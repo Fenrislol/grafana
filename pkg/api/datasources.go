@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/Fenrislol/grafana-plugin-sdk-go/backend"
 	"github.com/Fenrislol/grafana/pkg/api/datasource"
 	"github.com/Fenrislol/grafana/pkg/api/dtos"
 	"github.com/Fenrislol/grafana/pkg/bus"
