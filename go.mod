@@ -1,4 +1,4 @@
-module gitlab.com/digitalizm/grafana
+module github.com/grafana/grafana
 
 go 1.15
 
