@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/grafana/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/models"
 	macaron "gopkg.in/macaron.v1"
 )
 

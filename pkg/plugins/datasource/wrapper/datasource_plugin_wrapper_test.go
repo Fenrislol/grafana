@@ -3,9 +3,9 @@ package wrapper
 import (
 	"testing"
 
-	"github.com/grafana/grafana-plugin-model/go/datasource"
-	"github.com/grafana/grafana/pkg/infra/log"
-	"github.com/grafana/grafana/pkg/tsdb"
+	"gitlab.com/digitalizm/grafana-plugin-model/go/datasource"
+	"gitlab.com/digitalizm/grafana/pkg/infra/log"
+	"gitlab.com/digitalizm/grafana/pkg/tsdb"
 )
 
 func TestMapTables(t *testing.T) {

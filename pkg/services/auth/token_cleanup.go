@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/maksimmernikov/grafana/pkg/services/sqlstore"
+	"gitlab.com/digitalizm/grafana/pkg/services/sqlstore"
 )
 
 func (srv *UserAuthTokenService) Run(ctx context.Context) error {

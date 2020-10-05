@@ -7,7 +7,7 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/maksimmernikov/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/models"
 )
 
 var ErrProvokedError = errors.New("testing error")

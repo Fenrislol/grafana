@@ -12,7 +12,7 @@ weight = -16
 
 # What's new in Grafana v6.5
 
-For all details, read the full [CHANGELOG.md](https://github.com/grafana/grafana/blob/master/CHANGELOG.md).
+For all details, read the full [CHANGELOG.md](https://gitlab.com/digitalizm/grafana/blob/master/CHANGELOG.md).
 
 ## Highlights
 
@@ -208,4 +208,4 @@ See [upgrade notes]({{< relref "../installation/upgrading/#upgrading-to-v6-5" >}
 
 ## Changelog
 
-Check out [CHANGELOG.md](https://github.com/grafana/grafana/blob/master/CHANGELOG.md) for a complete list of new features, changes, and bug fixes.
+Check out [CHANGELOG.md](https://gitlab.com/digitalizm/grafana/blob/master/CHANGELOG.md) for a complete list of new features, changes, and bug fixes.

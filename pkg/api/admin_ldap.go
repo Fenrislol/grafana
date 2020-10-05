@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/maksimmernikov/grafana/pkg/services/ldap"
+	"gitlab.com/digitalizm/grafana/pkg/services/ldap"
 )
 
 func (server *HTTPServer) ReloadLdapCfg() Response {

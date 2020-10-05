@@ -4,15 +4,15 @@ import (
 	"context"
 	"time"
 
-	"github.com/grafana/grafana/pkg/bus"
-	"github.com/grafana/grafana/pkg/login/social"
-	"github.com/grafana/grafana/pkg/models"
-	"github.com/grafana/grafana/pkg/services/alerting"
-	"github.com/grafana/grafana/pkg/services/sqlstore"
+	"gitlab.com/digitalizm/grafana/pkg/bus"
+	"gitlab.com/digitalizm/grafana/pkg/login/social"
+	"gitlab.com/digitalizm/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/services/alerting"
+	"gitlab.com/digitalizm/grafana/pkg/services/sqlstore"
 
-	"github.com/grafana/grafana/pkg/infra/log"
-	"github.com/grafana/grafana/pkg/registry"
-	"github.com/grafana/grafana/pkg/setting"
+	"gitlab.com/digitalizm/grafana/pkg/infra/log"
+	"gitlab.com/digitalizm/grafana/pkg/registry"
+	"gitlab.com/digitalizm/grafana/pkg/setting"
 )
 
 var metricsLogger log.Logger = log.New("metrics")

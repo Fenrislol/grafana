@@ -1,9 +1,9 @@
 package securejsondata
 
 import (
-	"github.com/grafana/grafana/pkg/infra/log"
-	"github.com/grafana/grafana/pkg/setting"
-	"github.com/grafana/grafana/pkg/util"
+	"gitlab.com/digitalizm/grafana/pkg/infra/log"
+	"gitlab.com/digitalizm/grafana/pkg/setting"
+	"gitlab.com/digitalizm/grafana/pkg/util"
 )
 
 // SecureJsonData is used to store encrypted data (for example in data_source table). Only values are separately

@@ -3,8 +3,8 @@ package cloudmonitoring
 import (
 	"testing"
 
-	"github.com/grafana/grafana/pkg/components/simplejson"
-	"github.com/grafana/grafana/pkg/tsdb"
+	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
+	"gitlab.com/digitalizm/grafana/pkg/tsdb"
 
 	. "github.com/smartystreets/goconvey/convey"
 )

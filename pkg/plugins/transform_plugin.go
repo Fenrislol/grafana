@@ -7,17 +7,17 @@ import (
 	"path"
 	"strconv"
 
-	sdkgrpcplugin "github.com/grafana/grafana-plugin-sdk-go/backend/grpcplugin"
-	"github.com/grafana/grafana-plugin-sdk-go/genproto/pluginv2"
-	"github.com/grafana/grafana/pkg/bus"
-	"github.com/grafana/grafana/pkg/components/simplejson"
-	"github.com/grafana/grafana/pkg/infra/log"
-	"github.com/grafana/grafana/pkg/models"
-	"github.com/grafana/grafana/pkg/plugins/backendplugin"
-	"github.com/grafana/grafana/pkg/plugins/backendplugin/grpcplugin"
-	"github.com/grafana/grafana/pkg/plugins/datasource/wrapper"
-	"github.com/grafana/grafana/pkg/tsdb"
-	"github.com/grafana/grafana/pkg/util/errutil"
+	sdkgrpcplugin "gitlab.com/digitalizm/grafana-plugin-sdk-go/backend/grpcplugin"
+	"gitlab.com/digitalizm/grafana-plugin-sdk-go/genproto/pluginv2"
+	"gitlab.com/digitalizm/grafana/pkg/bus"
+	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
+	"gitlab.com/digitalizm/grafana/pkg/infra/log"
+	"gitlab.com/digitalizm/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin"
+	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin/grpcplugin"
+	"gitlab.com/digitalizm/grafana/pkg/plugins/datasource/wrapper"
+	"gitlab.com/digitalizm/grafana/pkg/tsdb"
+	"gitlab.com/digitalizm/grafana/pkg/util/errutil"
 )
 
 type TransformPlugin struct {

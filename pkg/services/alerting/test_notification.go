@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/grafana/grafana/pkg/components/securejsondata"
+	"gitlab.com/digitalizm/grafana/pkg/components/securejsondata"
 
-	"github.com/grafana/grafana/pkg/bus"
-	"github.com/grafana/grafana/pkg/components/null"
-	"github.com/grafana/grafana/pkg/components/simplejson"
-	"github.com/grafana/grafana/pkg/infra/log"
-	"github.com/grafana/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/bus"
+	"gitlab.com/digitalizm/grafana/pkg/components/null"
+	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
+	"gitlab.com/digitalizm/grafana/pkg/infra/log"
+	"gitlab.com/digitalizm/grafana/pkg/models"
 )
 
 // NotificationTestCommand initiates an test

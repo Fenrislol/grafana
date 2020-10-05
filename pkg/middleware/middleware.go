@@ -10,15 +10,15 @@ import (
 
 	macaron "gopkg.in/macaron.v1"
 
-	"github.com/grafana/grafana/pkg/bus"
-	"github.com/grafana/grafana/pkg/components/apikeygen"
-	"github.com/grafana/grafana/pkg/infra/log"
-	"github.com/grafana/grafana/pkg/infra/remotecache"
-	"github.com/grafana/grafana/pkg/login"
-	"github.com/grafana/grafana/pkg/models"
-	"github.com/grafana/grafana/pkg/services/rendering"
-	"github.com/grafana/grafana/pkg/setting"
-	"github.com/grafana/grafana/pkg/util"
+	"gitlab.com/digitalizm/grafana/pkg/bus"
+	"gitlab.com/digitalizm/grafana/pkg/components/apikeygen"
+	"gitlab.com/digitalizm/grafana/pkg/infra/log"
+	"gitlab.com/digitalizm/grafana/pkg/infra/remotecache"
+	"gitlab.com/digitalizm/grafana/pkg/login"
+	"gitlab.com/digitalizm/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/services/rendering"
+	"gitlab.com/digitalizm/grafana/pkg/setting"
+	"gitlab.com/digitalizm/grafana/pkg/util"
 )
 
 var getTime = time.Now

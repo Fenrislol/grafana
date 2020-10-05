@@ -1,7 +1,7 @@
 package migrations
 
 import (
-	. "github.com/grafana/grafana/pkg/services/sqlstore/migrator"
+	. "gitlab.com/digitalizm/grafana/pkg/services/sqlstore/migrator"
 	"xorm.io/xorm"
 )
 

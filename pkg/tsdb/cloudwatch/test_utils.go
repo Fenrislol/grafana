@@ -13,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
 	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi/resourcegroupstaggingapiiface"
-	"github.com/grafana/grafana/pkg/components/securejsondata"
-	"github.com/grafana/grafana/pkg/components/simplejson"
-	"github.com/grafana/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/components/securejsondata"
+	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
+	"gitlab.com/digitalizm/grafana/pkg/models"
 )
 
 func fakeDataSource() *models.DataSource {

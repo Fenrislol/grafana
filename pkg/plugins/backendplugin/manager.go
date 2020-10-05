@@ -12,13 +12,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend"
-	"github.com/grafana/grafana/pkg/infra/log"
-	"github.com/grafana/grafana/pkg/models"
-	"github.com/grafana/grafana/pkg/registry"
-	"github.com/grafana/grafana/pkg/setting"
-	"github.com/grafana/grafana/pkg/util/errutil"
-	"github.com/grafana/grafana/pkg/util/proxyutil"
+	"gitlab.com/digitalizm/grafana-plugin-sdk-go/backend"
+	"gitlab.com/digitalizm/grafana/pkg/infra/log"
+	"gitlab.com/digitalizm/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/registry"
+	"gitlab.com/digitalizm/grafana/pkg/setting"
+	"gitlab.com/digitalizm/grafana/pkg/util/errutil"
+	"gitlab.com/digitalizm/grafana/pkg/util/proxyutil"
 )
 
 var (

@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend"
-	"github.com/grafana/grafana/pkg/infra/log"
-	"github.com/grafana/grafana/pkg/plugins/backendplugin"
-	"github.com/grafana/grafana/pkg/plugins/backendplugin/coreplugin"
+	"gitlab.com/digitalizm/grafana-plugin-sdk-go/backend"
+	"gitlab.com/digitalizm/grafana/pkg/infra/log"
+	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin"
+	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin/coreplugin"
 	"github.com/stretchr/testify/require"
 )
 

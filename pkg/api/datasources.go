@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend"
-	"github.com/grafana/grafana/pkg/api/datasource"
-	"github.com/grafana/grafana/pkg/api/dtos"
-	"github.com/grafana/grafana/pkg/bus"
-	"github.com/grafana/grafana/pkg/infra/log"
-	"github.com/grafana/grafana/pkg/models"
-	"github.com/grafana/grafana/pkg/plugins"
-	"github.com/grafana/grafana/pkg/plugins/datasource/wrapper"
-	"github.com/grafana/grafana/pkg/util"
+	"gitlab.com/digitalizm/grafana-plugin-sdk-go/backend"
+	"gitlab.com/digitalizm/grafana/pkg/api/datasource"
+	"gitlab.com/digitalizm/grafana/pkg/api/dtos"
+	"gitlab.com/digitalizm/grafana/pkg/bus"
+	"gitlab.com/digitalizm/grafana/pkg/infra/log"
+	"gitlab.com/digitalizm/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/plugins"
+	"gitlab.com/digitalizm/grafana/pkg/plugins/datasource/wrapper"
+	"gitlab.com/digitalizm/grafana/pkg/util"
 )
 
 var datasourcesLogger = log.New("datasources")

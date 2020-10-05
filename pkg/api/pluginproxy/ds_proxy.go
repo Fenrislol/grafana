@@ -17,15 +17,15 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"golang.org/x/oauth2"
 
-	"github.com/grafana/grafana/pkg/api/datasource"
-	"github.com/grafana/grafana/pkg/bus"
-	glog "github.com/grafana/grafana/pkg/infra/log"
-	"github.com/grafana/grafana/pkg/login/social"
-	"github.com/grafana/grafana/pkg/models"
-	"github.com/grafana/grafana/pkg/plugins"
-	"github.com/grafana/grafana/pkg/setting"
-	"github.com/grafana/grafana/pkg/util"
-	"github.com/grafana/grafana/pkg/util/proxyutil"
+	"gitlab.com/digitalizm/grafana/pkg/api/datasource"
+	"gitlab.com/digitalizm/grafana/pkg/bus"
+	glog "gitlab.com/digitalizm/grafana/pkg/infra/log"
+	"gitlab.com/digitalizm/grafana/pkg/login/social"
+	"gitlab.com/digitalizm/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/plugins"
+	"gitlab.com/digitalizm/grafana/pkg/setting"
+	"gitlab.com/digitalizm/grafana/pkg/util"
+	"gitlab.com/digitalizm/grafana/pkg/util/proxyutil"
 )
 
 var (

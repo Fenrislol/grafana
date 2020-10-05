@@ -14,12 +14,12 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/grafana/grafana/pkg/cmd/grafana-cli/utils"
-	"github.com/grafana/grafana/pkg/util/errutil"
+	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/utils"
+	"gitlab.com/digitalizm/grafana/pkg/util/errutil"
 
-	"github.com/grafana/grafana/pkg/cmd/grafana-cli/logger"
-	"github.com/grafana/grafana/pkg/cmd/grafana-cli/models"
-	"github.com/grafana/grafana/pkg/cmd/grafana-cli/services"
+	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/logger"
+	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/models"
+	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/services"
 )
 
 func validateInput(c utils.CommandLine, pluginFolder string) error {

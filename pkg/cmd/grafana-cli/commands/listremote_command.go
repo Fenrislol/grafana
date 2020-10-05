@@ -1,8 +1,8 @@
 package commands
 
 import (
-	"github.com/grafana/grafana/pkg/cmd/grafana-cli/logger"
-	"github.com/grafana/grafana/pkg/cmd/grafana-cli/utils"
+	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/logger"
+	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/utils"
 )
 
 // listRemoteCommand prints out all plugins in the remote repo with latest version supported on current platform.

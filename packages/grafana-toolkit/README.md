@@ -109,7 +109,7 @@ Available options:
 
 ### Which version of grafana-toolkit should I use?
 
-See [Grafana packages versioning guide](https://github.com/grafana/grafana/blob/master/packages/README.md#versioning).
+See [Grafana packages versioning guide](https://gitlab.com/digitalizm/grafana/blob/master/packages/README.md#versioning).
 
 ### What tools does grafana-toolkit use?
 
@@ -225,7 +225,7 @@ const MyComponent = () => {
 };
 ```
 
-To learn more about using Grafana theme please refer to [Theme usage guide](https://github.com/grafana/grafana/blob/master/style_guides/themes.md#react)
+To learn more about using Grafana theme please refer to [Theme usage guide](https://gitlab.com/digitalizm/grafana/blob/master/style_guides/themes.md#react)
 
 > We do not support Emotion's `css` prop. Use className instead!
 
@@ -246,7 +246,7 @@ Yes! However, it's important that your `tsconfig.json` file contains the followi
 
 ### Can I adjust ESLint configuration to suit my needs?
 
-grafana-toolkit comes with [default config for ESLint](https://github.com/grafana/grafana/blob/master/packages/grafana-toolkit/src/config/eslint.plugin.json). For now, there is now way to customise ESLint config.
+grafana-toolkit comes with [default config for ESLint](https://gitlab.com/digitalizm/grafana/blob/master/packages/grafana-toolkit/src/config/eslint.plugin.json). For now, there is now way to customise ESLint config.
 
 ### How is Prettier integrated into grafana-toolkit workflow?
 
@@ -291,7 +291,7 @@ You can contribute to grafana-toolkit by helping develop it or by debugging it.
 
 Typically plugins should be developed using the `@grafana/toolkit` installed from npm. However, when working on the toolkit, you might want to use the local version. Follow the steps below to develop with a local version:
 
-1. Clone [Grafana repository](https://github.com/grafana/grafana).
+1. Clone [Grafana repository](https://gitlab.com/digitalizm/grafana).
 2. Navigate to the directory you have cloned Grafana repo to and then run `yarn install --pure-lockfile`.
 3. Navigate to `<GRAFANA_DIR>/packages/grafana-toolkit` and then run `yarn link`.
 4. Navigate to the directory where your plugin code is and then run `npx grafana-toolkit plugin:dev --yarnlink`. This adds all dependencies required by grafana-toolkit to your project, as well as link your local grafana-toolkit version to be used by the plugin.

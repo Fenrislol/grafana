@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/maksimmernikov/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/models"
 
 	"golang.org/x/oauth2"
 )

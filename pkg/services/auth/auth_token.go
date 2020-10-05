@@ -7,14 +7,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/grafana/grafana/pkg/infra/serverlock"
+	"gitlab.com/digitalizm/grafana/pkg/infra/serverlock"
 
-	"github.com/grafana/grafana/pkg/infra/log"
-	"github.com/grafana/grafana/pkg/models"
-	"github.com/grafana/grafana/pkg/registry"
-	"github.com/grafana/grafana/pkg/services/sqlstore"
-	"github.com/grafana/grafana/pkg/setting"
-	"github.com/grafana/grafana/pkg/util"
+	"gitlab.com/digitalizm/grafana/pkg/infra/log"
+	"gitlab.com/digitalizm/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/registry"
+	"gitlab.com/digitalizm/grafana/pkg/services/sqlstore"
+	"gitlab.com/digitalizm/grafana/pkg/setting"
+	"gitlab.com/digitalizm/grafana/pkg/util"
 )
 
 func init() {

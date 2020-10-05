@@ -4,15 +4,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/grafana/grafana/pkg/components/gtime"
-	"github.com/grafana/grafana/pkg/setting"
+	"gitlab.com/digitalizm/grafana/pkg/components/gtime"
+	"gitlab.com/digitalizm/grafana/pkg/setting"
 
-	"github.com/grafana/grafana/pkg/bus"
-	"github.com/grafana/grafana/pkg/infra/log"
-	"github.com/grafana/grafana/pkg/models"
-	"github.com/grafana/grafana/pkg/services/guardian"
-	"github.com/grafana/grafana/pkg/util"
-	"github.com/grafana/grafana/pkg/util/errutil"
+	"gitlab.com/digitalizm/grafana/pkg/bus"
+	"gitlab.com/digitalizm/grafana/pkg/infra/log"
+	"gitlab.com/digitalizm/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/services/guardian"
+	"gitlab.com/digitalizm/grafana/pkg/util"
+	"gitlab.com/digitalizm/grafana/pkg/util/errutil"
 )
 
 // DashboardService service for operating on dashboards

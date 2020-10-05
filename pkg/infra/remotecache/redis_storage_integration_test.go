@@ -5,7 +5,7 @@ package remotecache
 import (
 	"testing"
 
-	"github.com/maksimmernikov/grafana/pkg/setting"
+	"gitlab.com/digitalizm/grafana/pkg/setting"
 )
 
 func TestRedisCacheStorage(t *testing.T) {

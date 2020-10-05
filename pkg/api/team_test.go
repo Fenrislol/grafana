@@ -3,15 +3,15 @@ package api
 import (
 	"testing"
 
-	"github.com/maksimmernikov/grafana/pkg/setting"
+	"gitlab.com/digitalizm/grafana/pkg/setting"
 
-	"github.com/maksimmernikov/grafana/pkg/bus"
-	"github.com/maksimmernikov/grafana/pkg/components/simplejson"
-	"github.com/maksimmernikov/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/bus"
+	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
+	"gitlab.com/digitalizm/grafana/pkg/models"
 
 	"net/http"
 
-	"github.com/grafana/grafana/pkg/infra/log"
+	"gitlab.com/digitalizm/grafana/pkg/infra/log"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
 	macaron "gopkg.in/macaron.v1"

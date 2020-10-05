@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/maksimmernikov/grafana/pkg/tsdb"
+	"gitlab.com/digitalizm/grafana/pkg/tsdb"
 )
 
 var renders map[string]QueryDefinition

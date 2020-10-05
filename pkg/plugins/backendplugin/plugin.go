@@ -3,8 +3,8 @@ package backendplugin
 import (
 	"context"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend"
-	"github.com/grafana/grafana/pkg/infra/log"
+	"gitlab.com/digitalizm/grafana-plugin-sdk-go/backend"
+	"gitlab.com/digitalizm/grafana/pkg/infra/log"
 )
 
 // Plugin backend plugin interface.

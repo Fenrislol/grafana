@@ -66,7 +66,7 @@ We strongly recommend that you don't check in the plugin assets to the main bran
    git push --set-upstream origin release-0.1.x --follow-tags
    ```
 
-The next step is to submit the URL to your repository, and the release commit, to the [Grafana Plugin Repository](https://github.com/grafana/grafana-plugin-repository).
+The next step is to submit the URL to your repository, and the release commit, to the [Grafana Plugin Repository](https://gitlab.com/digitalizm/grafana-plugin-repository).
 
 ## Host the plugin yourself
 

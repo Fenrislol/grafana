@@ -1,10 +1,10 @@
 package dashboards
 
 import (
-	"github.com/maksimmernikov/grafana/pkg/bus"
-	"github.com/maksimmernikov/grafana/pkg/models"
-	"github.com/maksimmernikov/grafana/pkg/services/guardian"
-	"github.com/maksimmernikov/grafana/pkg/services/search"
+	"gitlab.com/digitalizm/grafana/pkg/bus"
+	"gitlab.com/digitalizm/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/services/guardian"
+	"gitlab.com/digitalizm/grafana/pkg/services/search"
 )
 
 // FolderService service for operating on folders

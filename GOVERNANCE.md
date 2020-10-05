@@ -197,8 +197,8 @@ The ex-member is
 
 If needed, we reserve the right to publicly announce removal.
 
-[coc]: https://github.com/grafana/grafana/blob/master/CODE_OF_CONDUCT.md
+[coc]: https://gitlab.com/digitalizm/grafana/blob/master/CODE_OF_CONDUCT.md
 [devs]: https://groups.google.com/forum/#!forum/grafana-developers
-[maintainers]: https://github.com/grafana/grafana/blob/master/MAINTAINERS.md
+[maintainers]: https://gitlab.com/digitalizm/grafana/blob/master/MAINTAINERS.md
 [rough]: https://tools.ietf.org/html/rfc7282
 [team]: https://groups.google.com/forum/#!forum/grafana-team

@@ -3,8 +3,8 @@ package stackdriver
 import (
 	"testing"
 
-	"github.com/maksimmernikov/grafana/pkg/components/simplejson"
-	"github.com/maksimmernikov/grafana/pkg/tsdb"
+	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
+	"gitlab.com/digitalizm/grafana/pkg/tsdb"
 
 	. "github.com/smartystreets/goconvey/convey"
 )

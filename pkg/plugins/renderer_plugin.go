@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"path"
 
-	pluginModel "github.com/grafana/grafana-plugin-model/go/renderer"
-	"github.com/grafana/grafana/pkg/infra/log"
-	"github.com/grafana/grafana/pkg/plugins/backendplugin"
-	"github.com/grafana/grafana/pkg/plugins/backendplugin/grpcplugin"
-	"github.com/grafana/grafana/pkg/plugins/backendplugin/pluginextensionv2"
-	"github.com/grafana/grafana/pkg/util/errutil"
+	pluginModel "gitlab.com/digitalizm/grafana-plugin-model/go/renderer"
+	"gitlab.com/digitalizm/grafana/pkg/infra/log"
+	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin"
+	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin/grpcplugin"
+	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin/pluginextensionv2"
+	"gitlab.com/digitalizm/grafana/pkg/util/errutil"
 )
 
 type RendererPlugin struct {

@@ -3,8 +3,8 @@ package middleware
 import (
 	"time"
 
-	"github.com/grafana/grafana/pkg/models"
-	"github.com/grafana/grafana/pkg/services/rendering"
+	"gitlab.com/digitalizm/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/services/rendering"
 )
 
 func initContextWithRenderAuth(ctx *models.ReqContext, renderService rendering.Service) bool {

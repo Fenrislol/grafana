@@ -3,8 +3,8 @@ package search
 import (
 	"testing"
 
-	"github.com/maksimmernikov/grafana/pkg/bus"
-	m "github.com/maksimmernikov/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/bus"
+	m "gitlab.com/digitalizm/grafana/pkg/models"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

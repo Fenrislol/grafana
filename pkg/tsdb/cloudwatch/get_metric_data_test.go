@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/maksimmernikov/grafana/pkg/components/null"
-	"github.com/maksimmernikov/grafana/pkg/tsdb"
+	"gitlab.com/digitalizm/grafana/pkg/components/null"
+	"gitlab.com/digitalizm/grafana/pkg/tsdb"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

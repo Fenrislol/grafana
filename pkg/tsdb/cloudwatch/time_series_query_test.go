@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/grafana/grafana/pkg/tsdb"
+	"gitlab.com/digitalizm/grafana/pkg/tsdb"
 	"github.com/stretchr/testify/assert"
 )
 

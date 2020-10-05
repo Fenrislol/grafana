@@ -6,8 +6,8 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/maksimmernikov/grafana/pkg/components/null"
-	"github.com/maksimmernikov/grafana/pkg/tsdb"
+	"gitlab.com/digitalizm/grafana/pkg/components/null"
+	"gitlab.com/digitalizm/grafana/pkg/tsdb"
 )
 
 func TestSimpleReducer(t *testing.T) {

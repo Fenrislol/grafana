@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend"
-	"github.com/grafana/grafana-plugin-sdk-go/data"
+	"gitlab.com/digitalizm/grafana-plugin-sdk-go/backend"
+	"gitlab.com/digitalizm/grafana-plugin-sdk-go/data"
 	"github.com/influxdata/influxdb-client-go/v2/api"
 )
 

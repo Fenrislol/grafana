@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/grafana/grafana/pkg/components/securejsondata"
-	"github.com/grafana/grafana/pkg/components/simplejson"
+	"gitlab.com/digitalizm/grafana/pkg/components/securejsondata"
+	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
 )
 
 var (

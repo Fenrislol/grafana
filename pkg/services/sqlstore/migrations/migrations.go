@@ -1,6 +1,6 @@
 package migrations
 
-import . "github.com/maksimmernikov/grafana/pkg/services/sqlstore/migrator"
+import . "gitlab.com/digitalizm/grafana/pkg/services/sqlstore/migrator"
 
 // --- Migration Guide line ---
 // 1. Never change a migration that is committed and pushed to master

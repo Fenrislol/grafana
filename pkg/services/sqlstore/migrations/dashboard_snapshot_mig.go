@@ -1,6 +1,6 @@
 package migrations
 
-import . "github.com/maksimmernikov/grafana/pkg/services/sqlstore/migrator"
+import . "gitlab.com/digitalizm/grafana/pkg/services/sqlstore/migrator"
 
 func addDashboardSnapshotMigrations(mg *Migrator) {
 	snapshotV4 := Table{

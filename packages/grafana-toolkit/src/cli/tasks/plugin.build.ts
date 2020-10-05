@@ -41,7 +41,7 @@ export const prepare = () =>
   useSpinner('Preparing', () =>
     Promise.all([
       // Remove local dependencies for @grafana/data/node_modules
-      // See: https://github.com/grafana/grafana/issues/26748
+      // See: https://gitlab.com/digitalizm/grafana/issues/26748
       rimraf(resolvePath(__dirname, 'node_modules/@grafana/data/node_modules')),
 
       // Copy only if local tsconfig does not exist.  Otherwise this will work, but have odd behavior

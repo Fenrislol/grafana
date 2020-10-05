@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maksimmernikov/grafana/pkg/tsdb"
+	"gitlab.com/digitalizm/grafana/pkg/tsdb"
 )
 
 // TimeGrain handles conversions between

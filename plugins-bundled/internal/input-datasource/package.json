@@ -5,7 +5,7 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "http://github.com/grafana/grafana.git"
+    "url": "http://gitlab.com/digitalizm/grafana.git"
   },
   "scripts": {
     "build": "grafana-toolkit plugin:build",

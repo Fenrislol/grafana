@@ -2,10 +2,10 @@ package commands
 
 import (
 	"github.com/fatih/color"
-	"github.com/grafana/grafana/pkg/cmd/grafana-cli/logger"
-	"github.com/grafana/grafana/pkg/cmd/grafana-cli/services"
-	"github.com/grafana/grafana/pkg/cmd/grafana-cli/utils"
-	"github.com/grafana/grafana/pkg/util/errutil"
+	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/logger"
+	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/services"
+	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/utils"
+	"gitlab.com/digitalizm/grafana/pkg/util/errutil"
 )
 
 func (cmd Command) upgradeCommand(c utils.CommandLine) error {

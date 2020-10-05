@@ -56,7 +56,7 @@ done
 # shellcheck disable=SC2124
 EXTRA_OPTS="$@"
 
-cd /go/src/github.com/grafana/grafana
+cd /go/src/gitlab.com/digitalizm/grafana
 echo "current dir: $(pwd)"
 
 if [ "$CIRCLE_TAG" != "" ]; then

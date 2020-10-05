@@ -130,7 +130,7 @@ In long format, string values are represented as separate fields rather than as 
 
 Grafana can detect and convert data frames in long format into wide format.
 
-> **Note:** Long format is currently only supported in the backend: [Grafana Issue #22219](https://github.com/grafana/grafana/issues/22219).
+> **Note:** Long format is currently only supported in the backend: [Grafana Issue #22219](https://gitlab.com/digitalizm/grafana/issues/22219).
 
 For example, the following data frame in long format:
 
@@ -174,8 +174,8 @@ The data frame structure is inspired by, and uses the [Apache Arrow Project](htt
 
 ### Javascript
 
-The Javascript implementation of data frames is in the [`/src/dataframe` folder](https://github.com/grafana/grafana/tree/master/packages/grafana-data/src/dataframe) and [`/src/types/dataframe.ts`](https://github.com/grafana/grafana/blob/master/packages/grafana-data/src/types/dataFrame.ts) of the [`@grafana/data` package](https://github.com/grafana/grafana/tree/master/packages/grafana-data).
+The Javascript implementation of data frames is in the [`/src/dataframe` folder](https://gitlab.com/digitalizm/grafana/tree/master/packages/grafana-data/src/dataframe) and [`/src/types/dataframe.ts`](https://gitlab.com/digitalizm/grafana/blob/master/packages/grafana-data/src/types/dataFrame.ts) of the [`@grafana/data` package](https://gitlab.com/digitalizm/grafana/tree/master/packages/grafana-data).
 
 ### Go
 
-For documentation on the Go implementation of data frames, refer to the [github.com/grafana/grafana-plugin-sdk-go/data package](https://pkg.go.dev/github.com/grafana/grafana-plugin-sdk-go/data?tab=doc).
+For documentation on the Go implementation of data frames, refer to the [gitlab.com/digitalizm/grafana-plugin-sdk-go/data package](https://pkg.go.dev/gitlab.com/digitalizm/grafana-plugin-sdk-go/data?tab=doc).

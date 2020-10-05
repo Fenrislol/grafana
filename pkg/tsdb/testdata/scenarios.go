@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maksimmernikov/grafana/pkg/components/null"
-	"github.com/maksimmernikov/grafana/pkg/log"
-	"github.com/maksimmernikov/grafana/pkg/tsdb"
+	"gitlab.com/digitalizm/grafana/pkg/components/null"
+	"gitlab.com/digitalizm/grafana/pkg/log"
+	"gitlab.com/digitalizm/grafana/pkg/tsdb"
 )
 
 type ScenarioHandler func(query *tsdb.Query, context *tsdb.TsdbQuery) *tsdb.QueryResult

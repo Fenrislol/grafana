@@ -3,7 +3,7 @@ package migrations
 import (
 	"fmt"
 
-	. "github.com/maksimmernikov/grafana/pkg/services/sqlstore/migrator"
+	. "gitlab.com/digitalizm/grafana/pkg/services/sqlstore/migrator"
 )
 
 func addDropAllIndicesMigrations(mg *Migrator, versionSuffix string, table Table) {

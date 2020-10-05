@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/maksimmernikov/grafana/pkg/components/simplejson"
+	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
 )
 
 // DashboardSnapshot model

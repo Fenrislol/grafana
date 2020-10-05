@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/maksimmernikov/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/models"
 )
 
 type TsdbQueryEndpoint interface {

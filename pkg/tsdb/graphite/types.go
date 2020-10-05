@@ -1,6 +1,6 @@
 package graphite
 
-import "github.com/maksimmernikov/grafana/pkg/tsdb"
+import "gitlab.com/digitalizm/grafana/pkg/tsdb"
 
 type TargetResponseDTO struct {
 	Target     string                `json:"target"`

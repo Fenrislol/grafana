@@ -3,7 +3,7 @@ package sqlstore
 import (
 	"strings"
 
-	m "github.com/maksimmernikov/grafana/pkg/models"
+	m "gitlab.com/digitalizm/grafana/pkg/models"
 )
 
 // SearchBuilder is a builder/object mother that builds a dashboard search query

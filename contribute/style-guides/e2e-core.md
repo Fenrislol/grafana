@@ -1,6 +1,6 @@
 # End-to-End Tests for core Grafana
 
-This document is specific to the [Grafana repository](https://github.com/grafana/grafana). Be sure that you've read the [generalized E2E document](e2e.md).
+This document is specific to the [Grafana repository](https://gitlab.com/digitalizm/grafana). Be sure that you've read the [generalized E2E document](e2e.md).
 
 ## Commands
 

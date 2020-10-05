@@ -3,8 +3,8 @@ package annotations
 import (
 	"context"
 
-	"github.com/grafana/grafana/pkg/components/simplejson"
-	"github.com/grafana/grafana/pkg/setting"
+	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
+	"gitlab.com/digitalizm/grafana/pkg/setting"
 )
 
 type Repository interface {

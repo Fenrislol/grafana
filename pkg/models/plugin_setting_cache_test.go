@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/grafana/grafana/pkg/components/securejsondata"
+	"gitlab.com/digitalizm/grafana/pkg/components/securejsondata"
 )
 
 func TestPluginSettingDecryptionCache(t *testing.T) {

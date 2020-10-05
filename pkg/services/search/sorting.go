@@ -3,7 +3,7 @@ package search
 import (
 	"sort"
 
-	"github.com/grafana/grafana/pkg/services/sqlstore/searchstore"
+	"gitlab.com/digitalizm/grafana/pkg/services/sqlstore/searchstore"
 )
 
 var (

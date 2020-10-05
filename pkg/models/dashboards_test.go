@@ -3,8 +3,8 @@ package models
 import (
 	"testing"
 
-	"github.com/maksimmernikov/grafana/pkg/components/simplejson"
-	"github.com/maksimmernikov/grafana/pkg/setting"
+	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
+	"gitlab.com/digitalizm/grafana/pkg/setting"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

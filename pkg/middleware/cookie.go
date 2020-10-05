@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/grafana/grafana/pkg/setting"
+	"gitlab.com/digitalizm/grafana/pkg/setting"
 )
 
 type CookieOptions struct {

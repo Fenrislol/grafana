@@ -12,14 +12,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/maksimmernikov/grafana/pkg/log"
+	"gitlab.com/digitalizm/grafana/pkg/log"
 
-	"github.com/maksimmernikov/grafana/pkg/components/null"
+	"gitlab.com/digitalizm/grafana/pkg/components/null"
 
 	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
-	"github.com/maksimmernikov/grafana/pkg/components/simplejson"
-	"github.com/maksimmernikov/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
+	"gitlab.com/digitalizm/grafana/pkg/models"
 )
 
 // SqlMacroEngine interpolates macros into sql. It takes in the Query to have access to query context and

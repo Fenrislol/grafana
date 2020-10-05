@@ -13,9 +13,9 @@ import (
 	"path"
 	"runtime"
 
-	"github.com/grafana/grafana/pkg/cmd/grafana-cli/logger"
-	"github.com/grafana/grafana/pkg/cmd/grafana-cli/models"
-	"github.com/grafana/grafana/pkg/util/errutil"
+	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/logger"
+	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/models"
+	"gitlab.com/digitalizm/grafana/pkg/util/errutil"
 )
 
 type GrafanaComClient struct {

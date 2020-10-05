@@ -87,8 +87,8 @@ export class ConfigEditor extends PureComponent<Props> {
             <h5>Support for flux in Grafana is currently in beta</h5>
             <p>
               Please report any issues to: <br />
-              <a href="https://github.com/grafana/grafana/issues/new/choose">
-                https://github.com/grafana/grafana/issues
+              <a href="https://gitlab.com/digitalizm/grafana/issues/new/choose">
+                https://gitlab.com/digitalizm/grafana/issues
               </a>
             </p>
           </div>

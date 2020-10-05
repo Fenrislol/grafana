@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/grafana/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/models"
 	"gopkg.in/macaron.v1"
 )
 

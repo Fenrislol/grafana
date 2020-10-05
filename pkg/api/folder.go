@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/grafana/grafana/pkg/api/dtos"
-	"github.com/grafana/grafana/pkg/models"
-	"github.com/grafana/grafana/pkg/services/dashboards"
-	"github.com/grafana/grafana/pkg/services/guardian"
-	"github.com/grafana/grafana/pkg/util"
+	"gitlab.com/digitalizm/grafana/pkg/api/dtos"
+	"gitlab.com/digitalizm/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/services/dashboards"
+	"gitlab.com/digitalizm/grafana/pkg/services/guardian"
+	"gitlab.com/digitalizm/grafana/pkg/util"
 )
 
 func GetFolders(c *models.ReqContext) Response {

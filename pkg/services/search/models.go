@@ -1,7 +1,7 @@
 package search
 
 import "strings"
-import "github.com/maksimmernikov/grafana/pkg/models"
+import "gitlab.com/digitalizm/grafana/pkg/models"
 
 type HitType string
 

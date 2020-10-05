@@ -2,7 +2,7 @@
 
 ## High level checks
 
-- [ ] The pull request adds value and the impact of the change is in line with [Frontend Style Guide](https://github.com/maksimmernikov/grafana/blob/master/style_guides/frontend.md).
+- [ ] The pull request adds value and the impact of the change is in line with [Frontend Style Guide](https://gitlab.com/digitalizm/grafana/blob/master/style_guides/frontend.md).
 - [ ] The pull request works the way it says it should do.
 - [ ] The pull request does not increase the Angular code base.
   > We are in the process of migrating to React so any increment of Angular code is generally discouraged from. (there are a few exceptions)
@@ -31,6 +31,6 @@
 ### Redux specific checks (skip if pull request does not contain Redux changes)
 
 - [ ] The pull request does not contain code that mutate state in reducers or thunks.
-- [ ] The pull request uses helpers `actionCreatorFactory` and `reducerFactory` instead of traditional `switch statement` reducers in Redux. ([Redux framework](https://github.com/maksimmernikov/grafana/blob/master/style_guides/redux.md))
-- [ ] The pull request uses `reducerTester` to test reducers.([Redux framework](https://github.com/maksimmernikov/grafana/blob/master/style_guides/redux.md))
+- [ ] The pull request uses helpers `actionCreatorFactory` and `reducerFactory` instead of traditional `switch statement` reducers in Redux. ([Redux framework](https://gitlab.com/digitalizm/grafana/blob/master/style_guides/redux.md))
+- [ ] The pull request uses `reducerTester` to test reducers.([Redux framework](https://gitlab.com/digitalizm/grafana/blob/master/style_guides/redux.md))
 - [ ] The pull request does not contain code that access reducers state slice directly, instead the code uses state selectors to access state.

@@ -1,7 +1,7 @@
 package datasources
 
 import (
-	"github.com/grafana/grafana/pkg/infra/log"
+	"gitlab.com/digitalizm/grafana/pkg/infra/log"
 )
 
 var (

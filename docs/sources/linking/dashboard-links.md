@@ -12,7 +12,7 @@ weight = 200
 
 When you create a dashboard link, you can include the time range and current template variables to directly jump to the same context in another dashboard. This way, you don’t have to worry whether the person you send the link to is looking at the right data. For other types of links, refer to [Data link variables]({{< relref "data-link-variables.md" >}}).
 
-Dashboard links can also be used as shortcuts to external systems, such as submitting [a GitHub issue with the current dashboard name](https://github.com/grafana/grafana/issues/new?title=Dashboard%3A%20HTTP%20Requests).
+Dashboard links can also be used as shortcuts to external systems, such as submitting [a GitHub issue with the current dashboard name](https://gitlab.com/digitalizm/grafana/issues/new?title=Dashboard%3A%20HTTP%20Requests).
 
 To see an example of dashboard links in action, check out: 
 - [Dashboard links with variables](https://play.grafana.org/d/rUpVRdamz/dashboard-links-with-variables?orgId=1)
@@ -43,7 +43,7 @@ Add a link to a URL at the top of your current dashboard. You can link to any av
 1. Click **Links** and then click **Add Dashboard Link** or **New**.
 1. In **Type**, select **link**.
 1. Select link options:
-   - **Url** – Enter the URL you want to link to. Depending on the target, you might want to include field values. **Example:** https://github.com/grafana/grafana/issues/new?title=Dashboard%3A%20HTTP%20Requests
+   - **Url** – Enter the URL you want to link to. Depending on the target, you might want to include field values. **Example:** https://gitlab.com/digitalizm/grafana/issues/new?title=Dashboard%3A%20HTTP%20Requests
    - **Title** – Enter the title you want the link to display.
    - **Tooltip** – Enter the tooltip you want the link to display when the user hovers their mouse over it.
    - **Icon** – Choose the icon you want displayed with the link.

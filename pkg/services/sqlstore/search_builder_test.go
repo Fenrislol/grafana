@@ -3,7 +3,7 @@ package sqlstore
 import (
 	"testing"
 
-	m "github.com/maksimmernikov/grafana/pkg/models"
+	m "gitlab.com/digitalizm/grafana/pkg/models"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

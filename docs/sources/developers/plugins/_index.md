@@ -63,7 +63,7 @@ Explore the many UI components in our [Grafana UI library](https://developers.gr
 
 ### Examples
 
-For inspiration, check out our [plugin examples](https://github.com/grafana/grafana-plugin-examples).
+For inspiration, check out our [plugin examples](https://gitlab.com/digitalizm/grafana-plugin-examples).
 
 ### API reference
 

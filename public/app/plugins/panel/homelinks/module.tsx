@@ -40,7 +40,7 @@ export class GrafanaLinksPanel extends PureComponent<Props> {
           <HomeLink
             title="Report a bug"
             icon="bug"
-            url="https://github.com/grafana/grafana/issues/new?template=1-bug_report.md"
+            url="https://gitlab.com/digitalizm/grafana/issues/new?template=1-bug_report.md"
             target="_blank"
           />
         </div>

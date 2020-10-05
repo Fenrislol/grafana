@@ -158,7 +158,7 @@ Macro example | Description
 *`$__unixEpochGroup(dateColumn,'5m', [fillmode])`* | Same as $__timeGroup, but for times stored as Unix timestamp (only available in Grafana 5.3+).
 *`$__unixEpochGroupAlias(dateColumn,'5m', [fillmode])`* | Same as above, but also adds a column alias (only available in Grafana 5.3+).
 
-We plan to add many more macros. If you have suggestions for what macros you would like to see, please [open an issue](https://github.com/grafana/grafana) in our GitHub repo.
+We plan to add many more macros. If you have suggestions for what macros you would like to see, please [open an issue](https://gitlab.com/digitalizm/grafana) in our GitHub repo.
 
 ## Table queries
 

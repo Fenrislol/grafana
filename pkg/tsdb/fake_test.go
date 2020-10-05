@@ -3,7 +3,7 @@ package tsdb
 import (
 	"context"
 
-	"github.com/maksimmernikov/grafana/pkg/models"
+	"gitlab.com/digitalizm/grafana/pkg/models"
 )
 
 type FakeExecutor struct {

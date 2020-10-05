@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/maksimmernikov/grafana/pkg/tsdb"
+	"gitlab.com/digitalizm/grafana/pkg/tsdb"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
