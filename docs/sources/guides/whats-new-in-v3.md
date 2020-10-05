@@ -224,4 +224,4 @@ Check out the full list of plugins on [Grafana.com](https://grafana.com/plugins)
 
 For a detailed list and link to github issues for everything included
 in the 3.0 release please view the
-[CHANGELOG.md](https://gitlab.com/digitalizm/grafana/blob/master/CHANGELOG.md) file.
+[CHANGELOG.md](https://github.com/Fenrislol/grafana/blob/master/CHANGELOG.md) file.

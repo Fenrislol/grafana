@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
-	"gitlab.com/digitalizm/grafana/pkg/tsdb"
-	"gitlab.com/digitalizm/grafana/pkg/util/errutil"
+	"github.com/Fenrislol/grafana/pkg/components/simplejson"
+	"github.com/Fenrislol/grafana/pkg/tsdb"
+	"github.com/Fenrislol/grafana/pkg/util/errutil"
 )
 
 func (e *cloudWatchExecutor) executeAnnotationQuery(ctx context.Context, queryContext *tsdb.TsdbQuery) (*tsdb.Response, error) {

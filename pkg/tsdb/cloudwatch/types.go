@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"gitlab.com/digitalizm/grafana/pkg/tsdb"
+	"github.com/Fenrislol/grafana/pkg/tsdb"
 )
 
 type cloudWatchClient interface {

@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/gosimple/slug"
-	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
-	"gitlab.com/digitalizm/grafana/pkg/setting"
-	"gitlab.com/digitalizm/grafana/pkg/util"
+	"github.com/Fenrislol/grafana/pkg/components/simplejson"
+	"github.com/Fenrislol/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/util"
 )
 
 const RootFolderName = "General"

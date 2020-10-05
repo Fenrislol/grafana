@@ -4,15 +4,15 @@ import (
 	"context"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/bus"
-	"gitlab.com/digitalizm/grafana/pkg/login/social"
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/services/alerting"
-	"gitlab.com/digitalizm/grafana/pkg/services/sqlstore"
+	"github.com/Fenrislol/grafana/pkg/bus"
+	"github.com/Fenrislol/grafana/pkg/login/social"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/services/alerting"
+	"github.com/Fenrislol/grafana/pkg/services/sqlstore"
 
-	"gitlab.com/digitalizm/grafana/pkg/infra/log"
-	"gitlab.com/digitalizm/grafana/pkg/registry"
-	"gitlab.com/digitalizm/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/registry"
+	"github.com/Fenrislol/grafana/pkg/setting"
 )
 
 var metricsLogger log.Logger = log.New("metrics")

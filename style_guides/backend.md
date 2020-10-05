@@ -9,7 +9,7 @@ This style guide is a guide for how we want to write Go code in the future. Gene
 Global state makes testing and debugging software harder and its something we want to avoid when possible.
 Unfortunately, there is quite a lot of global state in Grafana. The way we want to migrate away from this
 is to use the `inject` package to wire up all dependencies either in `pkg/cmd/grafana-server/main.go` or
-self registering using `registry.RegisterService` ex https://gitlab.com/digitalizm/grafana/blob/master/pkg/services/cleanup/cleanup.go#L25
+self registering using `registry.RegisterService` ex https://github.com/Fenrislol/grafana/blob/master/pkg/services/cleanup/cleanup.go#L25
 
 ### the `bus`
 `bus.Dispatch` is used in many places and something we want to avoid in the future since it refers to a global instance.
@@ -20,16 +20,16 @@ In the `setting` packages there are many global variables which Grafana sets at 
 away from and move as much configuration as possible to the `setting.Cfg` struct and pass it around, just like the bus.
 
 ## Linting and formatting
-We enforce strict `gofmt` formating and use some linters on our codebase. You can find the current list of linters at https://gitlab.com/digitalizm/grafana/blob/master/scripts/backend-lint.sh
+We enforce strict `gofmt` formating and use some linters on our codebase. You can find the current list of linters at https://github.com/Fenrislol/grafana/blob/master/scripts/backend-lint.sh
 
-We use [revive](https://github.com/mgechev/revive) as a go linter, and do enforce our [custom config](https://gitlab.com/digitalizm/grafana/blob/master/conf/revive.toml) for it.
+We use [revive](https://github.com/mgechev/revive) as a go linter, and do enforce our [custom config](https://github.com/Fenrislol/grafana/blob/master/conf/revive.toml) for it.
 
 ## Testing
-We use GoConvey for BDD/scenario based testing. Which we think is useful for testing certain chain or interactions. Ex https://gitlab.com/digitalizm/grafana/blob/master/pkg/services/auth/auth_token_test.go
+We use GoConvey for BDD/scenario based testing. Which we think is useful for testing certain chain or interactions. Ex https://github.com/Fenrislol/grafana/blob/master/pkg/services/auth/auth_token_test.go
 
 For smaller tests its preferred to use standard library testing.
 
 ### Mocks/Stubs
-As a general rule of thumb we try to override/replace functions/methods when mocks/stubs are needed. One common task is the need of overriding time (`time.Now()`). See usage of `getTime` variable in [code](https://gitlab.com/digitalizm/grafana/blob/52c39904120fb0b98494b961be67bb47574245b1/pkg/services/auth/auth_token.go#L22) and in [test](https://gitlab.com/digitalizm/grafana/blob/52c39904120fb0b98494b961be67bb47574245b1/pkg/services/auth/auth_token_test.go#L23-L26) as an example.
+As a general rule of thumb we try to override/replace functions/methods when mocks/stubs are needed. One common task is the need of overriding time (`time.Now()`). See usage of `getTime` variable in [code](https://github.com/Fenrislol/grafana/blob/52c39904120fb0b98494b961be67bb47574245b1/pkg/services/auth/auth_token.go#L22) and in [test](https://github.com/Fenrislol/grafana/blob/52c39904120fb0b98494b961be67bb47574245b1/pkg/services/auth/auth_token_test.go#L23-L26) as an example.
 
-When you need to stub/mock an interface you can implement a struct that allows you to override methods on a test-by-test basis. See [stub](https://gitlab.com/digitalizm/grafana/blob/52c39904120fb0b98494b961be67bb47574245b1/pkg/services/auth/testing.go) and [example usage](https://gitlab.com/digitalizm/grafana/blob/52c39904120fb0b98494b961be67bb47574245b1/pkg/middleware/middleware_test.go#L153-L180).
+When you need to stub/mock an interface you can implement a struct that allows you to override methods on a test-by-test basis. See [stub](https://github.com/Fenrislol/grafana/blob/52c39904120fb0b98494b961be67bb47574245b1/pkg/services/auth/testing.go) and [example usage](https://github.com/Fenrislol/grafana/blob/52c39904120fb0b98494b961be67bb47574245b1/pkg/middleware/middleware_test.go#L153-L180).

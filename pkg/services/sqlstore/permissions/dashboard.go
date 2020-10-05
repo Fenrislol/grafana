@@ -3,8 +3,8 @@ package permissions
 import (
 	"strings"
 
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/services/sqlstore/migrator"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/services/sqlstore/migrator"
 )
 
 type DashboardPermissionFilter struct {

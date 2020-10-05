@@ -3,8 +3,8 @@ package migrations
 import (
 	"testing"
 
-	. "gitlab.com/digitalizm/grafana/pkg/services/sqlstore/migrator"
-	"gitlab.com/digitalizm/grafana/pkg/services/sqlstore/sqlutil"
+	. "github.com/Fenrislol/grafana/pkg/services/sqlstore/migrator"
+	"github.com/Fenrislol/grafana/pkg/services/sqlstore/sqlutil"
 	"xorm.io/xorm"
 
 	. "github.com/smartystreets/goconvey/convey"

@@ -3,12 +3,12 @@ package api
 import (
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/api/dtos"
-	"gitlab.com/digitalizm/grafana/pkg/bus"
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/services/dashboards"
-	"gitlab.com/digitalizm/grafana/pkg/services/guardian"
-	"gitlab.com/digitalizm/grafana/pkg/util"
+	"github.com/Fenrislol/grafana/pkg/api/dtos"
+	"github.com/Fenrislol/grafana/pkg/bus"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/services/dashboards"
+	"github.com/Fenrislol/grafana/pkg/services/guardian"
+	"github.com/Fenrislol/grafana/pkg/util"
 )
 
 func GetFolderPermissionList(c *models.ReqContext) Response {

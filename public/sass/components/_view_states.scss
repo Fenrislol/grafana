@@ -28,7 +28,7 @@
   @extend .view-mode--inactive;
 }
 
-// https://gitlab.com/digitalizm/grafana/issues/18114
+// https://github.com/Fenrislol/grafana/issues/18114
 .view-mode--tv.panel-in-fullscreen {
   .navbar {
     padding-left: $navbar-padding;

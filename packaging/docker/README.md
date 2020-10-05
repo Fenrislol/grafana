@@ -36,7 +36,7 @@ Further documentation can be found at http://docs.grafana.org/installation/docke
 - Made it possible to set a specific plugin URL, #12861, thx ClementGautier.
 
 ### v5.1.5, v5.2.0-beta2
-- Fixed: config keys ending with _FILE are not respected [#170](https://gitlab.com/digitalizm/grafana-docker/issues/170).
+- Fixed: config keys ending with _FILE are not respected [#170](https://github.com/Fenrislol/grafana-docker/issues/170).
 
 ### v5.2.0-beta1
 - Added support for Docker secrets.
@@ -59,4 +59,4 @@ Further documentation can be found at http://docs.grafana.org/installation/docke
 - Plugins dir (`/var/lib/grafana/plugins`) is no longer a separate volume.
 
 ### v3.1.1
-- Made it possible to install specific plugin version https://gitlab.com/digitalizm/grafana-docker/issues/59#issuecomment-260584026.
+- Made it possible to install specific plugin version https://github.com/Fenrislol/grafana-docker/issues/59#issuecomment-260584026.

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gitlab.com/digitalizm/grafana/pkg/services/sqlstore/migrator"
+	"github.com/Fenrislol/grafana/pkg/services/sqlstore/migrator"
 )
 
 // Builder defaults to returning a SQL query to get a list of all dashboards

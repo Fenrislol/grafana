@@ -5,8 +5,8 @@ import (
 
 	"sort"
 
-	"gitlab.com/digitalizm/grafana/pkg/components/null"
-	"gitlab.com/digitalizm/grafana/pkg/tsdb"
+	"github.com/Fenrislol/grafana/pkg/components/null"
+	"github.com/Fenrislol/grafana/pkg/tsdb"
 )
 
 // queryReducer reduces a timeseries to a nullable float

@@ -3,8 +3,8 @@ package dashboards
 import (
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/bus"
-	"gitlab.com/digitalizm/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/bus"
+	"github.com/Fenrislol/grafana/pkg/models"
 )
 
 func MakeUserAdmin(bus bus.Bus, orgId int64, userId int64, dashboardId int64, setViewAndEditPermissions bool) error {

@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"path"
 
-	"gitlab.com/digitalizm/grafana/pkg/infra/log"
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin"
-	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin/grpcplugin"
-	"gitlab.com/digitalizm/grafana/pkg/plugins/datasource/wrapper"
-	"gitlab.com/digitalizm/grafana/pkg/tsdb"
-	"gitlab.com/digitalizm/grafana/pkg/util/errutil"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin"
+	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin/grpcplugin"
+	"github.com/Fenrislol/grafana/pkg/plugins/datasource/wrapper"
+	"github.com/Fenrislol/grafana/pkg/tsdb"
+	"github.com/Fenrislol/grafana/pkg/util/errutil"
 )
 
 // DataSourcePlugin contains all metadata about a datasource plugin

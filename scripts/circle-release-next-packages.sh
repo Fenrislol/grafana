@@ -16,7 +16,7 @@ function prepare_version_commit () {
 function unpublish_previous_canary () {
   _package=$1
   echo $'\nUnpublishing previous canary packages'
-  # dist-tag next to be changed to canary when https://gitlab.com/digitalizm/grafana/pull/18195 is merged
+  # dist-tag next to be changed to canary when https://github.com/Fenrislol/grafana/pull/18195 is merged
   CURRENT_CANARY=$(npm view @grafana/"${_package}" dist-tags.canary)
   if [ -z "${CURRENT_CANARY}" ]; then
       echo "@grafana/${_package} - Nothing to unpublish"

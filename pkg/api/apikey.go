@@ -3,10 +3,10 @@ package api
 import (
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/api/dtos"
-	"gitlab.com/digitalizm/grafana/pkg/bus"
-	"gitlab.com/digitalizm/grafana/pkg/components/apikeygen"
-	"gitlab.com/digitalizm/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/api/dtos"
+	"github.com/Fenrislol/grafana/pkg/bus"
+	"github.com/Fenrislol/grafana/pkg/components/apikeygen"
+	"github.com/Fenrislol/grafana/pkg/models"
 )
 
 func GetAPIKeys(c *models.ReqContext) Response {

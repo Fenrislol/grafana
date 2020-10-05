@@ -17,15 +17,15 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"golang.org/x/oauth2"
 
-	"gitlab.com/digitalizm/grafana/pkg/api/datasource"
-	"gitlab.com/digitalizm/grafana/pkg/bus"
-	glog "gitlab.com/digitalizm/grafana/pkg/infra/log"
-	"gitlab.com/digitalizm/grafana/pkg/login/social"
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/plugins"
-	"gitlab.com/digitalizm/grafana/pkg/setting"
-	"gitlab.com/digitalizm/grafana/pkg/util"
-	"gitlab.com/digitalizm/grafana/pkg/util/proxyutil"
+	"github.com/Fenrislol/grafana/pkg/api/datasource"
+	"github.com/Fenrislol/grafana/pkg/bus"
+	glog "github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/login/social"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/plugins"
+	"github.com/Fenrislol/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/util"
+	"github.com/Fenrislol/grafana/pkg/util/proxyutil"
 )
 
 var (

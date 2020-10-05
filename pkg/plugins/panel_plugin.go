@@ -3,7 +3,7 @@ package plugins
 import (
 	"encoding/json"
 
-	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin"
+	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin"
 )
 
 type PanelPlugin struct {

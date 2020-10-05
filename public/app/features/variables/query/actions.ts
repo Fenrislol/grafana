@@ -54,7 +54,7 @@ export const updateQueryVariableOptions = (
       // If we are searching options there is no need to validate selection state
       // This condition was added to as validateVariableSelectionState will update the current value of the variable
       // So after search and selection the current value is already update so no setValue, refresh & url update is performed
-      // The if statement below fixes https://gitlab.com/digitalizm/grafana/issues/25671
+      // The if statement below fixes https://github.com/Fenrislol/grafana/issues/25671
       if (!searchFilter) {
         await dispatch(validateVariableSelectionState(toVariableIdentifier(variableInState)));
       }

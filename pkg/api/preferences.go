@@ -1,9 +1,9 @@
 package api
 
 import (
-	"gitlab.com/digitalizm/grafana/pkg/api/dtos"
-	"gitlab.com/digitalizm/grafana/pkg/bus"
-	"gitlab.com/digitalizm/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/api/dtos"
+	"github.com/Fenrislol/grafana/pkg/bus"
+	"github.com/Fenrislol/grafana/pkg/models"
 )
 
 // POST /api/preferences/set-home-dash

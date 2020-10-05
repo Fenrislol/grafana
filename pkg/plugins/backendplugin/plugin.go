@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
-	"gitlab.com/digitalizm/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
 )
 
 // Plugin backend plugin interface.

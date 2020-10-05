@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gitlab.com/digitalizm/grafana/pkg/infra/log"
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/services/provisioning/utils"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/services/provisioning/utils"
 	"gopkg.in/yaml.v2"
 )
 

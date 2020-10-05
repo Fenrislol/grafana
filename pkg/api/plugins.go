@@ -9,14 +9,14 @@ import (
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 
-	"gitlab.com/digitalizm/grafana/pkg/api/dtos"
-	"gitlab.com/digitalizm/grafana/pkg/bus"
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/plugins"
-	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin"
-	"gitlab.com/digitalizm/grafana/pkg/plugins/datasource/wrapper"
-	"gitlab.com/digitalizm/grafana/pkg/setting"
-	"gitlab.com/digitalizm/grafana/pkg/util/errutil"
+	"github.com/Fenrislol/grafana/pkg/api/dtos"
+	"github.com/Fenrislol/grafana/pkg/bus"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/plugins"
+	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin"
+	"github.com/Fenrislol/grafana/pkg/plugins/datasource/wrapper"
+	"github.com/Fenrislol/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/util/errutil"
 )
 
 // ErrPluginNotFound is returned when an requested plugin is not installed.

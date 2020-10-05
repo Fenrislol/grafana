@@ -23,7 +23,7 @@ Create a directory for the project and set your path accordingly (or use the [de
 
 ```bash
 export GOPATH=`pwd`
-go get gitlab.com/digitalizm/grafana
+go get github.com/Fenrislol/grafana
 ```
 
 On Windows use setx instead of export and then restart your command prompt:
@@ -31,11 +31,11 @@ On Windows use setx instead of export and then restart your command prompt:
 setx GOPATH %cd%
 ```
 
-You may see an error such as: `package gitlab.com/digitalizm/grafana: no buildable Go source files`. This is just a warning, and you can proceed with the directions.
+You may see an error such as: `package github.com/Fenrislol/grafana: no buildable Go source files`. This is just a warning, and you can proceed with the directions.
 
 ## Building the backend
 ```bash
-cd $GOPATH/src/gitlab.com/digitalizm/grafana
+cd $GOPATH/src/github.com/Fenrislol/grafana
 go run build.go setup
 go run build.go build              # (or 'go build ./pkg/cmd/grafana-server')
 ```
@@ -98,7 +98,7 @@ Writing & watching frontend tests
 
 ### Datasource and dashboard provisioning
 
-[Here](https://gitlab.com/digitalizm/grafana/tree/master/devenv) you can find helpful scripts and docker-compose setup
+[Here](https://github.com/Fenrislol/grafana/tree/master/devenv) you can find helpful scripts and docker-compose setup
 that will populate your dev environment for quicker testing end experimenting.
 
 

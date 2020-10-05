@@ -6,13 +6,13 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	"gitlab.com/digitalizm/grafana/pkg/bus"
-	"gitlab.com/digitalizm/grafana/pkg/infra/log"
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/plugins"
-	"gitlab.com/digitalizm/grafana/pkg/setting"
-	"gitlab.com/digitalizm/grafana/pkg/util"
-	"gitlab.com/digitalizm/grafana/pkg/util/proxyutil"
+	"github.com/Fenrislol/grafana/pkg/bus"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/plugins"
+	"github.com/Fenrislol/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/util"
+	"github.com/Fenrislol/grafana/pkg/util/proxyutil"
 )
 
 type templateData struct {

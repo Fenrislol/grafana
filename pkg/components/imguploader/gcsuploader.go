@@ -13,8 +13,8 @@ import (
 	"golang.org/x/oauth2/jwt"
 
 	"cloud.google.com/go/storage"
-	"gitlab.com/digitalizm/grafana/pkg/infra/log"
-	"gitlab.com/digitalizm/grafana/pkg/util"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/util"
 	"golang.org/x/oauth2/google"
 )
 

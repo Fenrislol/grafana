@@ -13,8 +13,8 @@ import (
 
 	"golang.org/x/oauth2"
 
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/plugins"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/plugins"
 	"golang.org/x/oauth2/jwt"
 )
 

@@ -3,7 +3,7 @@ package commandstest
 import (
 	"os"
 
-	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/models"
+	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/models"
 )
 
 type FakeGrafanaComClient struct {

@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"strconv"
 
-	"gitlab.com/digitalizm/grafana/pkg/api/dtos"
-	"gitlab.com/digitalizm/grafana/pkg/bus"
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/services/alerting"
-	"gitlab.com/digitalizm/grafana/pkg/services/guardian"
-	"gitlab.com/digitalizm/grafana/pkg/services/search"
-	"gitlab.com/digitalizm/grafana/pkg/util"
+	"github.com/Fenrislol/grafana/pkg/api/dtos"
+	"github.com/Fenrislol/grafana/pkg/bus"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/services/alerting"
+	"github.com/Fenrislol/grafana/pkg/services/guardian"
+	"github.com/Fenrislol/grafana/pkg/services/search"
+	"github.com/Fenrislol/grafana/pkg/util"
 )
 
 func ValidateOrgAlert(c *models.ReqContext) {

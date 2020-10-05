@@ -3,9 +3,9 @@ package testdata
 import (
 	"context"
 
-	"gitlab.com/digitalizm/grafana/pkg/log"
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/tsdb"
+	"github.com/Fenrislol/grafana/pkg/log"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/tsdb"
 )
 
 type TestDataExecutor struct {

@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gitlab.com/digitalizm/grafana/pkg/setting"
-	"gitlab.com/digitalizm/grafana/pkg/util"
+	"github.com/Fenrislol/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/util"
 )
 
 type FrontendPluginBase struct {

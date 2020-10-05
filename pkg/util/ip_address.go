@@ -5,7 +5,7 @@ import (
 	"net"
 	"strings"
 
-	"gitlab.com/digitalizm/grafana/pkg/util/errutil"
+	"github.com/Fenrislol/grafana/pkg/util/errutil"
 )
 
 // ParseIPAddress parses an IP address and removes port and/or IPV6 format

@@ -3,9 +3,9 @@ package live
 import (
 	"context"
 
-	"gitlab.com/digitalizm/grafana/pkg/api/dtos"
-	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
-	"gitlab.com/digitalizm/grafana/pkg/log"
+	"github.com/Fenrislol/grafana/pkg/api/dtos"
+	"github.com/Fenrislol/grafana/pkg/components/simplejson"
+	"github.com/Fenrislol/grafana/pkg/log"
 )
 
 type hub struct {

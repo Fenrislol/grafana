@@ -302,7 +302,7 @@ class GraphElement {
      *  the time series data and the: "visualization options -> null value"
      *  set to "connected". In this scenario we will get the wrong dataIndex.
      *
-     *  https://gitlab.com/digitalizm/grafana/issues/22651
+     *  https://github.com/Fenrislol/grafana/issues/22651
      */
     const { datapoint, dataIndex } = item;
 

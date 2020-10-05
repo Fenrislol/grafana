@@ -7,10 +7,10 @@ import (
 	"errors"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/infra/log"
-	"gitlab.com/digitalizm/grafana/pkg/registry"
-	"gitlab.com/digitalizm/grafana/pkg/services/sqlstore"
-	"gitlab.com/digitalizm/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/registry"
+	"github.com/Fenrislol/grafana/pkg/services/sqlstore"
+	"github.com/Fenrislol/grafana/pkg/setting"
 )
 
 var (

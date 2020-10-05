@@ -5,7 +5,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"gitlab.com/digitalizm/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/setting"
 )
 
 // ExporterName is used as namespace for exposing prometheus metrics

@@ -1,7 +1,7 @@
 package elasticsearch
 
 import (
-	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
+	"github.com/Fenrislol/grafana/pkg/components/simplejson"
 )
 
 // Query represents the time series query model of the datasource

@@ -7,10 +7,10 @@ import (
 	"sync"
 
 	"github.com/centrifugal/centrifuge"
-	"gitlab.com/digitalizm/grafana/pkg/infra/log"
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/plugins"
-	"gitlab.com/digitalizm/grafana/pkg/services/live/features"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/plugins"
+	"github.com/Fenrislol/grafana/pkg/services/live/features"
 )
 
 var (

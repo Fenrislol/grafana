@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/setting"
 )
 
 var ErrInvalidQuotaTarget = errors.New("Invalid quota target")

@@ -9,15 +9,15 @@ import (
 
 	sdkgrpcplugin "github.com/grafana/grafana-plugin-sdk-go/backend/grpcplugin"
 	"github.com/grafana/grafana-plugin-sdk-go/genproto/pluginv2"
-	"gitlab.com/digitalizm/grafana/pkg/bus"
-	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
-	"gitlab.com/digitalizm/grafana/pkg/infra/log"
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin"
-	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin/grpcplugin"
-	"gitlab.com/digitalizm/grafana/pkg/plugins/datasource/wrapper"
-	"gitlab.com/digitalizm/grafana/pkg/tsdb"
-	"gitlab.com/digitalizm/grafana/pkg/util/errutil"
+	"github.com/Fenrislol/grafana/pkg/bus"
+	"github.com/Fenrislol/grafana/pkg/components/simplejson"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin"
+	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin/grpcplugin"
+	"github.com/Fenrislol/grafana/pkg/plugins/datasource/wrapper"
+	"github.com/Fenrislol/grafana/pkg/tsdb"
+	"github.com/Fenrislol/grafana/pkg/util/errutil"
 )
 
 type TransformPlugin struct {

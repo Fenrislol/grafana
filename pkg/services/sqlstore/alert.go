@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/bus"
-	"gitlab.com/digitalizm/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/bus"
+	"github.com/Fenrislol/grafana/pkg/models"
 )
 
 // timeNow makes it possible to test usage of time

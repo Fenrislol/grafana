@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/components/null"
-	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
-	es "gitlab.com/digitalizm/grafana/pkg/tsdb/elasticsearch/client"
+	"github.com/Fenrislol/grafana/pkg/components/null"
+	"github.com/Fenrislol/grafana/pkg/components/simplejson"
+	es "github.com/Fenrislol/grafana/pkg/tsdb/elasticsearch/client"
 
-	"gitlab.com/digitalizm/grafana/pkg/tsdb"
+	"github.com/Fenrislol/grafana/pkg/tsdb"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

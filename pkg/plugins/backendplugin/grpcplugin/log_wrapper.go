@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 
-	glog "gitlab.com/digitalizm/grafana/pkg/infra/log"
+	glog "github.com/Fenrislol/grafana/pkg/infra/log"
 	"github.com/hashicorp/go-hclog"
 )
 

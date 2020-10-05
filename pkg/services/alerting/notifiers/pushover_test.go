@@ -5,10 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	"gitlab.com/digitalizm/grafana/pkg/services/alerting"
+	"github.com/Fenrislol/grafana/pkg/services/alerting"
 
-	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
-	"gitlab.com/digitalizm/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/components/simplejson"
+	"github.com/Fenrislol/grafana/pkg/models"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

@@ -3,8 +3,8 @@ package commands
 import (
 	"errors"
 
-	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/logger"
-	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/utils"
+	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/logger"
+	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/utils"
 )
 
 func validateVersionInput(c utils.CommandLine) error {

@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/setting"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -168,7 +168,7 @@ func TestQuotaCommandsAndQueries(t *testing.T) {
 			So(query.Result.Used, ShouldEqual, 1)
 		})
 
-		// related: https://gitlab.com/digitalizm/grafana/issues/14342
+		// related: https://github.com/Fenrislol/grafana/issues/14342
 		Convey("Should org quota updating is successful even if it called multiple time", func() {
 			orgCmd := models.UpdateOrgQuotaCmd{
 				OrgId:  orgId,
@@ -200,7 +200,7 @@ func TestQuotaCommandsAndQueries(t *testing.T) {
 			So(query.Result.Limit, ShouldEqual, 10)
 		})
 
-		// related: https://gitlab.com/digitalizm/grafana/issues/14342
+		// related: https://github.com/Fenrislol/grafana/issues/14342
 		Convey("Should user quota updating is successful even if it called multiple time", func() {
 			userQuotaCmd := models.UpdateUserQuotaCmd{
 				UserId: userId,

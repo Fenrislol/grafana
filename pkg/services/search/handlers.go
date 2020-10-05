@@ -3,9 +3,9 @@ package search
 import (
 	"sort"
 
-	"gitlab.com/digitalizm/grafana/pkg/bus"
-	m "gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/registry"
+	"github.com/Fenrislol/grafana/pkg/bus"
+	m "github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/registry"
 )
 
 func init() {

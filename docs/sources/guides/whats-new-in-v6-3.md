@@ -12,7 +12,7 @@ weight = -14
 
 # What's new in Grafana v6.3
 
-For all details please read the full [CHANGELOG.md](https://gitlab.com/digitalizm/grafana/blob/master/CHANGELOG.md).
+For all details please read the full [CHANGELOG.md](https://github.com/Fenrislol/grafana/blob/master/CHANGELOG.md).
 
 ## Highlights
 

@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
-	"gitlab.com/digitalizm/grafana/pkg/log"
+	"github.com/Fenrislol/grafana/pkg/components/simplejson"
+	"github.com/Fenrislol/grafana/pkg/log"
 )
 
 const (

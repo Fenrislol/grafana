@@ -11,21 +11,21 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/api/datasource"
-	"gitlab.com/digitalizm/grafana/pkg/components/securejsondata"
-	"gitlab.com/digitalizm/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/api/datasource"
+	"github.com/Fenrislol/grafana/pkg/components/securejsondata"
+	"github.com/Fenrislol/grafana/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"golang.org/x/oauth2"
 	macaron "gopkg.in/macaron.v1"
 
-	"gitlab.com/digitalizm/grafana/pkg/bus"
-	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
-	"gitlab.com/digitalizm/grafana/pkg/login/social"
-	"gitlab.com/digitalizm/grafana/pkg/plugins"
-	"gitlab.com/digitalizm/grafana/pkg/setting"
-	"gitlab.com/digitalizm/grafana/pkg/util"
+	"github.com/Fenrislol/grafana/pkg/bus"
+	"github.com/Fenrislol/grafana/pkg/components/simplejson"
+	"github.com/Fenrislol/grafana/pkg/login/social"
+	"github.com/Fenrislol/grafana/pkg/plugins"
+	"github.com/Fenrislol/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/util"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

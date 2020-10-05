@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/setting"
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"gitlab.com/digitalizm/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/models"
 )
 
 func TestUserDataAccess(t *testing.T) {

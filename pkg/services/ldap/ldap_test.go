@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"gitlab.com/digitalizm/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
 	. "github.com/smartystreets/goconvey/convey"
 	"gopkg.in/ldap.v3"
 )

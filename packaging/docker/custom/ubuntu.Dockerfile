@@ -32,7 +32,7 @@ ENV GF_RENDERER_PLUGIN_CHROME_BIN="/usr/bin/google-chrome"
 RUN if [ $GF_INSTALL_IMAGE_RENDERER_PLUGIN = "true" ]; then \
     grafana-cli \
         --pluginsDir "$GF_PATHS_PLUGINS" \
-        --pluginUrl https://gitlab.com/digitalizm/grafana-image-renderer/releases/latest/download/plugin-linux-x64-glibc-no-chromium.zip \
+        --pluginUrl https://github.com/Fenrislol/grafana-image-renderer/releases/latest/download/plugin-linux-x64-glibc-no-chromium.zip \
         plugins install grafana-image-renderer; \
 fi
 

@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/commands/commandstest"
-	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/services"
+	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/commands/commandstest"
+	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/services"
 )
 
 func TestMissingPath(t *testing.T) {

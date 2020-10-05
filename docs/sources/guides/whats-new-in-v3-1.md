@@ -59,4 +59,4 @@ Switched logging framework to log15 to enable key value per logging and filterin
 
 ## CHANGELOG
 
-For a detailed list and link to github issues for everything included in the 3.1 release please view the [CHANGELOG.md](https://gitlab.com/digitalizm/grafana/blob/master/CHANGELOG.md) file.
+For a detailed list and link to github issues for everything included in the 3.1 release please view the [CHANGELOG.md](https://github.com/Fenrislol/grafana/blob/master/CHANGELOG.md) file.

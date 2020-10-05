@@ -1,9 +1,9 @@
 package hooks
 
 import (
-	"gitlab.com/digitalizm/grafana/pkg/api/dtos"
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/registry"
+	"github.com/Fenrislol/grafana/pkg/api/dtos"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/registry"
 )
 
 type IndexDataHook func(indexData *dtos.IndexViewData, req *models.ReqContext)

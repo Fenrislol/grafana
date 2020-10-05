@@ -6,10 +6,10 @@ import (
 	"regexp"
 	"strings"
 
-	"gitlab.com/digitalizm/grafana/pkg/components/gtime"
-	"gitlab.com/digitalizm/grafana/pkg/infra/log"
-	"gitlab.com/digitalizm/grafana/pkg/tsdb"
-	"gitlab.com/digitalizm/grafana/pkg/tsdb/sqleng"
+	"github.com/Fenrislol/grafana/pkg/components/gtime"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/tsdb"
+	"github.com/Fenrislol/grafana/pkg/tsdb/sqleng"
 )
 
 const rsIdentifier = `([_a-zA-Z0-9]+)`

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/tsdb"
+	"github.com/Fenrislol/grafana/pkg/tsdb"
 )
 
 func (e *StackdriverExecutor) executeAnnotationQuery(ctx context.Context, tsdbQuery *tsdb.TsdbQuery) (*tsdb.Response, error) {

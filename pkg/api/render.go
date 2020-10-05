@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/services/rendering"
-	"gitlab.com/digitalizm/grafana/pkg/util"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/services/rendering"
+	"github.com/Fenrislol/grafana/pkg/util"
 )
 
 func (hs *HTTPServer) RenderToPng(c *models.ReqContext) {

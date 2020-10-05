@@ -1,4 +1,4 @@
-module gitlab.com/digitalizm/grafana/scripts/go
+module github.com/Fenrislol/grafana/scripts/go
 
 go 1.14
 

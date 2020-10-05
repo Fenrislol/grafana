@@ -6,7 +6,7 @@ import (
 	"time"
 
 	pluginModel "github.com/grafana/grafana-plugin-model/go/renderer"
-	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin/pluginextensionv2"
+	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin/pluginextensionv2"
 )
 
 func (rs *RenderingService) startPlugin(ctx context.Context) error {

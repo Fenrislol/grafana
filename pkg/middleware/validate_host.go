@@ -3,8 +3,8 @@ package middleware
 import (
 	"strings"
 
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/setting"
 	"gopkg.in/macaron.v1"
 )
 

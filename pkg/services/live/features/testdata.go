@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/centrifugal/centrifuge"
-	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/logger"
-	"gitlab.com/digitalizm/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/logger"
+	"github.com/Fenrislol/grafana/pkg/models"
 )
 
 // TestdataRunner manages all the `grafana/dashboard/*` channels

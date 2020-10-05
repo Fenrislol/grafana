@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/commands/commandstest"
-	"gitlab.com/digitalizm/grafana/pkg/components/securejsondata"
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/services/sqlstore"
+	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/commands/commandstest"
+	"github.com/Fenrislol/grafana/pkg/components/securejsondata"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/services/sqlstore"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

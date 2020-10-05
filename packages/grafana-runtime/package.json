@@ -10,7 +10,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "http://gitlab.com/digitalizm/grafana.git",
+    "url": "http://github.com/Fenrislol/grafana.git",
     "directory": "packages/grafana-runtime"
   },
   "main": "src/index.ts",

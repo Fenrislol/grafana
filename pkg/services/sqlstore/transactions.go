@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/bus"
-	"gitlab.com/digitalizm/grafana/pkg/infra/log"
-	"gitlab.com/digitalizm/grafana/pkg/util/errutil"
+	"github.com/Fenrislol/grafana/pkg/bus"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/util/errutil"
 	"github.com/mattn/go-sqlite3"
 	"xorm.io/xorm"
 )

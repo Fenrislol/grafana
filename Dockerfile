@@ -20,7 +20,7 @@ FROM golang:1.15.1-alpine3.12 as go-builder
 
 RUN apk add --no-cache gcc g++
 
-WORKDIR $GOPATH/src/gitlab.com/digitalizm/grafana
+WORKDIR $GOPATH/src/github.com/Fenrislol/grafana
 
 COPY go.mod go.sum ./
 
@@ -68,7 +68,7 @@ RUN mkdir -p "$GF_PATHS_HOME/.aws" && \
     chown -R grafana:grafana "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS" "$GF_PATHS_PROVISIONING" && \
     chmod -R 777 "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS" "$GF_PATHS_PROVISIONING"
 
-COPY --from=go-builder /go/src/gitlab.com/digitalizm/grafana/bin/linux-amd64/grafana-server /go/src/gitlab.com/digitalizm/grafana/bin/linux-amd64/grafana-cli ./bin/
+COPY --from=go-builder /go/src/github.com/Fenrislol/grafana/bin/linux-amd64/grafana-server /go/src/github.com/Fenrislol/grafana/bin/linux-amd64/grafana-cli ./bin/
 COPY --from=js-builder /usr/src/app/public ./public
 COPY --from=js-builder /usr/src/app/tools ./tools
 

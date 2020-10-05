@@ -6,11 +6,11 @@ import (
 	"path"
 
 	pluginModel "github.com/grafana/grafana-plugin-model/go/renderer"
-	"gitlab.com/digitalizm/grafana/pkg/infra/log"
-	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin"
-	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin/grpcplugin"
-	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin/pluginextensionv2"
-	"gitlab.com/digitalizm/grafana/pkg/util/errutil"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin"
+	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin/grpcplugin"
+	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin/pluginextensionv2"
+	"github.com/Fenrislol/grafana/pkg/util/errutil"
 )
 
 type RendererPlugin struct {

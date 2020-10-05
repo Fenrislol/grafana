@@ -6,11 +6,11 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"gitlab.com/digitalizm/grafana/pkg/bus"
-	authLogin "gitlab.com/digitalizm/grafana/pkg/login"
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/setting"
-	"gitlab.com/digitalizm/grafana/pkg/util"
+	"github.com/Fenrislol/grafana/pkg/bus"
+	authLogin "github.com/Fenrislol/grafana/pkg/login"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/util"
 )
 
 func TestMiddlewareBasicAuth(t *testing.T) {

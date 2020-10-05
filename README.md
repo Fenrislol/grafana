@@ -4,12 +4,12 @@ The open-source platform for monitoring and observability.
 
 [![License](https://img.shields.io/github/license/grafana/grafana)](LICENSE)
 [![Circle CI](https://img.shields.io/circleci/build/gh/grafana/grafana)](https://circleci.com/gh/grafana/grafana)
-[![Go Report Card](https://goreportcard.com/badge/gitlab.com/digitalizm/grafana)](https://goreportcard.com/report/gitlab.com/digitalizm/grafana)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Fenrislol/grafana)](https://goreportcard.com/report/github.com/Fenrislol/grafana)
 
 
 ## Update grafana
-go get -u  gitlab.com/digitalizm/grafana
-cd /home/webmaster/go/src/gitlab.com/digitalizm/grafana
+go get -u  github.com/Fenrislol/grafana
+cd /home/webmaster/go/src/github.com/Fenrislol/grafana
 
 go run build.go setup
 go run build.go build
@@ -23,7 +23,7 @@ yarn start
 
 
 ## Run
-cd /home/webmaster/go/src/gitlab.com/digitalizm/grafana
+cd /home/webmaster/go/src/github.com/Fenrislol/grafana
 ./bin/linux-amd64/grafana-server --config=./conf/grafana.ini
 
 ================
@@ -57,7 +57,7 @@ If you're interested in contributing to the Grafana project:
 
 - Start by reading the [Contributing guide](/CONTRIBUTING.md).
 - Learn how to set up your local environment, in our [Developer guide](/contribute/developer-guide.md).
-- Explore our [beginner-friendly issues](https://gitlab.com/digitalizm/grafana/issues?q=is%3Aopen+is%3Aissue+label%3A%22beginner+friendly%22).
+- Explore our [beginner-friendly issues](https://github.com/Fenrislol/grafana/issues?q=is%3Aopen+is%3Aissue+label%3A%22beginner+friendly%22).
 
 ## Get involved
 
@@ -68,4 +68,4 @@ If you're interested in contributing to the Grafana project:
 
 ## License
 
-Grafana is distributed under the [Apache 2.0 License](https://gitlab.com/digitalizm/grafana/blob/master/LICENSE).
+Grafana is distributed under the [Apache 2.0 License](https://github.com/Fenrislol/grafana/blob/master/LICENSE).

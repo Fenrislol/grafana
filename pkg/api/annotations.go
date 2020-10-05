@@ -3,11 +3,11 @@ package api
 import (
 	"strings"
 
-	"gitlab.com/digitalizm/grafana/pkg/api/dtos"
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/services/annotations"
-	"gitlab.com/digitalizm/grafana/pkg/services/guardian"
-	"gitlab.com/digitalizm/grafana/pkg/util"
+	"github.com/Fenrislol/grafana/pkg/api/dtos"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/services/annotations"
+	"github.com/Fenrislol/grafana/pkg/services/guardian"
+	"github.com/Fenrislol/grafana/pkg/util"
 )
 
 func GetAnnotations(c *models.ReqContext) Response {

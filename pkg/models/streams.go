@@ -1,7 +1,7 @@
 package models
 
 import (
-	"gitlab.com/digitalizm/grafana/pkg/components/null"
+	"github.com/Fenrislol/grafana/pkg/components/null"
 )
 
 type TimePoint [2]null.Float

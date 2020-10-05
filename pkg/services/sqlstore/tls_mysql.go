@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"gitlab.com/digitalizm/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
 )
 
 var tlslog = log.New("tls_mysql")

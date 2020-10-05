@@ -64,7 +64,7 @@ To get started with issue triage and finding issues that haven't been triaged yo
 
 ### Browse unlabeled issues
 
-The easiest and straight forward way of getting started and finding issues that haven't been triaged is to browse [unlabeled issues](https://gitlab.com/digitalizm/grafana/issues?q=is%3Aopen+is%3Aissue+no%3Alabel) and starting from the bottom and working yourself to the top.
+The easiest and straight forward way of getting started and finding issues that haven't been triaged is to browse [unlabeled issues](https://github.com/Fenrislol/grafana/issues?q=is%3Aopen+is%3Aissue+no%3Alabel) and starting from the bottom and working yourself to the top.
 
 ### Subscribe to all notifications
 
@@ -80,7 +80,7 @@ Before triaging an issue very far, make sure that the issue's author provided th
 
 ### Standard issue information that must be included
 
-Given a certain [issue template]([template](https://gitlab.com/digitalizm/grafana/issues/new/choose)) have been used by the issue author or depending how the issue is perceived by the issue triage responsible, the following should help you understand what standard issue information that must be included.
+Given a certain [issue template]([template](https://github.com/Fenrislol/grafana/issues/new/choose)) have been used by the issue author or depending how the issue is perceived by the issue triage responsible, the following should help you understand what standard issue information that must be included.
 
 #### Bug report?
 
@@ -292,7 +292,7 @@ In many cases the issue author or community as a whole is more suitable to contr
 
 ## Investigation of issues
 
-When an issue has all basic information provided, but the triage responsible haven't been able to reproduce the reported problem at a first glance, the issue is labeled [Needs investigation](https://gitlab.com/digitalizm/grafana/labels/needs%20investigation). Depending on the perceived severity and/or number of [upvotes](https://help.github.com/en/articles/about-conversations-on-github#reacting-to-ideas-in-comments), the investigation will either be delegated to another maintainer for further investigation or put on hold until someone else (maintainer or contributor) picks it up and eventually starts investigating it.
+When an issue has all basic information provided, but the triage responsible haven't been able to reproduce the reported problem at a first glance, the issue is labeled [Needs investigation](https://github.com/Fenrislol/grafana/labels/needs%20investigation). Depending on the perceived severity and/or number of [upvotes](https://help.github.com/en/articles/about-conversations-on-github#reacting-to-ideas-in-comments), the investigation will either be delegated to another maintainer for further investigation or put on hold until someone else (maintainer or contributor) picks it up and eventually starts investigating it.
 
 Investigating issues can be a very time consuming task, especially for the maintainers, given the huge number of combinations of plugins, data sources, platforms, databases, browsers, tools, hardware, integrations, versions and cloud services, etc that are being used with Grafana. There is a certain number of combinations that are more common than others, and these are in general easier for maintainers to investigate.
 

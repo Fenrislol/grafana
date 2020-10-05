@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/models"
 	"github.com/stretchr/testify/assert"
 )
 

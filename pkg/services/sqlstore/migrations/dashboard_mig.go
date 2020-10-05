@@ -1,7 +1,7 @@
 package migrations
 
 import (
-	. "gitlab.com/digitalizm/grafana/pkg/services/sqlstore/migrator"
+	. "github.com/Fenrislol/grafana/pkg/services/sqlstore/migrator"
 )
 
 func addDashboardMigration(mg *Migrator) {

@@ -1,5 +1,5 @@
 // yarn build fails with:
-// >> /Users/hugo/go/src/gitlab.com/digitalizm/grafana/node_modules/stringmap/stringmap.js:99
+// >> /Users/hugo/go/src/github.com/Fenrislol/grafana/node_modules/stringmap/stringmap.js:99
 // >>             throw new Error("StringMap expected string key");
 // require('cypress-failed-log');
 import './commands';

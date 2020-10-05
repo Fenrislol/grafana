@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/infra/metrics"
+	"github.com/Fenrislol/grafana/pkg/infra/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"gopkg.in/macaron.v1"
 )

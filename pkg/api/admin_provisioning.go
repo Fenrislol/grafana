@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 
-	"gitlab.com/digitalizm/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/models"
 )
 
 func (server *HTTPServer) AdminProvisioningReloadDashboards(c *models.ReqContext) Response {

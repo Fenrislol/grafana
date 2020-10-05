@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
+	"github.com/Fenrislol/grafana/pkg/components/simplejson"
 )
 
 var (

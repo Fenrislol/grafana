@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/util"
+	"github.com/Fenrislol/grafana/pkg/util"
 )
 
 type WebdavUploader struct {

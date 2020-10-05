@@ -6,7 +6,7 @@ import (
 
 	"github.com/VividCortex/mysqlerr"
 	"github.com/go-sql-driver/mysql"
-	"gitlab.com/digitalizm/grafana/pkg/util/errutil"
+	"github.com/Fenrislol/grafana/pkg/util/errutil"
 	"xorm.io/xorm"
 )
 

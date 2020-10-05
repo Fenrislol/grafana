@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	es "gitlab.com/digitalizm/grafana/pkg/tsdb/elasticsearch/client"
+	es "github.com/Fenrislol/grafana/pkg/tsdb/elasticsearch/client"
 
-	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
-	"gitlab.com/digitalizm/grafana/pkg/tsdb"
+	"github.com/Fenrislol/grafana/pkg/components/simplejson"
+	"github.com/Fenrislol/grafana/pkg/tsdb"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

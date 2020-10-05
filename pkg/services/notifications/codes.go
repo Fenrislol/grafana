@@ -8,8 +8,8 @@ import (
 
 	"github.com/unknwon/com"
 
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/setting"
 )
 
 const timeLimitCodeLength = 12 + 6 + 40

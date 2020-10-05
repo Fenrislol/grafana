@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/infra/log"
-	"gitlab.com/digitalizm/grafana/pkg/infra/metrics"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/infra/metrics"
 )
 
 // DefaultEvalHandler is responsible for evaluating the alert rule.

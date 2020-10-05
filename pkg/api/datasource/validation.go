@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	"gitlab.com/digitalizm/grafana/pkg/infra/log"
-	"gitlab.com/digitalizm/grafana/pkg/tsdb/mssql"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/tsdb/mssql"
 )
 
 var logger = log.New("datasource")

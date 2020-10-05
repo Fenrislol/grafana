@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/davecgh/go-spew/spew"
-	"gitlab.com/digitalizm/grafana/pkg/infra/log"
-	"gitlab.com/digitalizm/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/models"
 	"gopkg.in/ldap.v3"
 )
 

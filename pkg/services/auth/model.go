@@ -3,7 +3,7 @@ package auth
 import (
 	"fmt"
 
-	"gitlab.com/digitalizm/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/models"
 )
 
 type userAuthToken struct {

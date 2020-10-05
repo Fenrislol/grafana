@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 	"github.com/golang/mock/gomock"
-	"gitlab.com/digitalizm/grafana/pkg/tsdb/cloudwatch/mock_stsiface"
+	"github.com/Fenrislol/grafana/pkg/tsdb/cloudwatch/mock_stsiface"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

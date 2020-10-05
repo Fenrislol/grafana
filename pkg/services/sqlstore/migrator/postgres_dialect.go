@@ -7,7 +7,7 @@ import (
 
 	"github.com/lib/pq"
 
-	"gitlab.com/digitalizm/grafana/pkg/util/errutil"
+	"github.com/Fenrislol/grafana/pkg/util/errutil"
 	"xorm.io/xorm"
 )
 

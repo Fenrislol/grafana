@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/tsdb"
+	"github.com/Fenrislol/grafana/pkg/tsdb"
 )
 
 const rsIdentifier = `__(timeFilter|timeFrom|timeTo|interval|contains|escapeMulti)`

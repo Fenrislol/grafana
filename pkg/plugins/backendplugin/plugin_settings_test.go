@@ -4,7 +4,7 @@ import (
 	"sort"
 	"testing"
 
-	"gitlab.com/digitalizm/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/setting"
 	"github.com/stretchr/testify/require"
 )
 

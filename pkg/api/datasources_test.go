@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"testing"
 
-	"gitlab.com/digitalizm/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/models"
 	"github.com/stretchr/testify/assert"
 
-	"gitlab.com/digitalizm/grafana/pkg/bus"
+	"github.com/Fenrislol/grafana/pkg/bus"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

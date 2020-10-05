@@ -7,9 +7,9 @@ import (
 	rendererV1 "github.com/grafana/grafana-plugin-model/go/renderer"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/grpcplugin"
 	sdkgrpcplugin "github.com/grafana/grafana-plugin-sdk-go/backend/grpcplugin"
-	"gitlab.com/digitalizm/grafana/pkg/infra/log"
-	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin"
-	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin/pluginextensionv2"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin"
+	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin/pluginextensionv2"
 	goplugin "github.com/hashicorp/go-plugin"
 )
 

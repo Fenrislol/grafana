@@ -298,7 +298,7 @@ def init_steps(edition, platform, version_mode, is_downstream=False, install_dep
                     },
                 },
                 'commands': [
-                    'git clone "https://$${GITHUB_TOKEN}@gitlab.com/digitalizm/grafana-enterprise.git"',
+                    'git clone "https://$${GITHUB_TOKEN}@github.com/Fenrislol/grafana-enterprise.git"',
                     'cd grafana-enterprise',
                     'git checkout ${DRONE_COMMIT}',
                 ],
@@ -952,7 +952,7 @@ def get_windows_steps(edition, version_mode, is_downstream=False):
     if edition == 'enterprise':
         # For enterprise, we have to clone both OSS and enterprise and merge the latter into the former
         clone_commands = [
-            'git clone "https://$$env:GITHUB_TOKEN@gitlab.com/digitalizm/grafana-enterprise.git"',
+            'git clone "https://$$env:GITHUB_TOKEN@github.com/Fenrislol/grafana-enterprise.git"',
         ]
         if not is_downstream:
             clone_commands.extend([

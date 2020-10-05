@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/grafana/grafana-plugin-model/go/datasource"
-	"gitlab.com/digitalizm/grafana/pkg/infra/log"
-	"gitlab.com/digitalizm/grafana/pkg/tsdb"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/tsdb"
 )
 
 func TestMapTables(t *testing.T) {

@@ -99,11 +99,11 @@ To add a migration:
 - In the `AddMigrations` function, find the `addXxxMigration` function for the service you want to create a migration for.
 - At the end of the `addXxxMigration` function, register your migration:
 
-[Example](https://gitlab.com/digitalizm/grafana/blob/00d0640b6e778ddaca021670fe851fe00982acf2/pkg/services/sqlstore/migrations/migrations.go#L55-L70)
+[Example](https://github.com/Fenrislol/grafana/blob/00d0640b6e778ddaca021670fe851fe00982acf2/pkg/services/sqlstore/migrations/migrations.go#L55-L70)
 
 ### Implement `DatabaseMigrator`
 
-During initialization, SQL store queries the service registry, and runs migrations for every service that implements the [DatabaseMigrator](https://gitlab.com/digitalizm/grafana/blob/44c2007498c76c2dbb48e8366b4af410f1ee1b98/pkg/registry/registry.go#L101-L106) interface.
+During initialization, SQL store queries the service registry, and runs migrations for every service that implements the [DatabaseMigrator](https://github.com/Fenrislol/grafana/blob/44c2007498c76c2dbb48e8366b4af410f1ee1b98/pkg/registry/registry.go#L101-L106) interface.
 
 To add a migration:
 

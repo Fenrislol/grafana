@@ -24,7 +24,7 @@ The backend plugin feature is implemented with the [HashiCorp plugin system](htt
 
 ## Datasource Plugin Interface
 
-The plugin interface is very simple and described as a Go interface type in [Grafana](https://gitlab.com/digitalizm/grafana/blob/6724aaeff9a332dc73b4ee0f8abe0621f7253142/pkg/tsdb/query_endpoint.go#L10-L12) and as a general [RPC service](https://github.com/grafana/grafana-plugin-model/blob/84176c64269d8060f99e750ee8aba6f062753336/datasource.proto#L96-L98) in the corresponding `.proto` (protocol buffer file):
+The plugin interface is very simple and described as a Go interface type in [Grafana](https://github.com/Fenrislol/grafana/blob/6724aaeff9a332dc73b4ee0f8abe0621f7253142/pkg/tsdb/query_endpoint.go#L10-L12) and as a general [RPC service](https://github.com/grafana/grafana-plugin-model/blob/84176c64269d8060f99e750ee8aba6f062753336/datasource.proto#L96-L98) in the corresponding `.proto` (protocol buffer file):
 
 ```go
 type TsdbQueryEndpoint interface {
@@ -151,7 +151,7 @@ class SimpleJSONDatasource {
 }
 ```
 
-This endpoint gets data in the following format (see [pkg/api/metrics.go](https://gitlab.com/digitalizm/grafana/blob/7b63913dc1d79da07f0329cf19dc4c2704ec488f/pkg/api/metrics.go#L16) and [pkg/api/dtos/models.go](https://gitlab.com/digitalizm/grafana/blob/7b63913dc1d79da07f0329cf19dc4c2704ec488f/pkg/api/dtos/models.go#L43-L47)):
+This endpoint gets data in the following format (see [pkg/api/metrics.go](https://github.com/Fenrislol/grafana/blob/7b63913dc1d79da07f0329cf19dc4c2704ec488f/pkg/api/metrics.go#L16) and [pkg/api/dtos/models.go](https://github.com/Fenrislol/grafana/blob/7b63913dc1d79da07f0329cf19dc4c2704ec488f/pkg/api/dtos/models.go#L43-L47)):
 
 ```js
 {
@@ -175,12 +175,12 @@ This endpoint gets data in the following format (see [pkg/api/metrics.go](https:
 
 There is only one query function but it is possible to move all your queries to the backend. In order to achieve this, you could add a kind of `queryType` field to your query model and check this type in the backend code. The Stackdriver and Cloudwatch core plugins have examples of supporting multiple types of queries if you need/want to do this:
 
-- Stackdriver: [pkg/tsdb/stackdriver/stackdriver.go](https://gitlab.com/digitalizm/grafana/blob/6724aaeff9a332dc73b4ee0f8abe0621f7253142/pkg/tsdb/stackdriver/stackdriver.go#L75-L88)
-- Cloudwatch: [pkg/tsdb/cloudwatch/cloudwatch.go](https://gitlab.com/digitalizm/grafana/blob/7b63913dc1d79da07f0329cf19dc4c2704ec488f/pkg/tsdb/cloudwatch/cloudwatch.go#L62-L74)
+- Stackdriver: [pkg/tsdb/stackdriver/stackdriver.go](https://github.com/Fenrislol/grafana/blob/6724aaeff9a332dc73b4ee0f8abe0621f7253142/pkg/tsdb/stackdriver/stackdriver.go#L75-L88)
+- Cloudwatch: [pkg/tsdb/cloudwatch/cloudwatch.go](https://github.com/Fenrislol/grafana/blob/7b63913dc1d79da07f0329cf19dc4c2704ec488f/pkg/tsdb/cloudwatch/cloudwatch.go#L62-L74)
 
 #### Response format
 
-Go types for the query response can be found in Grafana tsdb models ([pkg/tsdb/models.go](https://gitlab.com/digitalizm/grafana/blob/7b63913dc1d79da07f0329cf19dc4c2704ec488f/pkg/tsdb/models.go#L22-L34)) or in the corresponding protocol buffer file ([datasource.proto](https://github.com/grafana/grafana-plugin-model/blob/84176c64269d8060f99e750ee8aba6f062753336/datasource.proto#L26-L36))
+Go types for the query response can be found in Grafana tsdb models ([pkg/tsdb/models.go](https://github.com/Fenrislol/grafana/blob/7b63913dc1d79da07f0329cf19dc4c2704ec488f/pkg/tsdb/models.go#L22-L34)) or in the corresponding protocol buffer file ([datasource.proto](https://github.com/grafana/grafana-plugin-model/blob/84176c64269d8060f99e750ee8aba6f062753336/datasource.proto#L26-L36))
 
 ```protobuf
 // datasource.proto

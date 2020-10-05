@@ -3,7 +3,7 @@ package es
 import (
 	"strings"
 
-	"gitlab.com/digitalizm/grafana/pkg/tsdb"
+	"github.com/Fenrislol/grafana/pkg/tsdb"
 )
 
 // SearchRequestBuilder represents a builder which can build a search request

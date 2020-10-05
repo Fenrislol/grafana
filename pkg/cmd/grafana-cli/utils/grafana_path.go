@@ -4,8 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/logger"
-	"gitlab.com/digitalizm/grafana/pkg/util/errutil"
+	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/logger"
+	"github.com/Fenrislol/grafana/pkg/util/errutil"
 )
 
 func GetGrafanaPluginDir(currentOS string) string {

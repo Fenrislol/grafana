@@ -6,12 +6,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"gitlab.com/digitalizm/grafana/pkg/bus"
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/services/auth"
-	"gitlab.com/digitalizm/grafana/pkg/services/ldap"
-	"gitlab.com/digitalizm/grafana/pkg/services/multildap"
-	"gitlab.com/digitalizm/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/bus"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/services/auth"
+	"github.com/Fenrislol/grafana/pkg/services/ldap"
+	"github.com/Fenrislol/grafana/pkg/services/multildap"
+	"github.com/Fenrislol/grafana/pkg/setting"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

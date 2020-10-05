@@ -8,7 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
-	"gitlab.com/digitalizm/grafana/pkg/components/null"
+	"github.com/Fenrislol/grafana/pkg/components/null"
 	"github.com/stretchr/testify/require"
 	"github.com/xorcare/pointer"
 )

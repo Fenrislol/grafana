@@ -5,7 +5,7 @@ package remotecache
 import (
 	"testing"
 
-	"gitlab.com/digitalizm/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/setting"
 )
 
 func TestMemcachedCacheStorage(t *testing.T) {

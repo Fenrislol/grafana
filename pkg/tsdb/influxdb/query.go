@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gitlab.com/digitalizm/grafana/pkg/tsdb"
+	"github.com/Fenrislol/grafana/pkg/tsdb"
 )
 
 var (

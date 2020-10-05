@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	"gitlab.com/digitalizm/grafana/pkg/api/datasource"
-	"gitlab.com/digitalizm/grafana/pkg/api/pluginproxy"
-	"gitlab.com/digitalizm/grafana/pkg/infra/metrics"
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/plugins"
+	"github.com/Fenrislol/grafana/pkg/api/datasource"
+	"github.com/Fenrislol/grafana/pkg/api/pluginproxy"
+	"github.com/Fenrislol/grafana/pkg/infra/metrics"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/plugins"
 )
 
 // ProxyDataSourceRequest proxies datasource requests

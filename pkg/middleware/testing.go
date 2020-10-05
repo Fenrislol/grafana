@@ -8,10 +8,10 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"gopkg.in/macaron.v1"
 
-	"gitlab.com/digitalizm/grafana/pkg/infra/remotecache"
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/services/auth"
-	"gitlab.com/digitalizm/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/infra/remotecache"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/services/auth"
+	"github.com/Fenrislol/grafana/pkg/setting"
 )
 
 type scenarioContext struct {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gitlab.com/digitalizm/grafana/pkg/services/sqlstore/migrator"
+	"github.com/Fenrislol/grafana/pkg/services/sqlstore/migrator"
 )
 
 // FilterWhere limits the set of dashboard IDs to the dashboards for

@@ -3,14 +3,14 @@ package commands
 import (
 	"strings"
 
-	"gitlab.com/digitalizm/grafana/pkg/bus"
-	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/commands/datamigrations"
-	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/logger"
-	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/services"
-	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/utils"
-	"gitlab.com/digitalizm/grafana/pkg/services/sqlstore"
-	"gitlab.com/digitalizm/grafana/pkg/setting"
-	"gitlab.com/digitalizm/grafana/pkg/util/errutil"
+	"github.com/Fenrislol/grafana/pkg/bus"
+	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/commands/datamigrations"
+	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/logger"
+	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/services"
+	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/utils"
+	"github.com/Fenrislol/grafana/pkg/services/sqlstore"
+	"github.com/Fenrislol/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/util/errutil"
 	"github.com/urfave/cli/v2"
 )
 

@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/services/provisioning/dashboards"
-	"gitlab.com/digitalizm/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/services/provisioning/dashboards"
+	"github.com/Fenrislol/grafana/pkg/setting"
 	"github.com/stretchr/testify/assert"
 )
 

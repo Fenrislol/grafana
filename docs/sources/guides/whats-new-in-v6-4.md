@@ -12,7 +12,7 @@ weight = -15
 
 # What's new in Grafana v6.4
 
-For all details please read the full [CHANGELOG.md](https://gitlab.com/digitalizm/grafana/blob/master/CHANGELOG.md).
+For all details please read the full [CHANGELOG.md](https://github.com/Fenrislol/grafana/blob/master/CHANGELOG.md).
 
 ## Highlights
 
@@ -101,7 +101,7 @@ streaming in the future!
 
 [grafana-toolkit](https://www.npmjs.com/package/@grafana/toolkit/v/6.4.0-beta.1) is our attempt to simplify the life of plugin developers. It’s a CLI that helps them focus on the core value of their plugin rather than the ceremony around setting up the environment, configs, tests and builds. It’s available as an NPM package under `next` tag.
 
-You can read more about the grafana-toolkit [in the Readme](https://gitlab.com/digitalizm/grafana/blob/master/packages/grafana-toolkit/README.md) and play with it by trying out our [react panel](https://github.com/grafana/simple-react-panel) or [angular panel](https://github.com/grafana/simple-angular-panel) templates.
+You can read more about the grafana-toolkit [in the Readme](https://github.com/Fenrislol/grafana/blob/master/packages/grafana-toolkit/README.md) and play with it by trying out our [react panel](https://github.com/grafana/simple-react-panel) or [angular panel](https://github.com/grafana/simple-angular-panel) templates.
 
 ## PhantomJS deprecation
 
@@ -145,4 +145,4 @@ See [upgrade notes](/installation/upgrading/#upgrading-to-v6-4).
 
 ## Changelog
 
-Check out the [CHANGELOG.md](https://gitlab.com/digitalizm/grafana/blob/master/CHANGELOG.md) file for a complete list of new features, changes, and bug fixes.
+Check out the [CHANGELOG.md](https://github.com/Fenrislol/grafana/blob/master/CHANGELOG.md) file for a complete list of new features, changes, and bug fixes.

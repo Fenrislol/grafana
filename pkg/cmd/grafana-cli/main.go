@@ -6,10 +6,10 @@ import (
 	"runtime"
 
 	"github.com/fatih/color"
-	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/commands"
-	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/logger"
-	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/services"
-	"gitlab.com/digitalizm/grafana/pkg/cmd/grafana-cli/utils"
+	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/commands"
+	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/logger"
+	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/services"
+	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/utils"
 	"github.com/urfave/cli/v2"
 )
 

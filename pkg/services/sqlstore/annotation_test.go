@@ -5,7 +5,7 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"gitlab.com/digitalizm/grafana/pkg/services/annotations"
+	"github.com/Fenrislol/grafana/pkg/services/annotations"
 )
 
 func TestAnnotations(t *testing.T) {

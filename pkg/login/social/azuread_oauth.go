@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/util/errutil"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/util/errutil"
 
 	"golang.org/x/oauth2"
 	"gopkg.in/square/go-jose.v2/jwt"

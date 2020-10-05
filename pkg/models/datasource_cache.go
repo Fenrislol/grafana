@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/infra/metrics/metricutil"
-	"gitlab.com/digitalizm/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/infra/metrics/metricutil"
+	"github.com/Fenrislol/grafana/pkg/setting"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )

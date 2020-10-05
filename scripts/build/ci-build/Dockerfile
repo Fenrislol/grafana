@@ -133,7 +133,7 @@ RUN apt-get update && \
 
 # We build our own musl cross-compilers via the musl-cross-make project, on the same OS as this image's base image,
 # to ensure compatibility. We also make sure to target musl 1.1.x, since musl 1.2.x introduces 64-bit time types
-# that breaks compatibility on some 32-bit architectures (https://gitlab.com/digitalizm/grafana/issues/23500).
+# that breaks compatibility on some 32-bit architectures (https://github.com/Fenrislol/grafana/issues/23500).
 #
 # Use ARG so as not to persist environment variable in image
 ARG CHKSUM_ARMV7_MUSL=5db487fb0a4aa61667de45a9cfbf7940360bd7256583b8a1e7810b4d9dd0e02a8aac737ca634b57bf269195e776ef503832ed22a6689a1c8fcdcc956f846bef7

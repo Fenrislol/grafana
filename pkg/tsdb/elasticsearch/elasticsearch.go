@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/tsdb"
-	es "gitlab.com/digitalizm/grafana/pkg/tsdb/elasticsearch/client"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/tsdb"
+	es "github.com/Fenrislol/grafana/pkg/tsdb/elasticsearch/client"
 )
 
 // ElasticsearchExecutor represents a handler for handling elasticsearch datasource request

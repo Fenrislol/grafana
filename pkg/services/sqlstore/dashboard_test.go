@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
-	"gitlab.com/digitalizm/grafana/pkg/models"
-	"gitlab.com/digitalizm/grafana/pkg/services/search"
-	"gitlab.com/digitalizm/grafana/pkg/services/sqlstore/searchstore"
-	"gitlab.com/digitalizm/grafana/pkg/setting"
-	"gitlab.com/digitalizm/grafana/pkg/util"
+	"github.com/Fenrislol/grafana/pkg/components/simplejson"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/services/search"
+	"github.com/Fenrislol/grafana/pkg/services/sqlstore/searchstore"
+	"github.com/Fenrislol/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/util"
 
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"

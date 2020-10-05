@@ -3,7 +3,7 @@ package alerting
 import (
 	"encoding/json"
 
-	"gitlab.com/digitalizm/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/models"
 )
 
 // DatasourceAlertUsage is a hash where the key represents the

@@ -108,7 +108,7 @@ const changelogTaskRunner = ({ milestone }: ChangelogOptions) =>
   });
 
 function getMarkdownLineForIssue(item: any) {
-  const githubGrafanaUrl = 'https://gitlab.com/digitalizm/grafana';
+  const githubGrafanaUrl = 'https://github.com/Fenrislol/grafana';
   let markdown = '';
   let title: string = item.title.replace(/^([^:]*)/, (_match: any, g1: any) => {
     return `**${g1}**`;

@@ -36,7 +36,7 @@ WARNINGS_COUNT_LIMIT=900
 
 if [ "$WARNINGS_COUNT" -gt $WARNINGS_COUNT_LIMIT ]; then
   echo -e "API Extractor warnings/errors $WARNINGS_COUNT exceeded $WARNINGS_COUNT_LIMIT so failing build.\n"
-  echo -e "Please go to: https://gitlab.com/digitalizm/grafana/blob/master/contribute/style-guides/code-comments.md for more information on how to add code comments."
+  echo -e "Please go to: https://github.com/Fenrislol/grafana/blob/master/contribute/style-guides/code-comments.md for more information on how to add code comments."
   report_reference_docs_metrics "$CIRCLE_BRANCH" "$WARNINGS_COUNT"
   exit 1
 fi

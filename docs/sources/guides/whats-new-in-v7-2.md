@@ -12,7 +12,7 @@ weight = -16
 
 # What's new in Grafana v7.2
 
-This topic includes the release notes for the Grafana v7.2. For all details, read the full [CHANGELOG.md](https://gitlab.com/digitalizm/grafana/blob/master/CHANGELOG.md).
+This topic includes the release notes for the Grafana v7.2. For all details, read the full [CHANGELOG.md](https://github.com/Fenrislol/grafana/blob/master/CHANGELOG.md).
 
 
 The main highlights are:
@@ -150,7 +150,7 @@ See [upgrade notes]({{< relref "../installation/upgrading.md" >}}).
 
 ## Changelog
 
-Check out [CHANGELOG.md](https://gitlab.com/digitalizm/grafana/blob/master/CHANGELOG.md) for a complete list of new features, changes, and bug fixes.
+Check out [CHANGELOG.md](https://github.com/Fenrislol/grafana/blob/master/CHANGELOG.md) for a complete list of new features, changes, and bug fixes.
 
 ## What's new in other parts of the Grafana ecosystem
 
