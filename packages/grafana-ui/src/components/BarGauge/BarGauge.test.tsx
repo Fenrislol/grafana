@@ -1,34 +1,48 @@
 import React from 'react';
 import { shallow } from 'enzyme';
-import { BarGauge, Props, getValueColor, getBasicAndGradientStyles, getBarGradient, getTitleStyles } from './BarGauge';
-import { VizOrientation, DisplayValue } from '../../types';
+import { DisplayValue, VizOrientation, ThresholdsMode, Field, FieldType, getDisplayProcessor } from '@grafana/data';
+import {
+  BarGauge,
+  Props,
+  getValueColor,
+  getBasicAndGradientStyles,
+  getBarGradient,
+  getTitleStyles,
+  getValuePercent,
+  BarGaugeDisplayMode,
+} from './BarGauge';
 import { getTheme } from '../../themes';
-
-// jest.mock('jquery', () => ({
-//   plot: jest.fn(),
-// }));
 
 const green = '#73BF69';
 const orange = '#FF9830';
-// const red = '#BB';
 
 function getProps(propOverrides?: Partial<Props>): Props {
+  const field: Partial<Field> = {
+    type: FieldType.number,
+    config: {
+      min: 0,
+      max: 100,
+      thresholds: {
+        mode: ThresholdsMode.Absolute,
+        steps: [
+          { value: -Infinity, color: 'green' },
+          { value: 70, color: 'orange' },
+          { value: 90, color: 'red' },
+        ],
+      },
+    },
+  };
+  const theme = getTheme();
+  field.display = getDisplayProcessor({ field, theme });
+
   const props: Props = {
-    maxValue: 100,
-    minValue: 0,
-    displayMode: 'basic',
-    thresholds: [
-      { index: 0, value: -Infinity, color: 'green' },
-      { index: 1, value: 70, color: 'orange' },
-      { index: 2, value: 90, color: 'red' },
-    ],
+    displayMode: BarGaugeDisplayMode.Basic,
+    field: field.config!,
+    display: field.display!,
     height: 300,
     width: 300,
-    value: {
-      text: '25',
-      numeric: 25,
-    },
-    theme: getTheme(),
+    value: field.display(25),
+    theme,
     orientation: VizOrientation.Horizontal,
   };
 
@@ -54,12 +68,32 @@ function getValue(value: number, title?: string): DisplayValue {
 describe('BarGauge', () => {
   describe('Get value color', () => {
     it('should get the threshold color if value is same as a threshold', () => {
-      const props = getProps({ value: getValue(70) });
+      const props = getProps();
+      props.value = props.display!(70);
       expect(getValueColor(props)).toEqual(orange);
     });
     it('should get the base threshold', () => {
-      const props = getProps({ value: getValue(-10) });
+      const props = getProps();
+      props.value = props.display!(-10);
       expect(getValueColor(props)).toEqual(green);
+    });
+  });
+
+  describe('Get value percent', () => {
+    it('0 to 100 and value 40', () => {
+      expect(getValuePercent(40, 0, 100)).toEqual(0.4);
+    });
+
+    it('50 to 100 and value 75', () => {
+      expect(getValuePercent(75, 50, 100)).toEqual(0.5);
+    });
+
+    it('-30 to 30 and value 0', () => {
+      expect(getValuePercent(0, -30, 30)).toEqual(0.5);
+    });
+
+    it('-30 to 30 and value 30', () => {
+      expect(getValuePercent(30, -30, 30)).toEqual(1);
     });
   });
 
@@ -84,6 +118,20 @@ describe('BarGauge', () => {
       });
       const styles = getBasicAndGradientStyles(props);
       expect(styles.bar.height).toBe('249px');
+      expect(styles.emptyBar.bottom).toBe('-3px');
+    });
+  });
+
+  describe('Horizontal bar', () => {
+    it('should stretch items', () => {
+      const props = getProps({
+        height: 300,
+        value: getValue(100, 'ServerA'),
+        orientation: VizOrientation.Horizontal,
+      });
+      const styles = getBasicAndGradientStyles(props);
+      expect(styles.wrapper.alignItems).toBe('stretch');
+      expect(styles.emptyBar.left).toBe('-3px');
     });
   });
 
@@ -108,6 +156,38 @@ describe('BarGauge', () => {
       });
       const styles = getTitleStyles(props);
       expect(styles.wrapper.flexDirection).toBe('row');
+    });
+
+    it('should calculate title width based on title', () => {
+      const props = getProps({
+        height: 30,
+        value: getValue(100, 'AA'),
+        orientation: VizOrientation.Horizontal,
+      });
+      const styles = getTitleStyles(props);
+      expect(styles.title.width).toBe('17px');
+
+      const props2 = getProps({
+        height: 30,
+        value: getValue(120, 'Longer title with many words'),
+        orientation: VizOrientation.Horizontal,
+      });
+      const styles2 = getTitleStyles(props2);
+      expect(styles2.title.width).toBe('43px');
+    });
+
+    it('should use alignmentFactors if provided', () => {
+      const props = getProps({
+        height: 30,
+        value: getValue(100, 'AA'),
+        alignmentFactors: {
+          title: 'Super duper long title',
+          text: '1000',
+        },
+        orientation: VizOrientation.Horizontal,
+      });
+      const styles = getTitleStyles(props);
+      expect(styles.title.width).toBe('37px');
     });
   });
 

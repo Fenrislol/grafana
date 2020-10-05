@@ -1,12 +1,14 @@
 import React, { InputHTMLAttributes, FunctionComponent } from 'react';
-import { FormLabel } from '../FormLabel/FormLabel';
-import { PopperContent } from '../Tooltip/PopperController';
+import { cx } from 'emotion';
+import { InlineFormLabel } from '../FormLabel/FormLabel';
+import { PopoverContent } from '../Tooltip/Tooltip';
 
 export interface Props extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
-  tooltip?: PopperContent<any>;
+  tooltip?: PopoverContent;
   labelWidth?: number;
-  inputWidth?: number;
+  // If null no width will be specified not even default one
+  inputWidth?: number | null;
   inputEl?: React.ReactNode;
 }
 
@@ -25,14 +27,17 @@ export const FormField: FunctionComponent<Props> = ({
   labelWidth,
   inputWidth,
   inputEl,
+  className,
   ...inputProps
 }) => {
   return (
-    <div className="form-field">
-      <FormLabel width={labelWidth} tooltip={tooltip}>
+    <div className={cx('form-field', className)}>
+      <InlineFormLabel width={labelWidth} tooltip={tooltip}>
         {label}
-      </FormLabel>
-      {inputEl || <input type="text" className={`gf-form-input width-${inputWidth}`} {...inputProps} />}
+      </InlineFormLabel>
+      {inputEl || (
+        <input type="text" className={`gf-form-input ${inputWidth ? `width-${inputWidth}` : ''}`} {...inputProps} />
+      )}
     </div>
   );
 };

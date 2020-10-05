@@ -32,6 +32,15 @@ describe('InfluxQueryBuilder', () => {
       expect(query).toBe('SHOW TAG KEYS WHERE "host" = \'se1\'');
     });
 
+    it('should ignore condition if operator is a value operator', () => {
+      const builder = new InfluxQueryBuilder({
+        measurement: '',
+        tags: [{ key: 'value', value: '10', operator: '>' }],
+      });
+      const query = builder.buildExploreQuery('TAG_KEYS');
+      expect(query).toBe('SHOW TAG KEYS');
+    });
+
     it('should have no conditions in measurement query for query with no tags', () => {
       const builder = new InfluxQueryBuilder({ measurement: '', tags: [] });
       const query = builder.buildExploreQuery('MEASUREMENTS');
@@ -86,7 +95,10 @@ describe('InfluxQueryBuilder', () => {
     it('should have measurement tag condition and tag name IN filter in tag values query', () => {
       const builder = new InfluxQueryBuilder({
         measurement: 'cpu',
-        tags: [{ key: 'app', value: 'email' }, { key: 'host', value: 'server1' }],
+        tags: [
+          { key: 'app', value: 'email' },
+          { key: 'host', value: 'server1' },
+        ],
       });
       const query = builder.buildExploreQuery('TAG_VALUES', 'app');
       expect(query).toBe('SHOW TAG VALUES FROM "cpu" WITH KEY = "app" WHERE "host" = \'server1\'');
@@ -96,7 +108,10 @@ describe('InfluxQueryBuilder', () => {
       const builder = new InfluxQueryBuilder({
         measurement: 'cpu',
         policy: 'one_week',
-        tags: [{ key: 'app', value: 'email' }, { key: 'host', value: 'server1' }],
+        tags: [
+          { key: 'app', value: 'email' },
+          { key: 'host', value: 'server1' },
+        ],
       });
       const query = builder.buildExploreQuery('TAG_VALUES', 'app');
       expect(query).toBe('SHOW TAG VALUES FROM "one_week"."cpu" WITH KEY = "app" WHERE "host" = \'server1\'');

@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/maksimmernikov/grafana/pkg/api/pluginproxy"
-	"github.com/maksimmernikov/grafana/pkg/log"
-	"github.com/maksimmernikov/grafana/pkg/middleware"
-	m "github.com/maksimmernikov/grafana/pkg/models"
-	"github.com/maksimmernikov/grafana/pkg/plugins"
-	"github.com/maksimmernikov/grafana/pkg/util"
+	"github.com/grafana/grafana/pkg/api/pluginproxy"
+	"github.com/grafana/grafana/pkg/infra/log"
+	"github.com/grafana/grafana/pkg/middleware"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/plugins"
+	"github.com/grafana/grafana/pkg/util"
 	macaron "gopkg.in/macaron.v1"
 )
 
@@ -27,7 +27,6 @@ func (hs *HTTPServer) initAppPluginRoutes(r *macaron.Macaron) {
 		Dial: (&net.Dialer{
 			Timeout:   30 * time.Second,
 			KeepAlive: 30 * time.Second,
-			DualStack: true,
 		}).Dial,
 		TLSHandshakeTimeout: 10 * time.Second,
 	}
@@ -41,21 +40,21 @@ func (hs *HTTPServer) initAppPluginRoutes(r *macaron.Macaron) {
 			}))
 
 			if route.ReqRole != "" {
-				if route.ReqRole == m.ROLE_ADMIN {
-					handlers = append(handlers, middleware.RoleAuth(m.ROLE_ADMIN))
-				} else if route.ReqRole == m.ROLE_EDITOR {
-					handlers = append(handlers, middleware.RoleAuth(m.ROLE_EDITOR, m.ROLE_ADMIN))
+				if route.ReqRole == models.ROLE_ADMIN {
+					handlers = append(handlers, middleware.RoleAuth(models.ROLE_ADMIN))
+				} else if route.ReqRole == models.ROLE_EDITOR {
+					handlers = append(handlers, middleware.RoleAuth(models.ROLE_EDITOR, models.ROLE_ADMIN))
 				}
 			}
 			handlers = append(handlers, AppPluginRoute(route, plugin.Id, hs))
 			r.Route(url, route.Method, handlers...)
-			log.Debug("Plugins: Adding proxy route %s", url)
+			log.Debugf("Plugins: Adding proxy route %s", url)
 		}
 	}
 }
 
 func AppPluginRoute(route *plugins.AppPluginRoute, appID string, hs *HTTPServer) macaron.Handler {
-	return func(c *m.ReqContext) {
+	return func(c *models.ReqContext) {
 		path := c.Params("*")
 
 		proxy := pluginproxy.NewApiPluginProxy(c, path, route, appID, hs.Cfg)

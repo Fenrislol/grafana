@@ -1,49 +1,51 @@
 import { useState, useEffect } from 'react';
-import { DataSourceStatus } from '@grafana/ui/src/types/datasource';
+import { isEqual } from 'lodash';
+import { AbsoluteTimeRange } from '@grafana/data';
+import { CascaderOption } from '@grafana/ui';
 
 import LokiLanguageProvider from 'app/plugins/datasource/loki/language_provider';
-import { CascaderOption } from 'app/plugins/datasource/loki/components/LokiQueryFieldForm';
 import { useRefMounted } from 'app/core/hooks/useRefMounted';
 
 /**
  *
  * @param languageProvider
  * @param languageProviderInitialised
- * @param activeOption rc-cascader provided option used to fetch option's values that hasn't been loaded yet
+ * @param absoluteRange
  *
  * @description Fetches missing labels and enables labels refresh
  */
 export const useLokiLabels = (
   languageProvider: LokiLanguageProvider,
   languageProviderInitialised: boolean,
-  activeOption: CascaderOption[],
-  datasourceStatus: DataSourceStatus,
-  initialDatasourceStatus?: DataSourceStatus // used for test purposes
+  absoluteRange: AbsoluteTimeRange
 ) => {
   const mounted = useRefMounted();
 
   // State
-  const [logLabelOptions, setLogLabelOptions] = useState([]);
+  const [logLabelOptions, setLogLabelOptions] = useState<any>([]);
   const [shouldTryRefreshLabels, setRefreshLabels] = useState(false);
-  const [prevDatasourceStatus, setPrevDatasourceStatus] = useState(
-    initialDatasourceStatus || DataSourceStatus.Connected
-  );
-  const [shouldForceRefreshLabels, setForceRefreshLabels] = useState(false);
+  const [prevAbsoluteRange, setPrevAbsoluteRange] = useState<AbsoluteTimeRange | null>(null);
+  /**
+   * Holds information about currently selected option from rc-cascader to perform effect
+   * that loads option values not fetched yet. Based on that useLokiLabels hook decides whether or not
+   * the option requires additional data fetching
+   */
+  const [activeOption, setActiveOption] = useState<CascaderOption[]>([]);
 
   // Async
   const fetchOptionValues = async (option: string) => {
-    await languageProvider.fetchLabelValues(option);
+    await languageProvider.fetchLabelValues(option, absoluteRange);
     if (mounted.current) {
       setLogLabelOptions(languageProvider.logLabelOptions);
     }
   };
 
   const tryLabelsRefresh = async () => {
-    await languageProvider.refreshLogLabels(shouldForceRefreshLabels);
+    await languageProvider.refreshLogLabels(absoluteRange, !isEqual(absoluteRange, prevAbsoluteRange));
+    setPrevAbsoluteRange(absoluteRange);
 
     if (mounted.current) {
       setRefreshLabels(false);
-      setForceRefreshLabels(false);
       setLogLabelOptions(languageProvider.logLabelOptions);
     }
   };
@@ -57,7 +59,7 @@ export const useLokiLabels = (
     if (languageProviderInitialised) {
       const targetOption = activeOption[activeOption.length - 1];
       if (targetOption) {
-        const nextOptions = logLabelOptions.map(option => {
+        const nextOptions = logLabelOptions.map((option: any) => {
           if (option.value === targetOption.value) {
             return {
               ...option,
@@ -72,27 +74,25 @@ export const useLokiLabels = (
     }
   }, [activeOption]);
 
-  // This effect is performed on shouldTryRefreshLabels or shouldForceRefreshLabels state change only.
+  // This effect is performed on shouldTryRefreshLabels state change only.
   // Since shouldTryRefreshLabels is reset AFTER the labels are refreshed we are secured in case of trying to refresh
   // when previous refresh hasn't finished yet
   useEffect(() => {
-    if (shouldTryRefreshLabels || shouldForceRefreshLabels) {
+    if (shouldTryRefreshLabels) {
       tryLabelsRefresh();
     }
-  }, [shouldTryRefreshLabels, shouldForceRefreshLabels]);
+  }, [shouldTryRefreshLabels]);
 
-  // This effect is performed on datasourceStatus state change only.
-  // We want to make sure to only force refresh AFTER a disconnected state thats why we store the previous datasourceStatus in state
+  // Initialize labels from the provider after it gets initialized (it's initialisation happens outside of this hook)
   useEffect(() => {
-    if (datasourceStatus === DataSourceStatus.Connected && prevDatasourceStatus === DataSourceStatus.Disconnected) {
-      setForceRefreshLabels(true);
+    if (languageProviderInitialised) {
+      setLogLabelOptions(languageProvider.logLabelOptions);
     }
-    setPrevDatasourceStatus(datasourceStatus);
-  }, [datasourceStatus]);
+  }, [languageProviderInitialised]);
 
   return {
     logLabelOptions,
-    setLogLabelOptions,
     refreshLabels: () => setRefreshLabels(true),
+    setActiveOption,
   };
 };

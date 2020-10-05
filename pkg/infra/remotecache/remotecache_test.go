@@ -7,6 +7,7 @@ import (
 	"github.com/maksimmernikov/grafana/pkg/services/sqlstore"
 	"github.com/maksimmernikov/grafana/pkg/setting"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type CacheableStruct struct {
@@ -29,19 +30,17 @@ func createTestClient(t *testing.T, opts *setting.RemoteCacheOptions, sqlstore *
 	}
 
 	err := dc.Init()
-	if err != nil {
-		t.Fatalf("failed to init client for test. error: %v", err)
-	}
+	require.Nil(t, err, "Failed to init client for test")
 
 	return dc
 }
 
 func TestCachedBasedOnConfig(t *testing.T) {
-
 	cfg := setting.NewCfg()
-	cfg.Load(&setting.CommandLineArgs{
+	err := cfg.Load(&setting.CommandLineArgs{
 		HomePath: "../../../",
 	})
+	require.Nil(t, err, "Failed to load config")
 
 	client := createTestClient(t, cfg.RemoteCacheOptions, sqlstore.InitTestDB(t))
 	runTestsForClient(t, client)
@@ -84,7 +83,7 @@ func canNotFetchExpiredItems(t *testing.T, client CacheStorage) {
 	err := client.Set("key1", cacheableStruct, time.Second)
 	assert.Equal(t, err, nil)
 
-	//not sure how this can be avoided when testing redis/memcached :/
+	// not sure how this can be avoided when testing redis/memcached :/
 	<-time.After(time.Second + time.Millisecond)
 
 	// should not be able to read that value since its expired

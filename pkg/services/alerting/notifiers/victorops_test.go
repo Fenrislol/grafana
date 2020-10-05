@@ -3,20 +3,19 @@ package notifiers
 import (
 	"testing"
 
-	"github.com/maksimmernikov/grafana/pkg/components/simplejson"
-	m "github.com/maksimmernikov/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/components/simplejson"
+	"github.com/grafana/grafana/pkg/models"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestVictoropsNotifier(t *testing.T) {
 	Convey("Victorops notifier tests", t, func() {
-
 		Convey("Parsing alert notification from settings", func() {
 			Convey("empty settings should return error", func() {
 				json := `{ }`
 
 				settingsJSON, _ := simplejson.NewJson([]byte(json))
-				model := &m.AlertNotification{
+				model := &models.AlertNotification{
 					Name:     "victorops_testing",
 					Type:     "victorops",
 					Settings: settingsJSON,
@@ -33,7 +32,7 @@ func TestVictoropsNotifier(t *testing.T) {
 				}`
 
 				settingsJSON, _ := simplejson.NewJson([]byte(json))
-				model := &m.AlertNotification{
+				model := &models.AlertNotification{
 					Name:     "victorops_testing",
 					Type:     "victorops",
 					Settings: settingsJSON,

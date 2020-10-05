@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# When not limiting the open file descritors limit, the memory consumption of
+# When not limiting the open file descriptors limit, the memory consumption of
 # slapd is absurdly high. See https://github.com/docker/docker/issues/8231
 ulimit -n 8192
 
@@ -48,10 +48,6 @@ EOF
     for dc_part in "${dc_parts[@]}"; do
         dc_string="$dc_string,dc=$dc_part"
     done
-
-    base_string="BASE ${dc_string:1}"
-
-    sed -i "s/^#BASE.*/${base_string}/g" /etc/ldap/ldap.conf
 
     if [[ -n "$SLAPD_CONFIG_PASSWORD" ]]; then
         password_hash=`slappasswd -s "${SLAPD_CONFIG_PASSWORD}"`

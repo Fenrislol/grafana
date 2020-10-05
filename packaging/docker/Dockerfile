@@ -1,23 +1,20 @@
-ARG BASE_IMAGE=debian:stretch-slim
+ARG BASE_IMAGE=alpine:3.12
 FROM ${BASE_IMAGE}
 
-ARG GRAFANA_TGZ="grafana-latest.linux-x64.tar.gz"
+ARG GRAFANA_TGZ="grafana-latest.linux-x64-musl.tar.gz"
 
-RUN apt-get update && apt-get install -qq -y tar && \
-    apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/*
+# Make sure we have Gnu tar
+RUN apk add --no-cache tar
 
 COPY ${GRAFANA_TGZ} /tmp/grafana.tar.gz
 
 # Change to tar xfzv to make tar print every file it extracts
-RUN mkdir /tmp/grafana && tar xfz /tmp/grafana.tar.gz --strip-components=1 -C /tmp/grafana
+RUN mkdir /tmp/grafana && tar xzf /tmp/grafana.tar.gz --strip-components=1 -C /tmp/grafana
 
-ARG BASE_IMAGE=debian:stretch-slim
 FROM ${BASE_IMAGE}
 
 ARG GF_UID="472"
 ARG GF_GID="472"
-ARG DEBIAN_FRONTEND=noninteractive
 
 ENV PATH=/usr/share/grafana/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     GF_PATHS_CONFIG="/etc/grafana/grafana.ini" \
@@ -29,26 +26,40 @@ ENV PATH=/usr/share/grafana/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bi
 
 WORKDIR $GF_PATHS_HOME
 
-RUN apt-get update && apt-get -y upgrade && \
-    apt-get install -qq -y libfontconfig1 ca-certificates curl && \
-    apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache ca-certificates bash tzdata && \
+    apk add --no-cache openssl musl-utils
+
+# Oracle Support for x86_64 only
+RUN if [ `arch` = "x86_64" ]; then \
+      apk add --no-cache libaio libnsl && \
+      ln -s /usr/lib/libnsl.so.2 /usr/lib/libnsl.so.1 && \
+      wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.30-r0/glibc-2.30-r0.apk \
+        -O /tmp/glibc-2.30-r0.apk && \
+      wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.30-r0/glibc-bin-2.30-r0.apk \
+        -O /tmp/glibc-bin-2.30-r0.apk && \
+      apk add --allow-untrusted /tmp/glibc-2.30-r0.apk /tmp/glibc-bin-2.30-r0.apk && \
+      rm -f /tmp/glibc-2.30-r0.apk && \
+      rm -f /tmp/glibc-bin-2.30-r0.apk && \
+      rm -f /lib/ld-linux-x86-64.so.2 && \
+      rm -f /etc/ld.so.cache; \
+    fi
 
 COPY --from=0 /tmp/grafana "$GF_PATHS_HOME"
 
 RUN mkdir -p "$GF_PATHS_HOME/.aws" && \
-    groupadd -r -g $GF_GID grafana && \
-    useradd -r -u $GF_UID -g grafana grafana && \
+    addgroup -S -g $GF_GID grafana && \
+    adduser -S -u $GF_UID -G grafana grafana && \
     mkdir -p "$GF_PATHS_PROVISIONING/datasources" \
              "$GF_PATHS_PROVISIONING/dashboards" \
              "$GF_PATHS_PROVISIONING/notifiers" \
+             "$GF_PATHS_PROVISIONING/plugins" \
              "$GF_PATHS_LOGS" \
              "$GF_PATHS_PLUGINS" \
              "$GF_PATHS_DATA" && \
     cp "$GF_PATHS_HOME/conf/sample.ini" "$GF_PATHS_CONFIG" && \
     cp "$GF_PATHS_HOME/conf/ldap.toml" /etc/grafana/ldap.toml && \
-    chown -R grafana:grafana "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS" && \
-    chmod 777 "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS"
+    chown -R grafana:grafana "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS" "$GF_PATHS_PROVISIONING" && \
+    chmod -R 777 "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS" "$GF_PATHS_PROVISIONING"
 
 EXPOSE 3000
 

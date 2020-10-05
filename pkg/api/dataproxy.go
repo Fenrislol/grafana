@@ -1,19 +1,24 @@
 package api
 
 import (
-	"github.com/maksimmernikov/grafana/pkg/api/pluginproxy"
-	"github.com/maksimmernikov/grafana/pkg/infra/metrics"
-	m "github.com/maksimmernikov/grafana/pkg/models"
-	"github.com/maksimmernikov/grafana/pkg/plugins"
+	"errors"
+	"fmt"
+
+	"github.com/grafana/grafana/pkg/api/datasource"
+	"github.com/grafana/grafana/pkg/api/pluginproxy"
+	"github.com/grafana/grafana/pkg/infra/metrics"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/plugins"
 )
 
-func (hs *HTTPServer) ProxyDataSourceRequest(c *m.ReqContext) {
-	c.TimeRequest(metrics.M_DataSource_ProxyReq_Timer)
+// ProxyDataSourceRequest proxies datasource requests
+func (hs *HTTPServer) ProxyDataSourceRequest(c *models.ReqContext) {
+	c.TimeRequest(metrics.MDataSourceProxyReqTimer)
 
-	dsId := c.ParamsInt64(":id")
-	ds, err := hs.DatasourceCache.GetDatasource(dsId, c.SignedInUser, c.SkipCache)
+	dsID := c.ParamsInt64(":id")
+	ds, err := hs.DatasourceCache.GetDatasource(dsID, c.SignedInUser, c.SkipCache)
 	if err != nil {
-		if err == m.ErrDataSourceAccessDenied {
+		if err == models.ErrDataSourceAccessDenied {
 			c.JsonApiErr(403, "Access denied to datasource", err)
 			return
 		}
@@ -31,7 +36,15 @@ func (hs *HTTPServer) ProxyDataSourceRequest(c *m.ReqContext) {
 	// macaron does not include trailing slashes when resolving a wildcard path
 	proxyPath := ensureProxyPathTrailingSlash(c.Req.URL.Path, c.Params("*"))
 
-	proxy := pluginproxy.NewDataSourceProxy(ds, plugin, c, proxyPath, hs.Cfg)
+	proxy, err := pluginproxy.NewDataSourceProxy(ds, plugin, c, proxyPath, hs.Cfg)
+	if err != nil {
+		if errors.Is(err, datasource.URLValidationError{}) {
+			c.JsonApiErr(400, fmt.Sprintf("Invalid data source URL: %q", ds.Url), err)
+		} else {
+			c.JsonApiErr(500, "Failed creating data source proxy", err)
+		}
+		return
+	}
 	proxy.HandleRequest()
 }
 

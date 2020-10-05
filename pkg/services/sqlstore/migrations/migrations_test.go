@@ -3,16 +3,16 @@ package migrations
 import (
 	"testing"
 
-	"github.com/go-xorm/xorm"
-	. "github.com/maksimmernikov/grafana/pkg/services/sqlstore/migrator"
-	"github.com/maksimmernikov/grafana/pkg/services/sqlstore/sqlutil"
+	. "github.com/grafana/grafana/pkg/services/sqlstore/migrator"
+	"github.com/grafana/grafana/pkg/services/sqlstore/sqlutil"
+	"xorm.io/xorm"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestMigrations(t *testing.T) {
 	testDBs := []sqlutil.TestDB{
-		sqlutil.TestDB_Sqlite3,
+		sqlutil.Sqlite3TestDB(),
 	}
 
 	for _, testDB := range testDBs {
@@ -25,7 +25,8 @@ func TestMigrations(t *testing.T) {
 			x, err := xorm.NewEngine(testDB.DriverName, testDB.ConnStr)
 			So(err, ShouldBeNil)
 
-			NewDialect(x).CleanDB()
+			err = NewDialect(x).CleanDB()
+			So(err, ShouldBeNil)
 
 			_, err = x.SQL(sql).Get(&r)
 			So(err, ShouldNotBeNil)
@@ -39,7 +40,9 @@ func TestMigrations(t *testing.T) {
 			has, err := x.SQL(sql).Get(&r)
 			So(err, ShouldBeNil)
 			So(has, ShouldBeTrue)
-			expectedMigrations := mg.MigrationsCount() //we currently skip to migrations. We should rewrite skipped migrations to write in the log as well. until then we have to keep this
+			// we currently skip to migrations. We should rewrite skipped migrations to write in the log as well.
+			// until then we have to keep this
+			expectedMigrations := mg.MigrationsCount()
 			So(r.Count, ShouldEqual, expectedMigrations)
 
 			mg = NewMigrator(x)

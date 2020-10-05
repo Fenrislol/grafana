@@ -1,28 +1,30 @@
 // Libraries
-import React from 'react';
-// @ts-ignore
-import Cascader from 'rc-cascader';
-// @ts-ignore
-import PluginPrism from 'slate-prism';
+import React, { ReactNode } from 'react';
 
-// Components
-import QueryField, { TypeaheadInput, QueryFieldState } from 'app/features/explore/QueryField';
+import {
+  ButtonCascader,
+  CascaderOption,
+  SlatePrism,
+  TypeaheadOutput,
+  SuggestionsState,
+  QueryField,
+  TypeaheadInput,
+  BracesPlugin,
+} from '@grafana/ui';
 
 // Utils & Services
 // dom also includes Element polyfills
-import { getNextCharacter, getPreviousCousin } from 'app/features/explore/utils/dom';
-import BracesPlugin from 'app/features/explore/slate-plugins/braces';
-import RunnerPlugin from 'app/features/explore/slate-plugins/runner';
+import { Plugin, Node } from 'slate';
 
 // Types
-import { LokiQuery } from '../types';
-import { TypeaheadOutput, HistoryItem } from 'app/types/explore';
-import { ExploreDataSourceApi, ExploreQueryFieldProps, DataSourceStatus } from '@grafana/ui';
+import { DOMUtil } from '@grafana/ui';
+import { ExploreQueryFieldProps, AbsoluteTimeRange } from '@grafana/data';
+import { LokiQuery, LokiOptions } from '../types';
+import { Grammar } from 'prismjs';
+import LokiLanguageProvider, { LokiHistoryItem } from '../language_provider';
+import LokiDatasource from '../datasource';
 
-function getChooserText(hasSyntax: boolean, hasLogLabels: boolean, datasourceStatus: DataSourceStatus) {
-  if (datasourceStatus === DataSourceStatus.Disconnected) {
-    return '(Disconnected)';
-  }
+function getChooserText(hasSyntax: boolean, hasLogLabels: boolean) {
   if (!hasSyntax) {
     return 'Loading labels...';
   }
@@ -32,11 +34,11 @@ function getChooserText(hasSyntax: boolean, hasLogLabels: boolean, datasourceSta
   return 'Log labels';
 }
 
-function willApplySuggestion(suggestion: string, { typeaheadContext, typeaheadText }: QueryFieldState): string {
+function willApplySuggestion(suggestion: string, { typeaheadContext, typeaheadText }: SuggestionsState): string {
   // Modify suggestion based on context
   switch (typeaheadContext) {
     case 'context-labels': {
-      const nextChar = getNextCharacter();
+      const nextChar = DOMUtil.getNextCharacter();
       if (!nextChar || nextChar === '}' || nextChar === ',') {
         suggestion += '=';
       }
@@ -48,7 +50,7 @@ function willApplySuggestion(suggestion: string, { typeaheadContext, typeaheadTe
       if (!typeaheadText.match(/^(!?=~?"|")/)) {
         suggestion = `"${suggestion}`;
       }
-      if (getNextCharacter() !== '"') {
+      if (DOMUtil.getNextCharacter() !== '"') {
         suggestion = `${suggestion}"`;
       }
       break;
@@ -59,41 +61,30 @@ function willApplySuggestion(suggestion: string, { typeaheadContext, typeaheadTe
   return suggestion;
 }
 
-export interface CascaderOption {
-  label: string;
-  value: string;
-  children?: CascaderOption[];
-  disabled?: boolean;
-}
-
-export interface LokiQueryFieldFormProps extends ExploreQueryFieldProps<ExploreDataSourceApi, LokiQuery> {
-  history: HistoryItem[];
-  syntax: any;
-  logLabelOptions: any[];
-  syntaxLoaded: any;
+export interface LokiQueryFieldFormProps extends ExploreQueryFieldProps<LokiDatasource, LokiQuery, LokiOptions> {
+  history: LokiHistoryItem[];
+  syntax: Grammar | null;
+  logLabelOptions: CascaderOption[];
+  syntaxLoaded: boolean;
+  absoluteRange: AbsoluteTimeRange;
   onLoadOptions: (selectedOptions: CascaderOption[]) => void;
   onLabelsRefresh?: () => void;
+  ExtraFieldElement?: ReactNode;
 }
 
 export class LokiQueryFieldForm extends React.PureComponent<LokiQueryFieldFormProps> {
-  plugins: any[];
-  pluginsSearch: any[];
-  modifiedSearch: string;
-  modifiedQuery: string;
+  plugins: Plugin[];
 
   constructor(props: LokiQueryFieldFormProps, context: React.Context<any>) {
     super(props, context);
 
     this.plugins = [
       BracesPlugin(),
-      RunnerPlugin({ handler: props.onExecuteQuery }),
-      PluginPrism({
-        onlyIn: (node: any) => node.type === 'code_block',
-        getSyntax: (node: any) => 'promql',
+      SlatePrism({
+        onlyIn: (node: Node) => node.object === 'block' && node.type === 'code_block',
+        getSyntax: (node: Node) => 'promql',
       }),
     ];
-
-    this.pluginsSearch = [RunnerPlugin({ handler: props.onExecuteQuery })];
   }
 
   loadOptions = (selectedOptions: CascaderOption[]) => {
@@ -111,112 +102,81 @@ export class LokiQueryFieldForm extends React.PureComponent<LokiQueryFieldFormPr
 
   onChangeQuery = (value: string, override?: boolean) => {
     // Send text change to parent
-    const { query, onQueryChange, onExecuteQuery } = this.props;
-    if (onQueryChange) {
+    const { query, onChange, onRunQuery } = this.props;
+    if (onChange) {
       const nextQuery = { ...query, expr: value };
-      onQueryChange(nextQuery);
+      onChange(nextQuery);
 
-      if (override && onExecuteQuery) {
-        onExecuteQuery();
+      if (override && onRunQuery) {
+        onRunQuery();
       }
     }
   };
 
-  onClickHintFix = () => {
-    const { hint, onExecuteHint } = this.props;
-    if (onExecuteHint && hint && hint.fix) {
-      onExecuteHint(hint.fix.action);
-    }
-  };
-
-  onTypeahead = (typeahead: TypeaheadInput): TypeaheadOutput => {
+  onTypeahead = async (typeahead: TypeaheadInput): Promise<TypeaheadOutput> => {
     const { datasource } = this.props;
+
     if (!datasource.languageProvider) {
       return { suggestions: [] };
     }
 
-    const { history } = this.props;
-    const { prefix, text, value, wrapperNode } = typeahead;
+    const lokiLanguageProvider = datasource.languageProvider as LokiLanguageProvider;
+    const { history, absoluteRange } = this.props;
+    const { prefix, text, value, wrapperClasses, labelKey } = typeahead;
 
-    // Get DOM-dependent context
-    const wrapperClasses = Array.from(wrapperNode.classList);
-    const labelKeyNode = getPreviousCousin(wrapperNode, '.attr-name');
-    const labelKey = labelKeyNode && labelKeyNode.textContent;
-    const nextChar = getNextCharacter();
-
-    const result = datasource.languageProvider.provideCompletionItems(
+    const result = await lokiLanguageProvider.provideCompletionItems(
       { text, value, prefix, wrapperClasses, labelKey },
-      { history }
+      { history, absoluteRange }
     );
-
-    console.log('handleTypeahead', wrapperClasses, text, prefix, nextChar, labelKey, result.context);
-
     return result;
   };
 
   render() {
     const {
-      error,
-      hint,
+      ExtraFieldElement,
       query,
       syntaxLoaded,
       logLabelOptions,
       onLoadOptions,
       onLabelsRefresh,
       datasource,
-      datasourceStatus,
     } = this.props;
-    const cleanText = datasource.languageProvider ? datasource.languageProvider.cleanText : undefined;
+    const lokiLanguageProvider = datasource.languageProvider as LokiLanguageProvider;
+    const cleanText = datasource.languageProvider ? lokiLanguageProvider.cleanText : undefined;
     const hasLogLabels = logLabelOptions && logLabelOptions.length > 0;
-    const chooserText = getChooserText(syntaxLoaded, hasLogLabels, datasourceStatus);
-    const buttonDisabled = !syntaxLoaded || datasourceStatus === DataSourceStatus.Disconnected;
+    const chooserText = getChooserText(syntaxLoaded, hasLogLabels);
+    const buttonDisabled = !(syntaxLoaded && hasLogLabels);
 
     return (
       <>
-        <div className="gf-form-inline">
-          <div className="gf-form">
-            <Cascader
-              options={logLabelOptions}
+        <div className="gf-form-inline gf-form-inline--xs-view-flex-column flex-grow-1">
+          <div className="gf-form flex-shrink-0">
+            <ButtonCascader
+              options={logLabelOptions || []}
+              disabled={buttonDisabled}
               onChange={this.onChangeLogLabels}
               loadData={onLoadOptions}
-              onPopupVisibleChange={(isVisible: boolean) => {
-                if (isVisible && onLabelsRefresh) {
-                  onLabelsRefresh();
-                }
-              }}
+              onPopupVisibleChange={isVisible => isVisible && onLabelsRefresh && onLabelsRefresh()}
             >
-              <button className="gf-form-label gf-form-label--btn" disabled={buttonDisabled}>
-                {chooserText} <i className="fa fa-caret-down" />
-              </button>
-            </Cascader>
+              {chooserText}
+            </ButtonCascader>
           </div>
-          <div className="gf-form gf-form--grow">
+          <div className="gf-form gf-form--grow flex-shrink-1 min-width-15 explore-input-margin">
             <QueryField
               additionalPlugins={this.plugins}
               cleanText={cleanText}
-              initialQuery={query.expr}
+              query={query.expr}
               onTypeahead={this.onTypeahead}
               onWillApplySuggestion={willApplySuggestion}
-              onQueryChange={this.onChangeQuery}
-              onExecuteQuery={this.props.onExecuteQuery}
-              placeholder="Enter a Loki query"
+              onChange={this.onChangeQuery}
+              onBlur={this.props.onBlur}
+              onRunQuery={this.props.onRunQuery}
+              placeholder="Enter a Loki query (run with Shift+Enter)"
               portalOrigin="loki"
               syntaxLoaded={syntaxLoaded}
             />
           </div>
-        </div>
-        <div>
-          {error ? <div className="prom-query-field-info text-error">{error}</div> : null}
-          {hint ? (
-            <div className="prom-query-field-info text-warning">
-              {hint.label}{' '}
-              {hint.fix ? (
-                <a className="text-link muted" onClick={this.onClickHintFix}>
-                  {hint.fix.label}
-                </a>
-              ) : null}
-            </div>
-          ) : null}
+          {ExtraFieldElement}
         </div>
       </>
     );

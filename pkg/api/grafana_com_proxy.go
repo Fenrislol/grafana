@@ -7,9 +7,9 @@ import (
 	"net/url"
 	"time"
 
-	m "github.com/maksimmernikov/grafana/pkg/models"
-	"github.com/maksimmernikov/grafana/pkg/setting"
-	"github.com/maksimmernikov/grafana/pkg/util"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/util"
 )
 
 var grafanaComProxyTransport = &http.Transport{
@@ -17,7 +17,6 @@ var grafanaComProxyTransport = &http.Transport{
 	Dial: (&net.Dialer{
 		Timeout:   30 * time.Second,
 		KeepAlive: 30 * time.Second,
-		DualStack: true,
 	}).Dial,
 	TLSHandshakeTimeout: 10 * time.Second,
 }
@@ -41,7 +40,7 @@ func ReverseProxyGnetReq(proxyPath string) *httputil.ReverseProxy {
 	return &httputil.ReverseProxy{Director: director}
 }
 
-func ProxyGnetRequest(c *m.ReqContext) {
+func ProxyGnetRequest(c *models.ReqContext) {
 	proxyPath := c.Params("*")
 	proxy := ReverseProxyGnetReq(proxyPath)
 	proxy.Transport = grafanaComProxyTransport

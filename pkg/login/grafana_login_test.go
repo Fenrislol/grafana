@@ -5,8 +5,8 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/maksimmernikov/grafana/pkg/bus"
-	m "github.com/maksimmernikov/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/bus"
+	"github.com/grafana/grafana/pkg/models"
 )
 
 func TestGrafanaLogin(t *testing.T) {
@@ -16,14 +16,14 @@ func TestGrafanaLogin(t *testing.T) {
 			err := loginUsingGrafanaDB(sc.loginUserQuery)
 
 			Convey("it should result in user not found error", func() {
-				So(err, ShouldEqual, m.ErrUserNotFound)
+				So(err, ShouldEqual, models.ErrUserNotFound)
 			})
 
 			Convey("it should not call password validation", func() {
 				So(sc.validatePasswordCalled, ShouldBeFalse)
 			})
 
-			Convey("it should not pupulate user object", func() {
+			Convey("it should not populate user object", func() {
 				So(sc.loginUserQuery.User, ShouldBeNil)
 			})
 		})
@@ -40,7 +40,7 @@ func TestGrafanaLogin(t *testing.T) {
 				So(sc.validatePasswordCalled, ShouldBeTrue)
 			})
 
-			Convey("it should not pupulate user object", func() {
+			Convey("it should not populate user object", func() {
 				So(sc.loginUserQuery.User, ShouldBeNil)
 			})
 		})
@@ -57,17 +57,34 @@ func TestGrafanaLogin(t *testing.T) {
 				So(sc.validatePasswordCalled, ShouldBeTrue)
 			})
 
-			Convey("it should pupulate user object", func() {
+			Convey("it should populate user object", func() {
 				So(sc.loginUserQuery.User, ShouldNotBeNil)
 				So(sc.loginUserQuery.User.Login, ShouldEqual, sc.loginUserQuery.Username)
 				So(sc.loginUserQuery.User.Password, ShouldEqual, sc.loginUserQuery.Password)
+			})
+		})
+
+		grafanaLoginScenario("When login with disabled user", func(sc *grafanaLoginScenarioContext) {
+			sc.withDisabledUser()
+			err := loginUsingGrafanaDB(sc.loginUserQuery)
+
+			Convey("it should return user is disabled error", func() {
+				So(err, ShouldEqual, ErrUserDisabled)
+			})
+
+			Convey("it should not call password validation", func() {
+				So(sc.validatePasswordCalled, ShouldBeFalse)
+			})
+
+			Convey("it should not populate user object", func() {
+				So(sc.loginUserQuery.User, ShouldBeNil)
 			})
 		})
 	})
 }
 
 type grafanaLoginScenarioContext struct {
-	loginUserQuery         *m.LoginUserQuery
+	loginUserQuery         *models.LoginUserQuery
 	validatePasswordCalled bool
 }
 
@@ -78,7 +95,7 @@ func grafanaLoginScenario(desc string, fn grafanaLoginScenarioFunc) {
 		origValidatePassword := validatePassword
 
 		sc := &grafanaLoginScenarioContext{
-			loginUserQuery: &m.LoginUserQuery{
+			loginUserQuery: &models.LoginUserQuery{
 				Username:  "user",
 				Password:  "pwd",
 				IpAddress: "192.168.1.1:56433",
@@ -106,10 +123,10 @@ func mockPasswordValidation(valid bool, sc *grafanaLoginScenarioContext) {
 	}
 }
 
-func (sc *grafanaLoginScenarioContext) getUserByLoginQueryReturns(user *m.User) {
-	bus.AddHandler("test", func(query *m.GetUserByLoginQuery) error {
+func (sc *grafanaLoginScenarioContext) getUserByLoginQueryReturns(user *models.User) {
+	bus.AddHandler("test", func(query *models.GetUserByLoginQuery) error {
 		if user == nil {
-			return m.ErrUserNotFound
+			return models.ErrUserNotFound
 		}
 
 		query.Result = user
@@ -118,7 +135,7 @@ func (sc *grafanaLoginScenarioContext) getUserByLoginQueryReturns(user *m.User) 
 }
 
 func (sc *grafanaLoginScenarioContext) withValidCredentials() {
-	sc.getUserByLoginQueryReturns(&m.User{
+	sc.getUserByLoginQueryReturns(&models.User{
 		Id:       1,
 		Login:    sc.loginUserQuery.Username,
 		Password: sc.loginUserQuery.Password,
@@ -132,9 +149,15 @@ func (sc *grafanaLoginScenarioContext) withNonExistingUser() {
 }
 
 func (sc *grafanaLoginScenarioContext) withInvalidPassword() {
-	sc.getUserByLoginQueryReturns(&m.User{
+	sc.getUserByLoginQueryReturns(&models.User{
 		Password: sc.loginUserQuery.Password,
 		Salt:     "salt",
 	})
 	mockPasswordValidation(false, sc)
+}
+
+func (sc *grafanaLoginScenarioContext) withDisabledUser() {
+	sc.getUserByLoginQueryReturns(&models.User{
+		IsDisabled: true,
+	})
 }

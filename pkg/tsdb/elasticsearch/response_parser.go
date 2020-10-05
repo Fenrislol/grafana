@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/maksimmernikov/grafana/pkg/components/null"
-	"github.com/maksimmernikov/grafana/pkg/components/simplejson"
-	"github.com/maksimmernikov/grafana/pkg/tsdb"
-	"github.com/maksimmernikov/grafana/pkg/tsdb/elasticsearch/client"
+	"github.com/grafana/grafana/pkg/components/null"
+	"github.com/grafana/grafana/pkg/components/simplejson"
+	"github.com/grafana/grafana/pkg/tsdb"
+	es "github.com/grafana/grafana/pkg/tsdb/elasticsearch/client"
 )
 
 const (
@@ -29,12 +29,14 @@ const (
 type responseParser struct {
 	Responses []*es.SearchResponse
 	Targets   []*Query
+	DebugInfo *es.SearchDebugInfo
 }
 
-var newResponseParser = func(responses []*es.SearchResponse, targets []*Query) *responseParser {
+var newResponseParser = func(responses []*es.SearchResponse, targets []*Query, debugInfo *es.SearchDebugInfo) *responseParser {
 	return &responseParser{
 		Responses: responses,
 		Targets:   targets,
+		DebugInfo: debugInfo,
 	}
 }
 
@@ -49,12 +51,19 @@ func (rp *responseParser) getTimeSeries() (*tsdb.Response, error) {
 	for i, res := range rp.Responses {
 		target := rp.Targets[i]
 
+		var debugInfo *simplejson.Json
+		if rp.DebugInfo != nil && i == 0 {
+			debugInfo = simplejson.NewFromAny(rp.DebugInfo)
+		}
+
 		if res.Error != nil {
 			result.Results[target.RefID] = getErrorFromElasticResponse(res)
+			result.Results[target.RefID].Meta = debugInfo
 			continue
 		}
 
 		queryRes := tsdb.NewQueryResult()
+		queryRes.Meta = debugInfo
 		props := make(map[string]string)
 		table := tsdb.Table{
 			Columns: make([]tsdb.TableColumn, 0),
@@ -149,10 +158,8 @@ func (rp *responseParser) processBuckets(aggs map[string]interface{}, target *Qu
 				}
 			}
 		}
-
 	}
 	return nil
-
 }
 
 func (rp *responseParser) processMetrics(esAgg *simplejson.Json, target *Query, series *tsdb.TimeSeriesSlice, props map[string]string) error {
@@ -239,11 +246,12 @@ func (rp *responseParser) processMetrics(esAgg *simplejson.Json, target *Query, 
 					bucket := simplejson.NewFromAny(v)
 					key := castToNullFloat(bucket.Get("key"))
 					var value null.Float
-					if statName == "std_deviation_bounds_upper" {
+					switch statName {
+					case "std_deviation_bounds_upper":
 						value = castToNullFloat(bucket.GetPath(metric.ID, "std_deviation_bounds", "upper"))
-					} else if statName == "std_deviation_bounds_lower" {
+					case "std_deviation_bounds_lower":
 						value = castToNullFloat(bucket.GetPath(metric.ID, "std_deviation_bounds", "lower"))
-					} else {
+					default:
 						value = castToNullFloat(bucket.GetPath(metric.ID, statName))
 					}
 					newSeries.Points = append(newSeries.Points, tsdb.TimePoint{value, key})
@@ -342,11 +350,12 @@ func (rp *responseParser) processAggregationDocs(esAgg *simplejson.Json, aggDef 
 					}
 
 					var value null.Float
-					if statName == "std_deviation_bounds_upper" {
+					switch statName {
+					case "std_deviation_bounds_upper":
 						value = castToNullFloat(bucket.GetPath(metric.ID, "std_deviation_bounds", "upper"))
-					} else if statName == "std_deviation_bounds_lower" {
+					case "std_deviation_bounds_lower":
 						value = castToNullFloat(bucket.GetPath(metric.ID, "std_deviation_bounds", "lower"))
-					} else {
+					default:
 						value = castToNullFloat(bucket.GetPath(metric.ID, statName))
 					}
 
@@ -365,6 +374,10 @@ func (rp *responseParser) processAggregationDocs(esAgg *simplejson.Json, aggDef 
 
 				if len(otherMetrics) > 1 {
 					metricName += " " + metric.Field
+					if metric.Type == "bucket_script" {
+						// Use the formula in the column name
+						metricName = metric.Settings.Get("script").MustString("")
+					}
 				}
 
 				addMetricValue(&values, metricName, castToNullFloat(bucket.GetPath(metric.ID, "value")))
@@ -415,7 +428,6 @@ func (rp *responseParser) nameSeries(seriesList *tsdb.TimeSeriesSlice, target *Q
 	for _, series := range *seriesList {
 		series.Name = rp.getSeriesName(series, target, metricTypeCount)
 	}
-
 }
 
 var aliasPatternRegex = regexp.MustCompile(`\{\{([\s\S]+?)\}\}`)
@@ -472,7 +484,7 @@ func (rp *responseParser) getSeriesName(series *tsdb.TimeSeries, target *Query, 
 					for name, pipelineAgg := range metric.PipelineVariables {
 						for _, m := range target.Metrics {
 							if m.ID == pipelineAgg {
-								metricName = strings.Replace(metricName, "params."+name, describeMetric(m.Type, m.Field), -1)
+								metricName = strings.ReplaceAll(metricName, "params."+name, describeMetric(m.Type, m.Field))
 							}
 						}
 					}
@@ -510,7 +522,6 @@ func (rp *responseParser) getSeriesName(series *tsdb.TimeSeries, target *Query, 
 	}
 
 	return strings.TrimSpace(name) + " " + metricName
-
 }
 
 func (rp *responseParser) getMetricName(metric string) string {
@@ -559,11 +570,12 @@ func getErrorFromElasticResponse(response *es.SearchResponse) *tsdb.QueryResult 
 	reason := json.Get("reason").MustString()
 	rootCauseReason := json.Get("root_cause").GetIndex(0).Get("reason").MustString()
 
-	if rootCauseReason != "" {
+	switch {
+	case rootCauseReason != "":
 		result.ErrorString = rootCauseReason
-	} else if reason != "" {
+	case reason != "":
 		result.ErrorString = reason
-	} else {
+	default:
 		result.ErrorString = "Unknown elasticsearch error response"
 	}
 

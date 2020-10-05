@@ -104,7 +104,7 @@ func TestShouldSendAlertNotification(t *testing.T) {
 			expect: false,
 		},
 		{
-			name:         "alerting -> alerting with reminder and last notifciation sent 11 minutes ago should trigger",
+			name:         "alerting -> alerting with reminder and last notification sent 11 minutes ago should trigger",
 			newState:     models.AlertStateAlerting,
 			prevState:    models.AlertStateAlerting,
 			frequency:    time.Minute * 10,
@@ -114,7 +114,7 @@ func TestShouldSendAlertNotification(t *testing.T) {
 			expect: true,
 		},
 		{
-			name:      "OK -> alerting with notifciation state pending and updated 30 seconds ago should not trigger",
+			name:      "OK -> alerting with notification state pending and updated 30 seconds ago should not trigger",
 			newState:  models.AlertStateAlerting,
 			prevState: models.AlertStateOK,
 			state:     &models.AlertNotificationState{State: models.AlertNotificationStatePending, UpdatedAt: tnow.Add(-30 * time.Second).Unix()},
@@ -122,7 +122,7 @@ func TestShouldSendAlertNotification(t *testing.T) {
 			expect: false,
 		},
 		{
-			name:      "OK -> alerting with notifciation state pending and updated 2 minutes ago should trigger",
+			name:      "OK -> alerting with notification state pending and updated 2 minutes ago should trigger",
 			newState:  models.AlertStateAlerting,
 			prevState: models.AlertStateOK,
 			state:     &models.AlertNotificationState{State: models.AlertNotificationStatePending, UpdatedAt: tnow.Add(-2 * time.Minute).Unix()},
@@ -157,6 +157,13 @@ func TestShouldSendAlertNotification(t *testing.T) {
 
 			expect: false,
 		},
+		{
+			name:      "no_data -> ok",
+			prevState: models.AlertStateNoData,
+			newState:  models.AlertStateOK,
+
+			expect: true,
+		},
 	}
 
 	for _, tc := range tcs {
@@ -178,24 +185,24 @@ func TestShouldSendAlertNotification(t *testing.T) {
 
 func TestBaseNotifier(t *testing.T) {
 	Convey("default constructor for notifiers", t, func() {
-		bJson := simplejson.New()
+		bJSON := simplejson.New()
 
 		model := &models.AlertNotification{
 			Uid:      "1",
 			Name:     "name",
 			Type:     "email",
-			Settings: bJson,
+			Settings: bJSON,
 		}
 
 		Convey("can parse false value", func() {
-			bJson.Set("uploadImage", false)
+			bJSON.Set("uploadImage", false)
 
 			base := NewNotifierBase(model)
 			So(base.UploadImage, ShouldBeFalse)
 		})
 
 		Convey("can parse true value", func() {
-			bJson.Set("uploadImage", true)
+			bJSON.Set("uploadImage", true)
 
 			base := NewNotifierBase(model)
 			So(base.UploadImage, ShouldBeTrue)

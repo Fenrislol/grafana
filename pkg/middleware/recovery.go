@@ -19,13 +19,14 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"runtime"
 
 	"gopkg.in/macaron.v1"
 
-	"github.com/maksimmernikov/grafana/pkg/log"
-	m "github.com/maksimmernikov/grafana/pkg/models"
-	"github.com/maksimmernikov/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/infra/log"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/setting"
 )
 
 var (
@@ -92,7 +93,7 @@ func function(pc uintptr) []byte {
 	if period := bytes.Index(name, dot); period >= 0 {
 		name = name[period+1:]
 	}
-	name = bytes.Replace(name, centerDot, dot, -1)
+	name = bytes.ReplaceAll(name, centerDot, dot)
 	return name
 }
 
@@ -102,22 +103,34 @@ func Recovery() macaron.Handler {
 	return func(c *macaron.Context) {
 		defer func() {
 			if err := recover(); err != nil {
-				stack := stack(3)
-
 				panicLogger := log.Root
 				// try to get request logger
 				if ctx, ok := c.Data["ctx"]; ok {
-					ctxTyped := ctx.(*m.ReqContext)
+					ctxTyped := ctx.(*models.ReqContext)
 					panicLogger = ctxTyped.Logger
 				}
 
+				// http.ErrAbortHandler is suppressed by default in the http package
+				// and used as a signal for aborting requests. Suppresses stacktrace
+				// since it doesn't add any important information.
+				if err == http.ErrAbortHandler {
+					panicLogger.Error("Request error", "error", err)
+					return
+				}
+
+				stack := stack(3)
 				panicLogger.Error("Request error", "error", err, "stack", string(stack))
+
+				// if response has already been written, skip.
+				if c.Written() {
+					return
+				}
 
 				c.Data["Title"] = "Server Error"
 				c.Data["AppSubUrl"] = setting.AppSubUrl
 				c.Data["Theme"] = setting.DefaultTheme
 
-				if setting.Env == setting.DEV {
+				if setting.Env == setting.Dev {
 					if theErr, ok := err.(error); ok {
 						c.Data["Title"] = theErr.Error()
 					}
@@ -125,7 +138,7 @@ func Recovery() macaron.Handler {
 					c.Data["ErrorMsg"] = string(stack)
 				}
 
-				ctx, ok := c.Data["ctx"].(*m.ReqContext)
+				ctx, ok := c.Data["ctx"].(*models.ReqContext)
 
 				if ok && ctx.IsApiRequest() {
 					resp := make(map[string]interface{})
@@ -139,7 +152,7 @@ func Recovery() macaron.Handler {
 
 					c.JSON(500, resp)
 				} else {
-					c.HTML(500, setting.ERR_TEMPLATE_NAME)
+					c.HTML(500, setting.ErrTemplateName)
 				}
 			}
 		}()

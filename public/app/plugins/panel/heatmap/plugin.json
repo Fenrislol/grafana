@@ -3,12 +3,10 @@
   "name": "Heatmap",
   "id": "heatmap",
 
-  "dataFormats": ["time_series"],
-
   "info": {
     "description": "Heatmap Panel for Grafana",
     "author": {
-      "name": "Grafana Project",
+      "name": "Grafana Labs",
       "url": "https://grafana.com"
     },
     "logos": {

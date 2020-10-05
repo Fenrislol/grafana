@@ -1,9 +1,27 @@
 import _ from 'lodash';
+import { IScope } from 'angular';
+import { getBackendSrv } from '@grafana/runtime';
+import { dateMath, dateTime } from '@grafana/data';
+import { selectors } from '@grafana/e2e-selectors';
 
 import { QueryCtrl } from 'app/plugins/sdk';
-import moment from 'moment';
-import { defaultQuery } from './StreamHandler';
-import { getBackendSrv } from 'app/core/services/backend_srv';
+import { defaultQuery } from './runStreams';
+import { promiseToDigest } from 'app/core/utils/promiseToDigest';
+
+export const defaultPulse: any = {
+  timeStep: 60,
+  onCount: 3,
+  onValue: 2,
+  offCount: 3,
+  offValue: 1,
+};
+
+export const defaultCSVWave: any = {
+  timeStep: 60,
+  valuesCSV: '0,0,2,2,1,1',
+};
+
+const showLabelsFor = ['random_walk', 'predictable_pulse', 'predictable_csv_wave'];
 
 export class TestDataQueryCtrl extends QueryCtrl {
   static templateUrl = 'partials/query.editor.html';
@@ -13,27 +31,33 @@ export class TestDataQueryCtrl extends QueryCtrl {
   newPointValue: number;
   newPointTime: any;
   selectedPoint: any;
+  digest: (promise: Promise<any>) => Promise<any>;
+
+  showLabels = false;
+  selectors: typeof selectors.components.DataSource.TestData.QueryTab;
 
   /** @ngInject */
-  constructor($scope: any, $injector: any) {
+  constructor($scope: IScope, $injector: any) {
     super($scope, $injector);
 
     this.target.scenarioId = this.target.scenarioId || 'random_walk';
     this.scenarioList = [];
-    this.newPointTime = moment();
+    this.newPointTime = dateTime();
     this.selectedPoint = { text: 'Select point', value: null };
+    this.showLabels = showLabelsFor.includes(this.target.scenarioId);
+    this.selectors = selectors.components.DataSource.TestData.QueryTab;
   }
 
   getPoints() {
     return _.map(this.target.points, (point, index) => {
       return {
-        text: moment(point[1]).format('MMMM Do YYYY, H:mm:ss') + ' : ' + point[0],
+        text: dateTime(point[1]).format('MMMM Do YYYY, H:mm:ss') + ' : ' + point[0],
         value: index,
       };
     });
   }
 
-  pointSelected(option) {
+  pointSelected(option: any) {
     this.selectedPoint = option;
   }
 
@@ -45,23 +69,25 @@ export class TestDataQueryCtrl extends QueryCtrl {
 
   addPoint() {
     this.target.points = this.target.points || [];
+    this.newPointTime = dateMath.parse(this.newPointTime);
     this.target.points.push([this.newPointValue, this.newPointTime.valueOf()]);
     this.target.points = _.sortBy(this.target.points, p => p[1]);
     this.refresh();
   }
 
   $onInit() {
-    return getBackendSrv()
-      .get('/api/tsdb/testdata/scenarios')
-      .then(res => {
-        this.scenarioList = res;
-        this.scenario = _.find(this.scenarioList, { id: this.target.scenarioId });
-      });
+    return promiseToDigest(this.$scope)(
+      getBackendSrv()
+        .get('/api/tsdb/testdata/scenarios')
+        .then((res: any) => {
+          this.scenarioList = res;
+          this.scenario = _.find(this.scenarioList, { id: this.target.scenarioId });
+        })
+    );
   }
 
   scenarioChanged() {
     this.scenario = _.find(this.scenarioList, { id: this.target.scenarioId });
-    this.target.stringInput = this.scenario.stringInput;
 
     if (this.target.scenarioId === 'manual_entry') {
       this.target.points = this.target.points || [];
@@ -74,6 +100,27 @@ export class TestDataQueryCtrl extends QueryCtrl {
     } else {
       delete this.target.stream;
     }
+
+    if (this.target.scenarioId === 'predictable_pulse') {
+      this.target.pulseWave = _.defaults(this.target.pulseWave || {}, defaultPulse);
+    } else {
+      delete this.target.pulseWave;
+    }
+
+    if (this.target.scenarioId === 'predictable_csv_wave') {
+      this.target.csvWave = _.defaults(this.target.csvWave || {}, defaultCSVWave);
+    } else {
+      delete this.target.csvWave;
+    }
+
+    if (this.target.scenarioId === 'grafana_api') {
+      this.target.stringInput = 'datasources';
+    } else {
+      delete this.target.stringInput;
+    }
+
+    this.target.stringInput = this.scenario.stringInput ?? undefined;
+    this.showLabels = showLabelsFor.includes(this.target.scenarioId);
 
     this.refresh();
   }

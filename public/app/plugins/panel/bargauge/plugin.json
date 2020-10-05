@@ -1,14 +1,12 @@
 {
   "type": "panel",
-  "name": "Bar Gauge",
+  "name": "Bar gauge",
   "id": "bargauge",
   "state": "beta",
 
-  "dataFormats": ["time_series"],
-
   "info": {
     "author": {
-      "name": "Grafana Project",
+      "name": "Grafana Labs",
       "url": "https://grafana.com"
     },
     "logos": {

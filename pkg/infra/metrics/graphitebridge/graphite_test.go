@@ -306,7 +306,7 @@ prefix.page.response.constname.constvalue.labelname.val2.count 1 1477043
 		t.Fatalf("wanted \n%s\n, got \n%s\n", want, got)
 	}
 
-	//next collect
+	// next collect
 	cntVec.WithLabelValues("val1").Inc()
 	cntVec.WithLabelValues("val2").Inc()
 	apicntVec.WithLabelValues("val1").Inc()
@@ -373,7 +373,7 @@ func TestCounter(t *testing.T) {
 		t.Fatalf("wanted \n%s\n, got \n%s\n", want, got)
 	}
 
-	//next collect
+	// next collect
 	cntVec.Inc()
 
 	mfs, err = reg.Gather()
@@ -547,9 +547,15 @@ func newMockGraphite(port string) (*mockGraphite, error) {
 		conn, err := ln.Accept()
 		if err != nil {
 			errc <- err
+			return
 		}
+
 		var b bytes.Buffer
-		io.Copy(&b, conn)
+		if _, err := io.Copy(&b, conn); err != nil {
+			errc <- err
+			return
+		}
+
 		readc <- b.String()
 	}()
 

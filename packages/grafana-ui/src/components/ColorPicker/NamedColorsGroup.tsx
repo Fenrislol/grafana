@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
 import { Themeable } from '../../types';
-import { ColorDefinition, getColorForTheme } from '../../utils/namedColorsPalette';
+import { ColorDefinition, getColorForTheme } from '@grafana/data';
 import { Color } from 'csstype';
 import upperFirst from 'lodash/upperFirst';
 import find from 'lodash/find';
@@ -33,8 +33,8 @@ export const ColorSwatch: FunctionComponent<ColorSwatchProps> = ({
 
   const selectedSwatchBorder = selectThemeVariant(
     {
-      light: theme.colors.white,
-      dark: theme.colors.black,
+      light: theme.palette.white,
+      dark: theme.palette.black,
     },
     theme.type
   );

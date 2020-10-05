@@ -14,7 +14,7 @@ import { getTeamLoadingNav } from './state/navModel';
 import { getNavModel } from 'app/core/selectors/navModel';
 import { getRouteParamsId, getRouteParamsPage } from '../../core/selectors/location';
 import { contextSrv, User } from 'app/core/services/context_srv';
-import { NavModel } from '@grafana/ui';
+import { NavModel } from '@grafana/data';
 
 export interface Props {
   team: Team;
@@ -23,9 +23,9 @@ export interface Props {
   teamId: number;
   pageName: string;
   navModel: NavModel;
-  members?: TeamMember[];
-  editorsCanAdmin?: boolean;
-  signedInUser?: User;
+  members: TeamMember[];
+  editorsCanAdmin: boolean;
+  signedInUser: User;
 }
 
 interface State {
@@ -45,7 +45,7 @@ export class TeamPages extends PureComponent<Props, State> {
 
     this.state = {
       isLoading: false,
-      isSyncEnabled: config.buildInfo.isEnterprise,
+      isSyncEnabled: config.licenseInfo.hasLicense,
     };
   }
 
@@ -92,7 +92,7 @@ export class TeamPages extends PureComponent<Props, State> {
     return navModel;
   };
 
-  renderPage(isSignedInUserTeamAdmin: boolean) {
+  renderPage(isSignedInUserTeamAdmin: boolean): React.ReactNode {
     const { isSyncEnabled } = this.state;
     const { members } = this.props;
     const currentPage = this.getCurrentPage();
@@ -124,7 +124,7 @@ export class TeamPages extends PureComponent<Props, State> {
   }
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state: any) {
   const teamId = getRouteParamsId(state.location);
   const pageName = getRouteParamsPage(state.location) || 'members';
   const teamLoadingNav = getTeamLoadingNav(pageName as string);
@@ -148,9 +148,4 @@ const mapDispatchToProps = {
   loadTeamMembers,
 };
 
-export default hot(module)(
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )(TeamPages)
-);
+export default hot(module)(connect(mapStateToProps, mapDispatchToProps)(TeamPages));

@@ -1,43 +1,20 @@
 // Services & Utils
-import { getBackendSrv } from 'app/core/services/backend_srv';
-import { actionCreatorFactory, noPayloadActionCreatorFactory } from 'app/core/redux';
+import { getBackendSrv } from '@grafana/runtime';
 import { createSuccessNotification } from 'app/core/copy/appNotification';
-
 // Actions
 import { loadPluginDashboards } from '../../plugins/state/actions';
-import { notifyApp } from 'app/core/actions';
-
-// Types
 import {
-  ThunkResult,
-  DashboardAcl,
-  DashboardAclDTO,
-  PermissionLevel,
-  DashboardAclUpdateDTO,
-  NewDashboardAclItem,
-  MutableDashboard,
-  DashboardInitError,
-} from 'app/types';
-
-export const loadDashboardPermissions = actionCreatorFactory<DashboardAclDTO[]>('LOAD_DASHBOARD_PERMISSIONS').create();
-
-export const dashboardInitFetching = noPayloadActionCreatorFactory('DASHBOARD_INIT_FETCHING').create();
-
-export const dashboardInitServices = noPayloadActionCreatorFactory('DASHBOARD_INIT_SERVICES').create();
-
-export const dashboardInitSlow = noPayloadActionCreatorFactory('SET_DASHBOARD_INIT_SLOW').create();
-
-export const dashboardInitCompleted = actionCreatorFactory<MutableDashboard>('DASHBOARD_INIT_COMLETED').create();
-
-/*
- * Unrecoverable init failure (fetch or model creation failed)
- */
-export const dashboardInitFailed = actionCreatorFactory<DashboardInitError>('DASHBOARD_INIT_FAILED').create();
-
-/*
- * When leaving dashboard, resets state
- * */
-export const cleanUpDashboard = noPayloadActionCreatorFactory('DASHBOARD_CLEAN_UP').create();
+  cleanUpDashboard,
+  loadDashboardPermissions,
+  panelModelAndPluginReady,
+  setPanelAngularComponent,
+} from './reducers';
+import { notifyApp } from 'app/core/actions';
+import { loadPanelPlugin } from 'app/features/plugins/state/actions';
+// Types
+import { DashboardAcl, DashboardAclUpdateDTO, NewDashboardAclItem, PermissionLevel, ThunkResult } from 'app/types';
+import { PanelModel } from './PanelModel';
+import { cancelVariables } from '../../variables/state/actions';
 
 export function getDashboardPermissions(id: number): ThunkResult<void> {
   return async dispatch => {
@@ -125,7 +102,7 @@ export function addDashboardPermission(dashboardId: number, newItem: NewDashboar
   };
 }
 
-export function importDashboard(data, dashboardTitle: string): ThunkResult<void> {
+export function importDashboard(data: any, dashboardTitle: string): ThunkResult<void> {
   return async dispatch => {
     await getBackendSrv().post('/api/dashboards/import', data);
     dispatch(notifyApp(createSuccessNotification('Dashboard Imported', dashboardTitle)));
@@ -139,3 +116,51 @@ export function removeDashboard(uri: string): ThunkResult<void> {
     dispatch(loadPluginDashboards());
   };
 }
+
+export function initDashboardPanel(panel: PanelModel): ThunkResult<void> {
+  return async (dispatch, getStore) => {
+    let plugin = getStore().plugins.panels[panel.type];
+
+    if (!plugin) {
+      plugin = await dispatch(loadPanelPlugin(panel.type));
+    }
+
+    if (!panel.plugin) {
+      panel.pluginLoaded(plugin);
+    }
+
+    dispatch(panelModelAndPluginReady({ panelId: panel.id, plugin }));
+  };
+}
+
+export function changePanelPlugin(panel: PanelModel, pluginId: string): ThunkResult<void> {
+  return async (dispatch, getStore) => {
+    // ignore action is no change
+    if (panel.type === pluginId) {
+      return;
+    }
+
+    const store = getStore();
+    let plugin = store.plugins.panels[pluginId];
+
+    if (!plugin) {
+      plugin = await dispatch(loadPanelPlugin(pluginId));
+    }
+
+    // clean up angular component (scope / ctrl state)
+    const angularComponent = store.dashboard.panels[panel.id].angularComponent;
+    if (angularComponent) {
+      angularComponent.destroy();
+      dispatch(setPanelAngularComponent({ panelId: panel.id, angularComponent: null }));
+    }
+
+    panel.changePlugin(plugin);
+
+    dispatch(panelModelAndPluginReady({ panelId: panel.id, plugin }));
+  };
+}
+
+export const cleanUpDashboardAndVariables = (): ThunkResult<void> => dispatch => {
+  dispatch(cleanUpDashboard());
+  dispatch(cancelVariables());
+};

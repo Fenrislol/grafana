@@ -6,19 +6,14 @@ import PageLoader from '../PageLoader/PageLoader';
 
 interface Props {
   isLoading?: boolean;
-  children: JSX.Element[] | JSX.Element;
+  children: React.ReactNode;
 }
 
 class PageContents extends Component<Props> {
   render() {
     const { isLoading } = this.props;
 
-    return (
-      <div className="page-container page-body">
-        {isLoading && <PageLoader />}
-        {this.props.children}
-      </div>
-    );
+    return <div className="page-container page-body">{isLoading ? <PageLoader /> : this.props.children}</div>;
   }
 }
 

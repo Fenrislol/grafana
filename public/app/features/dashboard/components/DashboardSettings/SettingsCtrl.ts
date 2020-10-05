@@ -1,9 +1,15 @@
-import { coreModule, appEvents, contextSrv } from 'app/core/core';
-import { DashboardModel } from '../../state/DashboardModel';
-import $ from 'jquery';
 import _ from 'lodash';
-import angular from 'angular';
-import config from 'app/core/config';
+import angular, { ILocationService, IScope } from 'angular';
+import { selectors } from '@grafana/e2e-selectors';
+
+import { appEvents, contextSrv, coreModule } from 'app/core/core';
+import { DashboardModel } from '../../state/DashboardModel';
+import { DashboardSrv } from '../../services/DashboardSrv';
+import { CoreEvents } from 'app/types';
+import { GrafanaRootScope } from 'app/routes/GrafanaCtrl';
+import { AppEvents, locationUtil, TimeZone, urlUtil } from '@grafana/data';
+import { promiseToDigest } from '../../../../core/utils/promiseToDigest';
+import { deleteDashboard } from 'app/features/manage-dashboards/state/actions';
 
 export class SettingsCtrl {
   dashboard: DashboardModel;
@@ -12,19 +18,20 @@ export class SettingsCtrl {
   json: string;
   alertCount: number;
   canSaveAs: boolean;
-  canSave: boolean;
-  canDelete: boolean;
+  canSave?: boolean;
+  canDelete?: boolean;
   sections: any[];
   hasUnsavedFolderChange: boolean;
+  selectors: typeof selectors.pages.Dashboard.Settings.General;
+  renderCount: number; // hack to update React when Angular changes
 
   /** @ngInject */
   constructor(
-    private $scope,
-    private $route,
-    private $location,
-    private $rootScope,
-    private backendSrv,
-    private dashboardSrv
+    private $scope: IScope & Record<string, any>,
+    private $route: any,
+    private $location: ILocationService,
+    private $rootScope: GrafanaRootScope,
+    private dashboardSrv: DashboardSrv
   ) {
     // temp hack for annotations and variables editors
     // that rely on inherited scope
@@ -33,7 +40,7 @@ export class SettingsCtrl {
     this.$scope.$on('$destroy', () => {
       this.dashboard.updateSubmenuVisibility();
       setTimeout(() => {
-        this.$rootScope.appEvent('dash-scroll', { restore: true });
+        this.$rootScope.appEvent(CoreEvents.dashScroll, { restore: true });
         this.dashboard.startRefresh();
       });
     });
@@ -45,9 +52,13 @@ export class SettingsCtrl {
     this.buildSectionList();
     this.onRouteUpdated();
 
-    this.$rootScope.onAppEvent('$routeUpdate', this.onRouteUpdated.bind(this), $scope);
-    this.$rootScope.appEvent('dash-scroll', { animate: false, pos: 0 });
-    this.$rootScope.onAppEvent('dashboard-saved', this.onPostSave.bind(this), $scope);
+    this.$rootScope.onAppEvent(CoreEvents.routeUpdated, this.onRouteUpdated.bind(this), $scope);
+    this.$rootScope.appEvent(CoreEvents.dashScroll, { animate: false, pos: 0 });
+
+    appEvents.on(CoreEvents.dashboardSaved, this.onPostSave.bind(this), $scope);
+
+    this.selectors = selectors.pages.Dashboard.Settings.General;
+    this.renderCount = 0;
   }
 
   buildSectionList() {
@@ -57,22 +68,22 @@ export class SettingsCtrl {
       this.sections.push({
         title: 'General',
         id: 'settings',
-        icon: 'gicon gicon-preferences',
+        icon: 'sliders-v-alt',
       });
       this.sections.push({
         title: 'Annotations',
         id: 'annotations',
-        icon: 'gicon gicon-annotation',
+        icon: 'comment-alt',
       });
       this.sections.push({
         title: 'Variables',
         id: 'templating',
-        icon: 'gicon gicon-variable',
+        icon: 'calculator-alt',
       });
       this.sections.push({
         title: 'Links',
         id: 'links',
-        icon: 'gicon gicon-link',
+        icon: 'link',
       });
     }
 
@@ -80,7 +91,7 @@ export class SettingsCtrl {
       this.sections.push({
         title: 'Versions',
         id: 'versions',
-        icon: 'fa fa-fw fa-history',
+        icon: 'history',
       });
     }
 
@@ -88,14 +99,14 @@ export class SettingsCtrl {
       this.sections.push({
         title: 'Permissions',
         id: 'permissions',
-        icon: 'fa fa-fw fa-lock',
+        icon: 'lock',
       });
     }
 
     if (this.dashboard.meta.canMakeEditable) {
       this.sections.push({
         title: 'General',
-        icon: 'gicon gicon-preferences',
+        icon: 'sliders-v-alt',
         id: 'make_editable',
       });
     }
@@ -103,15 +114,14 @@ export class SettingsCtrl {
     this.sections.push({
       title: 'JSON Model',
       id: 'dashboard_json',
-      icon: 'gicon gicon-json',
+      icon: 'arrow',
     });
 
     const params = this.$location.search();
     const url = this.$location.path();
 
     for (const section of this.sections) {
-      const sectionParams = _.defaults({ editview: section.id }, params);
-      section.url = config.appSubUrl + url + '?' + $.param(sectionParams);
+      section.url = locationUtil.assureBaseUrl(urlUtil.renderUrl(url, { ...params, editview: section.id }));
     }
   }
 
@@ -131,20 +141,11 @@ export class SettingsCtrl {
       this.sections.unshift({
         title: 'Not found',
         id: '404',
-        icon: 'fa fa-fw fa-warning',
+        icon: 'exclamation-triangle',
       });
       this.viewId = '404';
     }
   }
-
-  openSaveAsModal() {
-    this.dashboardSrv.showSaveAsModal();
-  }
-
-  saveDashboard() {
-    this.dashboardSrv.saveDashboard();
-  }
-
   saveDashboardJson() {
     this.dashboardSrv.saveJSONDashboard(this.json).then(() => {
       this.$route.reload();
@@ -175,7 +176,7 @@ export class SettingsCtrl {
     this.buildSectionList();
 
     const currentSection: any = _.find(this.sections, { id: this.viewId } as any);
-    this.$location.url(currentSection.url);
+    this.$location.url(locationUtil.stripBaseFromUrl(currentSection.url));
   }
 
   deleteDashboard() {
@@ -183,7 +184,7 @@ export class SettingsCtrl {
     let text2 = this.dashboard.title;
 
     if (this.dashboard.meta.provisioned) {
-      appEvents.emit('confirm-modal', {
+      appEvents.emit(CoreEvents.showConfirmModal, {
         title: 'Cannot delete provisioned dashboard',
         text: `
           This dashboard is managed by Grafanas provisioning and cannot be deleted. Remove the dashboard from the
@@ -196,7 +197,7 @@ export class SettingsCtrl {
           File path: ${this.dashboard.meta.provisionedExternalId}
         `,
         text2htmlBind: true,
-        icon: 'fa-trash',
+        icon: 'trash-alt',
         noText: 'OK',
       });
       return;
@@ -211,11 +212,11 @@ export class SettingsCtrl {
       text2 = `This dashboard contains ${alerts} alerts. Deleting this dashboard will also delete those alerts`;
     }
 
-    appEvents.emit('confirm-modal', {
+    appEvents.emit(CoreEvents.showConfirmModal, {
       title: 'Delete',
       text: 'Do you want to delete this dashboard?',
       text2: text2,
-      icon: 'fa-trash',
+      icon: 'trash-alt',
       confirmText: confirmText,
       yesText: 'Delete',
       onConfirm: () => {
@@ -226,17 +227,19 @@ export class SettingsCtrl {
   }
 
   deleteDashboardConfirmed() {
-    this.backendSrv.deleteDashboard(this.dashboard.uid).then(() => {
-      appEvents.emit('alert-success', ['Dashboard Deleted', this.dashboard.title + ' has been deleted']);
-      this.$location.url('/');
-    });
+    promiseToDigest(this.$scope)(
+      deleteDashboard(this.dashboard.uid, false).then(() => {
+        appEvents.emit(AppEvents.alertSuccess, ['Dashboard Deleted', this.dashboard.title + ' has been deleted']);
+        this.$location.url('/');
+      })
+    );
   }
 
-  onFolderChange(folder) {
+  onFolderChange = (folder: { id: number; title: string }) => {
     this.dashboard.meta.folderId = folder.id;
     this.dashboard.meta.folderTitle = folder.title;
     this.hasUnsavedFolderChange = true;
-  }
+  };
 
   getFolder() {
     return {
@@ -245,6 +248,30 @@ export class SettingsCtrl {
       url: this.dashboard.meta.folderUrl,
     };
   }
+
+  getDashboard = () => {
+    return this.dashboard;
+  };
+
+  onRefreshIntervalChange = (intervals: string[]) => {
+    this.dashboard.timepicker.refresh_intervals = intervals.filter(i => i.trim() !== '');
+    this.renderCount++;
+  };
+
+  onNowDelayChange = (nowDelay: string) => {
+    this.dashboard.timepicker.nowDelay = nowDelay;
+    this.renderCount++;
+  };
+
+  onHideTimePickerChange = (hide: boolean) => {
+    this.dashboard.timepicker.hidden = hide;
+    this.renderCount++;
+  };
+
+  onTimeZoneChange = (timeZone: TimeZone) => {
+    this.dashboard.timezone = timeZone;
+    this.renderCount++;
+  };
 }
 
 export function dashboardSettings() {

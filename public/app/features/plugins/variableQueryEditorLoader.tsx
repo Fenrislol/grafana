@@ -2,9 +2,9 @@ import coreModule from 'app/core/core_module';
 import { importDataSourcePlugin } from './plugin_loader';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import DefaultVariableQueryEditor from '../templating/DefaultVariableQueryEditor';
-import { DataSourcePluginMeta } from '@grafana/ui';
-import { TemplateSrv } from '../templating/template_srv';
+import DefaultVariableQueryEditor from '../variables/editor/DefaultVariableQueryEditor';
+import { DataSourcePluginMeta } from '@grafana/data';
+import { TemplateSrv } from '@grafana/runtime';
 
 async function loadComponent(meta: DataSourcePluginMeta) {
   const dsPlugin = await importDataSourcePlugin(meta);
@@ -19,7 +19,7 @@ async function loadComponent(meta: DataSourcePluginMeta) {
 function variableQueryEditorLoader(templateSrv: TemplateSrv) {
   return {
     restrict: 'E',
-    link: async (scope, elem) => {
+    link: async (scope: any, elem: JQuery) => {
       const Component = await loadComponent(scope.currentDatasource.meta);
       const props = {
         datasource: scope.currentDatasource,

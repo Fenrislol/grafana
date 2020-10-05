@@ -1,6 +1,11 @@
-import angular from 'angular';
+import angular, { ILocationService, IRootScopeService } from 'angular';
 import _ from 'lodash';
 import { DashboardModel } from '../state/DashboardModel';
+import { ContextSrv } from 'app/core/services/context_srv';
+import { GrafanaRootScope } from 'app/routes/GrafanaCtrl';
+import { AppEventConsumer, CoreEvents } from 'app/types';
+import { appEvents } from 'app/core/app_events';
+import { UnsavedChangesModal } from '../components/SaveDashboard/UnsavedChangesModal';
 
 export class ChangeTracker {
   current: any;
@@ -12,14 +17,14 @@ export class ChangeTracker {
 
   /** @ngInject */
   constructor(
-    dashboard,
-    scope,
-    originalCopyDelay,
-    private $location,
-    $window,
-    private $timeout,
-    private contextSrv,
-    private $rootScope
+    dashboard: DashboardModel,
+    scope: IRootScopeService & AppEventConsumer,
+    originalCopyDelay: any,
+    private $location: ILocationService,
+    $window: any,
+    private $timeout: any,
+    private contextSrv: ContextSrv,
+    private $rootScope: GrafanaRootScope
   ) {
     this.$location = $location;
     this.$window = $window;
@@ -29,7 +34,7 @@ export class ChangeTracker {
     this.scope = scope;
 
     // register events
-    scope.onAppEvent('dashboard-saved', () => {
+    appEvents.on(CoreEvents.dashboardSaved, () => {
       this.original = this.current.getSaveModelClone();
       this.originalPath = $location.path();
     });
@@ -44,11 +49,12 @@ export class ChangeTracker {
       return undefined;
     };
 
-    scope.$on('$locationChangeStart', (event, next) => {
+    scope.$on('$locationChangeStart', (event: any, next: any) => {
       // check if we should look for changes
       if (this.originalPath === $location.path()) {
         return true;
       }
+
       if (this.ignoreChanges()) {
         return true;
       }
@@ -64,7 +70,7 @@ export class ChangeTracker {
       return false;
     });
 
-    if (originalCopyDelay) {
+    if (originalCopyDelay && !dashboard.meta.fromExplore) {
       this.$timeout(() => {
         // wait for different services to patch the dashboard (missing properties)
         this.original = dashboard.getSaveModelClone();
@@ -92,7 +98,7 @@ export class ChangeTracker {
   }
 
   // remove stuff that should not count in diff
-  cleanDashboardFromIgnoredChanges(dashData) {
+  cleanDashboardFromIgnoredChanges(dashData: any) {
     // need to new up the domain model class to get access to expand / collapse row logic
     const model = new DashboardModel(dashData);
 
@@ -106,6 +112,7 @@ export class ChangeTracker {
     dash.time = 0;
     dash.refresh = 0;
     dash.schemaVersion = 0;
+    dash.timezone = 0;
 
     // ignore iteration property
     delete dash.iteration;
@@ -116,7 +123,7 @@ export class ChangeTracker {
       }
 
       // remove scopedVars
-      panel.scopedVars = null;
+      panel.scopedVars = undefined;
 
       // ignore panel legend sort
       if (panel.legend) {
@@ -128,10 +135,10 @@ export class ChangeTracker {
     });
 
     // ignore template variable values
-    _.each(dash.templating.list, value => {
-      value.current = null;
-      value.options = null;
-      value.filters = null;
+    _.each(dash.getVariables(), (variable: any) => {
+      variable.current = null;
+      variable.options = null;
+      variable.filters = null;
     });
 
     return dash;
@@ -141,8 +148,8 @@ export class ChangeTracker {
     const current = this.cleanDashboardFromIgnoredChanges(this.current.getSaveModelClone());
     const original = this.cleanDashboardFromIgnoredChanges(this.original);
 
-    const currentTimepicker: any = _.find(current.nav, { type: 'timepicker' });
-    const originalTimepicker: any = _.find(original.nav, { type: 'timepicker' });
+    const currentTimepicker: any = _.find((current as any).nav, { type: 'timepicker' });
+    const originalTimepicker: any = _.find((original as any).nav, { type: 'timepicker' });
 
     if (currentTimepicker && originalTimepicker) {
       currentTimepicker.now = originalTimepicker.now;
@@ -154,33 +161,36 @@ export class ChangeTracker {
     return currentJson !== originalJson;
   }
 
-  discardChanges() {
+  discardChanges = () => {
     this.original = null;
     this.gotoNext();
-  }
+  };
 
-  open_modal() {
-    this.$rootScope.appEvent('show-modal', {
-      templateHtml: '<unsaved-changes-modal dismiss="dismiss()"></unsaved-changes-modal>',
-      modalClass: 'modal--narrow confirm-modal',
+  open_modal = () => {
+    this.$rootScope.appEvent(CoreEvents.showModalReact, {
+      component: UnsavedChangesModal,
+      props: {
+        dashboard: this.current,
+        onSaveSuccess: this.onSaveSuccess,
+        onDiscard: () => {
+          this.discardChanges();
+        },
+      },
     });
-  }
+  };
 
-  saveChanges() {
-    const self = this;
-    const cancel = this.$rootScope.$on('dashboard-saved', () => {
-      cancel();
-      this.$timeout(() => {
-        self.gotoNext();
-      });
+  onSaveSuccess = () => {
+    this.$timeout(() => {
+      this.gotoNext();
     });
+  };
 
-    this.$rootScope.appEvent('save-dashboard');
-  }
-
-  gotoNext() {
+  gotoNext = () => {
     const baseLen = this.$location.absUrl().length - this.$location.url().length;
     const nextUrl = this.next.substring(baseLen);
-    this.$location.url(nextUrl);
-  }
+
+    this.$timeout(() => {
+      this.$location.url(nextUrl);
+    });
+  };
 }

@@ -3,6 +3,7 @@ import Clipboard from 'clipboard';
 import coreModule from '../core_module';
 import kbn from 'app/core/utils/kbn';
 import { appEvents } from 'app/core/core';
+import { AppEvents } from '@grafana/data';
 
 /** @ngInject */
 function tip($compile: any) {
@@ -13,7 +14,7 @@ function tip($compile: any) {
         '<i class="grafana-tip fa fa-' +
         (attrs.icon || 'question-circle') +
         '" bs-tooltip="\'' +
-        kbn.addslashes(elem.text()) +
+        kbn.addSlashes(elem.text()) +
         '\'"></i>';
       _t = _t.replace(/{/g, '\\{').replace(/}/g, '\\}');
       elem.replaceWith($compile(angular.element(_t))(scope));
@@ -34,7 +35,7 @@ function clipboardButton() {
       });
 
       scope.clipboard.on('success', () => {
-        appEvents.emit('alert-success', ['Content copied to clipboard']);
+        appEvents.emit(AppEvents.alertSuccess, ['Content copied to clipboard']);
       });
 
       scope.$on('$destroy', () => {

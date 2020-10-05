@@ -4,9 +4,9 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/maksimmernikov/grafana/pkg/bus"
-	m "github.com/maksimmernikov/grafana/pkg/models"
-	"github.com/maksimmernikov/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/bus"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/setting"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -27,12 +27,12 @@ func TestEmailIntegrationTest(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		Convey("When sending reset email password", func() {
-			cmd := &m.SendEmailCommand{
+			cmd := &models.SendEmailCommand{
 
 				Data: map[string]interface{}{
-					"Title":         "[CRITICAL] Imaginary timeserie alert",
+					"Title":         "[CRITICAL] Imaginary timeseries alert",
 					"State":         "Firing",
-					"Name":          "Imaginary timeserie alert",
+					"Name":          "Imaginary timeseries alert",
 					"Severity":      "ok",
 					"SeverityColor": "#D63232",
 					"Message":       "Alert message that will support markdown in some distant future.",
@@ -61,7 +61,8 @@ func TestEmailIntegrationTest(t *testing.T) {
 			sentMsg := <-ns.mailQueue
 			So(sentMsg.From, ShouldEqual, "Grafana Admin <from@address.com>")
 			So(sentMsg.To[0], ShouldEqual, "asdf@asdf.com")
-			ioutil.WriteFile("../../../tmp/test_email.html", []byte(sentMsg.Body), 0777)
+			err = ioutil.WriteFile("../../../tmp/test_email.html", []byte(sentMsg.Body), 0777)
+			So(err, ShouldBeNil)
 		})
 	})
 }

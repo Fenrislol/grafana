@@ -1,4 +1,10 @@
-import { DataSourceApi, DataQueryRequest, DataQueryResponse } from '@grafana/ui';
+import {
+  DataQueryRequest,
+  DataQueryResponse,
+  DataSourceApi,
+  DataSourceInstanceSettings,
+  DataSourcePluginMeta,
+} from '@grafana/data';
 
 export class DatasourceSrvMock {
   constructor(private defaultDS: DataSourceApi, private datasources: { [name: string]: DataSourceApi }) {
@@ -17,21 +23,28 @@ export class DatasourceSrvMock {
   }
 }
 
-export class MockDataSourceApi implements DataSourceApi {
-  name: string;
-
+export class MockDataSourceApi extends DataSourceApi {
   result: DataQueryResponse = { data: [] };
-  queryResolver: Promise<DataQueryResponse>;
 
-  constructor(DataQueryResponse, name?: string) {
-    this.name = name ? name : 'MockDataSourceApi';
+  constructor(name?: string, result?: DataQueryResponse, meta?: any, private error: string | null = null) {
+    super({ name: name ? name : 'MockDataSourceApi' } as DataSourceInstanceSettings);
+    if (result) {
+      this.result = result;
+    }
+
+    this.meta = meta || ({} as DataSourcePluginMeta);
   }
 
   query(request: DataQueryRequest): Promise<DataQueryResponse> {
-    if (this.queryResolver) {
-      return this.queryResolver;
+    if (this.error) {
+      return Promise.reject(this.error);
     }
-    return Promise.resolve(this.result);
+
+    return new Promise(resolver => {
+      setTimeout(() => {
+        resolver(this.result);
+      });
+    });
   }
 
   testDatasource() {

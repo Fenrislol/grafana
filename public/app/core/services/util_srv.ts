@@ -1,17 +1,51 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { selectors } from '@grafana/e2e-selectors';
+
 import coreModule from 'app/core/core_module';
 import appEvents from 'app/core/app_events';
+import { CoreEvents } from 'app/types';
+import { GrafanaRootScope } from 'app/routes/GrafanaCtrl';
+import { AngularModalProxy } from '../components/modals/AngularModalProxy';
+import { provideTheme } from '../utils/ConfigProvider';
 
 export class UtilSrv {
   modalScope: any;
+  reactModalRoot = document.body;
+  reactModalNode = document.createElement('div');
 
   /** @ngInject */
-  constructor(private $rootScope, private $modal) {}
+  constructor(private $rootScope: GrafanaRootScope, private $modal: any) {
+    this.reactModalNode.setAttribute('id', 'angular2ReactModalRoot');
+  }
 
   init() {
-    appEvents.on('show-modal', this.showModal.bind(this), this.$rootScope);
-    appEvents.on('hide-modal', this.hideModal.bind(this), this.$rootScope);
-    appEvents.on('confirm-modal', this.showConfirmModal.bind(this), this.$rootScope);
+    appEvents.on(CoreEvents.showModal, this.showModal.bind(this), this.$rootScope);
+    appEvents.on(CoreEvents.hideModal, this.hideModal.bind(this), this.$rootScope);
+    appEvents.on(CoreEvents.showConfirmModal, this.showConfirmModal.bind(this), this.$rootScope);
+    appEvents.on(CoreEvents.showModalReact, this.showModalReact.bind(this), this.$rootScope);
   }
+
+  showModalReact(options: any) {
+    const { component, props } = options;
+    const modalProps = {
+      component,
+      props: {
+        ...props,
+        isOpen: true,
+        onDismiss: this.onReactModalDismiss,
+      },
+    };
+
+    const elem = React.createElement(provideTheme(AngularModalProxy), modalProps);
+    this.reactModalRoot.appendChild(this.reactModalNode);
+    return ReactDOM.render(elem, this.reactModalNode);
+  }
+
+  onReactModalDismiss = () => {
+    ReactDOM.unmountComponentAtNode(this.reactModalNode);
+    this.reactModalRoot.removeChild(this.reactModalNode);
+  };
 
   hideModal() {
     if (this.modalScope && this.modalScope.dismiss) {
@@ -19,7 +53,7 @@ export class UtilSrv {
     }
   }
 
-  showModal(options) {
+  showModal(options: any) {
     if (this.modalScope && this.modalScope.dismiss) {
       this.modalScope.dismiss();
     }
@@ -49,10 +83,10 @@ export class UtilSrv {
     });
   }
 
-  showConfirmModal(payload) {
-    const scope = this.$rootScope.$new();
+  showConfirmModal(payload: any) {
+    const scope: any = this.$rootScope.$new();
 
-    scope.updateConfirmText = value => {
+    scope.updateConfirmText = (value: any) => {
       scope.confirmTextValid = payload.confirmText.toLowerCase() === value.toLowerCase();
     };
 
@@ -65,12 +99,13 @@ export class UtilSrv {
     scope.onConfirm = payload.onConfirm;
     scope.onAltAction = payload.onAltAction;
     scope.altActionText = payload.altActionText;
-    scope.icon = payload.icon || 'fa-check';
+    scope.icon = payload.icon || 'check';
     scope.yesText = payload.yesText || 'Yes';
     scope.noText = payload.noText || 'Cancel';
     scope.confirmTextValid = scope.confirmText ? false : true;
+    scope.selectors = selectors.pages.ConfirmModal;
 
-    appEvents.emit('show-modal', {
+    appEvents.emit(CoreEvents.showModal, {
       src: 'public/app/partials/confirm_modal.html',
       scope: scope,
       modalClass: 'confirm-modal',

@@ -5,31 +5,34 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/maksimmernikov/grafana/pkg/bus"
-	"github.com/maksimmernikov/grafana/pkg/log"
-	m "github.com/maksimmernikov/grafana/pkg/models"
-	"github.com/maksimmernikov/grafana/pkg/services/alerting"
-	"github.com/maksimmernikov/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/bus"
+	"github.com/grafana/grafana/pkg/infra/log"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/services/alerting"
+	"github.com/grafana/grafana/pkg/setting"
 )
 
 func init() {
 	alerting.RegisterNotifier(&alerting.NotifierPlugin{
-		Type: "googlechat",
-		Name: "Google Hangouts Chat",
-		Description: "Sends notifications to Google Hangouts Chat via webhooks based on the official JSON message " +
-			"format (https://developers.google.com/hangouts/chat/reference/message-formats/).",
-		Factory: NewGoogleChatNotifier,
-		OptionsTemplate: `
-      <h3 class="page-heading">Google Hangouts Chat settings</h3>
-      <div class="gf-form max-width-30">
-        <span class="gf-form-label width-6">Url</span>
-        <input type="text" required class="gf-form-input max-width-30" ng-model="ctrl.model.settings.url" placeholder="Google Hangouts Chat incoming webhook url"></input>
-      </div>
-    `,
+		Type:        "googlechat",
+		Name:        "Google Hangouts Chat",
+		Description: "Sends notifications to Google Hangouts Chat via webhooks based on the official JSON message format",
+		Factory:     newGoogleChatNotifier,
+		Heading:     "Google Hangouts Chat settings",
+		Options: []alerting.NotifierOption{
+			{
+				Label:        "Url",
+				Element:      alerting.ElementTypeInput,
+				InputType:    alerting.InputTypeText,
+				Placeholder:  "Google Hangouts Chat incoming webhook url",
+				PropertyName: "url",
+				Required:     true,
+			},
+		},
 	})
 }
 
-func NewGoogleChatNotifier(model *m.AlertNotification) (alerting.Notifier, error) {
+func newGoogleChatNotifier(model *models.AlertNotification) (alerting.Notifier, error) {
 	url := model.Settings.Get("url").MustString()
 	if url == "" {
 		return nil, alerting.ValidationError{Reason: "Could not find url property in settings"}
@@ -37,14 +40,16 @@ func NewGoogleChatNotifier(model *m.AlertNotification) (alerting.Notifier, error
 
 	return &GoogleChatNotifier{
 		NotifierBase: NewNotifierBase(model),
-		Url:          url,
+		URL:          url,
 		log:          log.New("alerting.notifier.googlechat"),
 	}, nil
 }
 
+// GoogleChatNotifier is responsible for sending
+// alert notifications to Google chat.
 type GoogleChatNotifier struct {
 	NotifierBase
-	Url string
+	URL string
 	log log.Logger
 }
 
@@ -53,7 +58,9 @@ Structs used to build a custom Google Hangouts Chat message card.
 See: https://developers.google.com/hangouts/chat/reference/message-formats/cards
 */
 type outerStruct struct {
-	Cards []card `json:"cards"`
+	PreviewText  string `json:"previewText"`
+	FallbackText string `json:"fallbackText"`
+	Cards        []card `json:"cards"`
 }
 
 type card struct {
@@ -90,7 +97,7 @@ type imageWidget struct {
 }
 
 type image struct {
-	ImageUrl string `json:"imageUrl"`
+	ImageURL string `json:"imageUrl"`
 }
 
 type button struct {
@@ -107,28 +114,31 @@ type onClick struct {
 }
 
 type openLink struct {
-	Url string `json:"url"`
+	URL string `json:"url"`
 }
 
-func (this *GoogleChatNotifier) Notify(evalContext *alerting.EvalContext) error {
-	this.log.Info("Executing Google Chat notification")
+// Notify send an alert notification to Google Chat.
+func (gcn *GoogleChatNotifier) Notify(evalContext *alerting.EvalContext) error {
+	gcn.log.Info("Executing Google Chat notification")
 
 	headers := map[string]string{
 		"Content-Type": "application/json; charset=UTF-8",
 	}
 
-	ruleUrl, err := evalContext.GetRuleUrl()
+	ruleURL, err := evalContext.GetRuleURL()
 	if err != nil {
-		this.log.Error("evalContext returned an invalid rule URL")
+		gcn.log.Error("evalContext returned an invalid rule URL")
 	}
 
-	// add a text paragraph widget for the message
-	widgets := []widget{
-		textParagraphWidget{
+	widgets := []widget{}
+	if len(evalContext.Rule.Message) > 0 {
+		// add a text paragraph widget for the message if there is a message
+		// Google Chat API doesn't accept an empty text property
+		widgets = append(widgets, textParagraphWidget{
 			Text: text{
 				Text: evalContext.Rule.Message,
 			},
-		},
+		})
 	}
 
 	// add a text paragraph widget for the fields
@@ -148,15 +158,17 @@ func (this *GoogleChatNotifier) Notify(evalContext *alerting.EvalContext) error 
 	}
 	widgets = append(widgets, fields)
 
-	// if an image exists, add it as an image widget
-	if evalContext.ImagePublicUrl != "" {
-		widgets = append(widgets, imageWidget{
-			Image: image{
-				ImageUrl: evalContext.ImagePublicUrl,
-			},
-		})
-	} else {
-		this.log.Info("Could not retrieve a public image URL.")
+	if gcn.NeedsImage() {
+		// if an image exists, add it as an image widget
+		if evalContext.ImagePublicURL != "" {
+			widgets = append(widgets, imageWidget{
+				Image: image{
+					ImageURL: evalContext.ImagePublicURL,
+				},
+			})
+		} else {
+			gcn.log.Info("Could not retrieve a public image URL.")
+		}
 	}
 
 	// add a button widget (link to Grafana)
@@ -167,7 +179,7 @@ func (this *GoogleChatNotifier) Notify(evalContext *alerting.EvalContext) error 
 					Text: "OPEN IN GRAFANA",
 					OnClick: onClick{
 						OpenLink: openLink{
-							Url: ruleUrl,
+							URL: ruleURL,
 						},
 					},
 				},
@@ -184,6 +196,8 @@ func (this *GoogleChatNotifier) Notify(evalContext *alerting.EvalContext) error 
 
 	// nest the required structs
 	res1D := &outerStruct{
+		PreviewText:  evalContext.GetNotificationTitle(),
+		FallbackText: evalContext.GetNotificationTitle(),
 		Cards: []card{
 			{
 				Header: header{
@@ -199,15 +213,15 @@ func (this *GoogleChatNotifier) Notify(evalContext *alerting.EvalContext) error 
 	}
 	body, _ := json.Marshal(res1D)
 
-	cmd := &m.SendWebhookSync{
-		Url:        this.Url,
+	cmd := &models.SendWebhookSync{
+		Url:        gcn.URL,
 		HttpMethod: "POST",
 		HttpHeader: headers,
 		Body:       string(body),
 	}
 
 	if err := bus.DispatchCtx(evalContext.Ctx, cmd); err != nil {
-		this.log.Error("Failed to send Google Hangouts Chat alert", "error", err, "webhook", this.Name)
+		gcn.log.Error("Failed to send Google Hangouts Chat alert", "error", err, "webhook", gcn.Name)
 		return err
 	}
 

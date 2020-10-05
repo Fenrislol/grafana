@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/maksimmernikov/grafana/pkg/log"
-	"github.com/maksimmernikov/grafana/pkg/registry"
-	"github.com/maksimmernikov/grafana/pkg/services/sqlstore"
+	"github.com/grafana/grafana/pkg/infra/log"
+	"github.com/grafana/grafana/pkg/registry"
+	"github.com/grafana/grafana/pkg/services/sqlstore"
 )
 
 func init() {
@@ -38,8 +38,8 @@ func (sl *ServerLockService) LockAndExecute(ctx context.Context, actionName stri
 
 	// avoid execution if last lock happened less than `maxInterval` ago
 	if rowLock.LastExecution != 0 {
-		lastExeuctionTime := time.Unix(rowLock.LastExecution, 0)
-		if lastExeuctionTime.Unix() > time.Now().Add(-maxInterval).Unix() {
+		lastExecutionTime := time.Unix(rowLock.LastExecution, 0)
+		if lastExecutionTime.Unix() > time.Now().Add(-maxInterval).Unix() {
 			return nil
 		}
 	}

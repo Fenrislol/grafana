@@ -1,169 +1,237 @@
 import './dashboard_loaders';
 import './ReactContainer';
 import { applyRouteRegistrationHandlers } from './registry';
-
 // Pages
-import ServerStats from 'app/features/admin/ServerStats';
-import AlertRuleList from 'app/features/alerting/AlertRuleList';
-import TeamPages from 'app/features/teams/TeamPages';
-import TeamList from 'app/features/teams/TeamList';
-import ApiKeys from 'app/features/api-keys/ApiKeysPage';
-import PluginListPage from 'app/features/plugins/PluginListPage';
-import FolderSettingsPage from 'app/features/folders/FolderSettingsPage';
-import FolderPermissions from 'app/features/folders/FolderPermissions';
-import CreateFolderCtrl from 'app/features/folders/CreateFolderCtrl';
-import FolderDashboardsCtrl from 'app/features/folders/FolderDashboardsCtrl';
-import DashboardImportCtrl from 'app/features/manage-dashboards/DashboardImportCtrl';
-import DataSourcesListPage from 'app/features/datasources/DataSourcesListPage';
-import NewDataSourcePage from '../features/datasources/NewDataSourcePage';
-import UsersListPage from 'app/features/users/UsersListPage';
-import DataSourceDashboards from 'app/features/datasources/DataSourceDashboards';
-import DataSourceSettingsPage from '../features/datasources/settings/DataSourceSettingsPage';
-import OrgDetailsPage from '../features/org/OrgDetailsPage';
-import SoloPanelPage from '../features/dashboard/containers/SoloPanelPage';
-import DashboardPage from '../features/dashboard/containers/DashboardPage';
-import PluginPage from '../features/plugins/PluginPage';
-import AppRootPage from 'app/features/plugins/AppRootPage';
-import config from 'app/core/config';
+import LdapPage from 'app/features/admin/ldap/LdapPage';
+import UserAdminPage from 'app/features/admin/UserAdminPage';
+import { LoginPage } from 'app/core/components/Login/LoginPage';
 
+import config from 'app/core/config';
+import { ILocationProvider, route } from 'angular';
 // Types
 import { DashboardRouteInfo } from 'app/types';
+import { SafeDynamicImport } from '../core/components/DynamicImports/SafeDynamicImport';
 
 /** @ngInject */
-export function setupAngularRoutes($routeProvider, $locationProvider) {
+export function setupAngularRoutes($routeProvider: route.IRouteProvider, $locationProvider: ILocationProvider) {
   $locationProvider.html5Mode(true);
+
+  // Routes here are guarded both here and server side for react-container routes or just on the server for angular
+  // ones. That means angular ones could be navigated to in case there is a client side link some where.
+
+  const importDashboardPage = () =>
+    SafeDynamicImport(import(/* webpackChunkName: "DashboardPage" */ '../features/dashboard/containers/DashboardPage'));
 
   $routeProvider
     .when('/', {
       template: '<react-container />',
+      //@ts-ignore
       pageClass: 'page-dashboard',
       routeInfo: DashboardRouteInfo.Home,
       reloadOnSearch: false,
       resolve: {
-        component: () => DashboardPage,
+        component: importDashboardPage,
       },
     })
     .when('/d/:uid/:slug', {
       template: '<react-container />',
+      //@ts-ignore
       pageClass: 'page-dashboard',
       routeInfo: DashboardRouteInfo.Normal,
       reloadOnSearch: false,
       resolve: {
-        component: () => DashboardPage,
+        component: importDashboardPage,
       },
     })
     .when('/d/:uid', {
       template: '<react-container />',
+      //@ts-ignore
       pageClass: 'page-dashboard',
       reloadOnSearch: false,
       routeInfo: DashboardRouteInfo.Normal,
       resolve: {
-        component: () => DashboardPage,
+        component: importDashboardPage,
       },
     })
     .when('/dashboard/:type/:slug', {
       template: '<react-container />',
+      //@ts-ignore
       pageClass: 'page-dashboard',
       routeInfo: DashboardRouteInfo.Normal,
       reloadOnSearch: false,
       resolve: {
-        component: () => DashboardPage,
+        component: importDashboardPage,
       },
     })
     .when('/dashboard/new', {
       template: '<react-container />',
+      //@ts-ignore
       pageClass: 'page-dashboard',
       routeInfo: DashboardRouteInfo.New,
       reloadOnSearch: false,
       resolve: {
-        component: () => DashboardPage,
+        component: importDashboardPage,
       },
     })
     .when('/d-solo/:uid/:slug', {
       template: '<react-container />',
+      //@ts-ignore
       pageClass: 'dashboard-solo',
       routeInfo: DashboardRouteInfo.Normal,
       reloadOnSearch: false,
       resolve: {
-        component: () => SoloPanelPage,
+        component: () =>
+          SafeDynamicImport(
+            import(/* webpackChunkName: "SoloPanelPage" */ '../features/dashboard/containers/SoloPanelPage')
+          ),
+      },
+    })
+    .when('/d-solo/:uid', {
+      template: '<react-container />',
+      //@ts-ignore
+      pageClass: 'dashboard-solo',
+      routeInfo: DashboardRouteInfo.Normal,
+      reloadOnSearch: false,
+      resolve: {
+        component: () =>
+          SafeDynamicImport(
+            import(/* webpackChunkName: "SoloPanelPage" */ '../features/dashboard/containers/SoloPanelPage')
+          ),
       },
     })
     .when('/dashboard-solo/:type/:slug', {
       template: '<react-container />',
+      //@ts-ignore
       pageClass: 'dashboard-solo',
       routeInfo: DashboardRouteInfo.Normal,
       reloadOnSearch: false,
       resolve: {
-        component: () => SoloPanelPage,
+        component: () =>
+          SafeDynamicImport(
+            import(/* webpackChunkName: "SoloPanelPage" */ '../features/dashboard/containers/SoloPanelPage')
+          ),
       },
     })
     .when('/dashboard/import', {
-      templateUrl: 'public/app/features/manage-dashboards/partials/dashboard_import.html',
-      controller: DashboardImportCtrl,
-      controllerAs: 'ctrl',
+      template: '<react-container />',
+      reloadOnSearch: false,
+      resolve: {
+        component: () =>
+          SafeDynamicImport(
+            import(/* webpackChunkName: "DashboardImport"*/ 'app/features/manage-dashboards/DashboardImportPage')
+          ),
+      },
     })
     .when('/datasources', {
       template: '<react-container />',
+      reloadOnSearch: false,
       resolve: {
-        component: () => DataSourcesListPage,
+        component: () =>
+          SafeDynamicImport(
+            import(/* webpackChunkName: "DataSourcesListPage"*/ 'app/features/datasources/DataSourcesListPage')
+          ),
       },
     })
     .when('/datasources/edit/:id/', {
       template: '<react-container />',
+      reloadOnSearch: false, // for tabs
       resolve: {
-        component: () => DataSourceSettingsPage,
+        component: () =>
+          SafeDynamicImport(
+            import(
+              /* webpackChunkName: "DataSourceSettingsPage"*/ '../features/datasources/settings/DataSourceSettingsPage'
+            )
+          ),
       },
     })
     .when('/datasources/edit/:id/dashboards', {
       template: '<react-container />',
+      reloadOnSearch: false,
       resolve: {
-        component: () => DataSourceDashboards,
+        component: () =>
+          SafeDynamicImport(
+            import(/* webpackChunkName: "DataSourceDashboards"*/ 'app/features/datasources/DataSourceDashboards')
+          ),
       },
     })
     .when('/datasources/new', {
       template: '<react-container />',
+      reloadOnSearch: false,
       resolve: {
-        component: () => NewDataSourcePage,
+        component: () =>
+          SafeDynamicImport(
+            import(/* webpackChunkName: "NewDataSourcePage"*/ '../features/datasources/NewDataSourcePage')
+          ),
       },
     })
     .when('/dashboards', {
-      templateUrl: 'public/app/features/manage-dashboards/partials/dashboard_list.html',
-      controller: 'DashboardListCtrl',
-      controllerAs: 'ctrl',
+      template: '<react-container />',
+      reloadOnSearch: false,
+      resolve: {
+        component: () =>
+          SafeDynamicImport(
+            import(/* webpackChunkName: "DashboardListPage"*/ 'app/features/search/components/DashboardListPage')
+          ),
+      },
     })
     .when('/dashboards/folder/new', {
-      templateUrl: 'public/app/features/folders/partials/create_folder.html',
-      controller: CreateFolderCtrl,
-      controllerAs: 'ctrl',
+      template: '<react-container />',
+      reloadOnSearch: false,
+      resolve: {
+        component: () =>
+          SafeDynamicImport(
+            import(/* webpackChunkName: "NewDashboardsFolder"*/ 'app/features/folders/components/NewDashboardsFolder')
+          ),
+      },
     })
     .when('/dashboards/f/:uid/:slug/permissions', {
       template: '<react-container />',
+      reloadOnSearch: false,
       resolve: {
-        component: () => FolderPermissions,
+        component: () =>
+          SafeDynamicImport(
+            import(/* webpackChunkName: "FolderPermissions"*/ 'app/features/folders/FolderPermissions')
+          ),
       },
     })
     .when('/dashboards/f/:uid/:slug/settings', {
       template: '<react-container />',
+      reloadOnSearch: false,
       resolve: {
-        component: () => FolderSettingsPage,
+        component: () =>
+          SafeDynamicImport(
+            import(/* webpackChunkName: "FolderSettingsPage"*/ 'app/features/folders/FolderSettingsPage')
+          ),
       },
     })
     .when('/dashboards/f/:uid/:slug', {
-      templateUrl: 'public/app/features/folders/partials/folder_dashboards.html',
-      controller: FolderDashboardsCtrl,
-      controllerAs: 'ctrl',
+      template: '<react-container />',
+      reloadOnSearch: false,
+      resolve: {
+        component: () =>
+          SafeDynamicImport(
+            import(/* webpackChunkName: "DashboardListPage"*/ 'app/features/search/components/DashboardListPage')
+          ),
+      },
     })
     .when('/dashboards/f/:uid', {
-      templateUrl: 'public/app/features/folders/partials/folder_dashboards.html',
-      controller: FolderDashboardsCtrl,
-      controllerAs: 'ctrl',
+      template: '<react-container />',
+      reloadOnSearch: false,
+      resolve: {
+        component: () =>
+          SafeDynamicImport(
+            import(/* webpackChunkName: "DashboardListPage"*/ 'app/features/search/components/DashboardListPage')
+          ),
+      },
     })
     .when('/explore', {
       template: '<react-container />',
       reloadOnSearch: false,
+      //@ts-ignore
+      pageClass: 'page-explore',
       resolve: {
         roles: () => (config.viewersCanEdit ? [] : ['Editor', 'Admin']),
-        component: () => import(/* webpackChunkName: "explore" */ 'app/features/explore/Wrapper'),
+        component: () => SafeDynamicImport(import(/* webpackChunkName: "explore" */ 'app/features/explore/Wrapper')),
       },
     })
     .when('/a/:pluginId/', {
@@ -171,162 +239,279 @@ export function setupAngularRoutes($routeProvider, $locationProvider) {
       template: '<react-container />',
       reloadOnSearch: false,
       resolve: {
-        component: () => AppRootPage,
+        component: () =>
+          SafeDynamicImport(import(/* webpackChunkName: "AppRootPage" */ 'app/features/plugins/AppRootPage')),
       },
     })
     .when('/org', {
       template: '<react-container />',
+      reloadOnSearch: false,
       resolve: {
-        component: () => OrgDetailsPage,
+        component: () =>
+          SafeDynamicImport(import(/* webpackChunkName: "OrgDetailsPage" */ '../features/org/OrgDetailsPage')),
       },
     })
     .when('/org/new', {
-      templateUrl: 'public/app/features/org/partials/newOrg.html',
-      controller: 'NewOrgCtrl',
+      template: '<react-container />',
+      reloadOnSearch: false,
+      resolve: {
+        component: () => SafeDynamicImport(import(/* webpackChunkName: "NewOrgPage" */ 'app/features/org/NewOrgPage')),
+      },
     })
     .when('/org/users', {
       template: '<react-container />',
+      reloadOnSearch: false,
       resolve: {
-        component: () => UsersListPage,
+        component: () =>
+          SafeDynamicImport(import(/* webpackChunkName: "UsersListPage" */ 'app/features/users/UsersListPage')),
       },
     })
     .when('/org/users/invite', {
-      templateUrl: 'public/app/features/org/partials/invite.html',
-      controller: 'UserInviteCtrl',
-      controllerAs: 'ctrl',
+      template: '<react-container/>',
+      reloadOnSearch: false,
+      resolve: {
+        component: () =>
+          SafeDynamicImport(import(/* webpackChunkName: "UserInvitePage" */ 'app/features/org/UserInvitePage')),
+      },
     })
     .when('/org/apikeys', {
       template: '<react-container />',
+      reloadOnSearch: false,
       resolve: {
         roles: () => ['Editor', 'Admin'],
-        component: () => ApiKeys,
+        component: () =>
+          SafeDynamicImport(import(/* webpackChunkName: "ApiKeysPage" */ 'app/features/api-keys/ApiKeysPage')),
       },
     })
     .when('/org/teams', {
       template: '<react-container />',
+      reloadOnSearch: false,
       resolve: {
         roles: () => (config.editorsCanAdmin ? [] : ['Editor', 'Admin']),
-        component: () => TeamList,
+        component: () => SafeDynamicImport(import(/* webpackChunkName: "TeamList" */ 'app/features/teams/TeamList')),
       },
     })
     .when('/org/teams/new', {
-      templateUrl: 'public/app/features/teams/partials/create_team.html',
-      controller: 'CreateTeamCtrl',
-      controllerAs: 'ctrl',
+      template: '<react-container />',
+      reloadOnSearch: false,
+      resolve: {
+        roles: () => (config.editorsCanAdmin ? [] : ['Admin']),
+        component: () =>
+          SafeDynamicImport(import(/* webpackChunkName: "CreateTeam" */ 'app/features/teams/CreateTeam')),
+      },
     })
     .when('/org/teams/edit/:id/:page?', {
       template: '<react-container />',
+      reloadOnSearch: false,
       resolve: {
         roles: () => (config.editorsCanAdmin ? [] : ['Admin']),
-        component: () => TeamPages,
+        component: () => SafeDynamicImport(import(/* webpackChunkName: "TeamPages" */ 'app/features/teams/TeamPages')),
       },
     })
     .when('/profile', {
-      templateUrl: 'public/app/features/profile/partials/profile.html',
-      controller: 'ProfileCtrl',
-      controllerAs: 'ctrl',
+      template: '<react-container />',
+      reloadOnSearch: false,
+      resolve: {
+        component: () =>
+          SafeDynamicImport(import(/* webpackChunkName: "UserProfileEdit" */ 'app/features/profile/UserProfileEdit')),
+      },
     })
     .when('/profile/password', {
-      templateUrl: 'public/app/features/profile/partials/change_password.html',
-      controller: 'ChangePasswordCtrl',
+      template: '<react-container />',
+      reloadOnSearch: false,
+      resolve: {
+        component: () =>
+          SafeDynamicImport(
+            import(/* webpackChunkName: "ChangePasswordPage" */ 'app/features/profile/ChangePasswordPage')
+          ),
+      },
     })
     .when('/profile/select-org', {
-      templateUrl: 'public/app/features/org/partials/select_org.html',
-      controller: 'SelectOrgCtrl',
+      template: '<react-container/>',
+      reloadOnSearch: false,
+      resolve: {
+        component: () =>
+          SafeDynamicImport(import(/* webpackChunkName: "SelectOrgPage" */ 'app/features/org/SelectOrgPage')),
+      },
     })
     // ADMIN
     .when('/admin', {
       templateUrl: 'public/app/features/admin/partials/admin_home.html',
       controller: 'AdminHomeCtrl',
       controllerAs: 'ctrl',
+      reloadOnSearch: false,
     })
     .when('/admin/settings', {
-      templateUrl: 'public/app/features/admin/partials/settings.html',
-      controller: 'AdminSettingsCtrl',
-      controllerAs: 'ctrl',
+      template: '<react-container />',
+      reloadOnSearch: false,
+      resolve: {
+        component: () =>
+          SafeDynamicImport(import(/* webpackChunkName: "AdminSettings" */ 'app/features/admin/AdminSettings')),
+      },
+    })
+    .when('/admin/upgrading', {
+      template: '<react-container />',
+      reloadOnSearch: false,
+      resolve: {
+        component: () => SafeDynamicImport(import('app/features/admin/UpgradePage')),
+      },
     })
     .when('/admin/users', {
-      templateUrl: 'public/app/features/admin/partials/users.html',
-      controller: 'AdminListUsersCtrl',
-      controllerAs: 'ctrl',
+      template: '<react-container />',
+      reloadOnSearch: false,
+      resolve: {
+        component: () =>
+          SafeDynamicImport(import(/* webpackChunkName: "UserListAdminPage" */ 'app/features/admin/UserListAdminPage')),
+      },
     })
     .when('/admin/users/create', {
-      templateUrl: 'public/app/features/admin/partials/new_user.html',
-      controller: 'AdminEditUserCtrl',
+      template: '<react-container />',
+      reloadOnSearch: false,
+      resolve: {
+        component: () =>
+          SafeDynamicImport(import(/* webpackChunkName: "UserCreatePage" */ 'app/features/admin/UserCreatePage')),
+      },
     })
     .when('/admin/users/edit/:id', {
-      templateUrl: 'public/app/features/admin/partials/edit_user.html',
-      controller: 'AdminEditUserCtrl',
+      template: '<react-container />',
+      reloadOnSearch: false,
+      resolve: {
+        component: () => UserAdminPage,
+      },
     })
     .when('/admin/orgs', {
-      templateUrl: 'public/app/features/admin/partials/orgs.html',
-      controller: 'AdminListOrgsCtrl',
-      controllerAs: 'ctrl',
+      template: '<react-container />',
+      reloadOnSearch: false,
+      resolve: {
+        component: () =>
+          SafeDynamicImport(import(/* webpackChunkName: "AdminListOrgsPage" */ 'app/features/admin/AdminListOrgsPage')),
+      },
     })
     .when('/admin/orgs/edit/:id', {
-      templateUrl: 'public/app/features/admin/partials/edit_org.html',
-      controller: 'AdminEditOrgCtrl',
-      controllerAs: 'ctrl',
+      template: '<react-container />',
+      reloadOnSearch: false,
+      resolve: {
+        component: () =>
+          SafeDynamicImport(import(/* webpackChunkName: "AdminEditOrgPage" */ 'app/features/admin/AdminEditOrgPage')),
+      },
     })
     .when('/admin/stats', {
       template: '<react-container />',
+      reloadOnSearch: false,
       resolve: {
-        component: () => ServerStats,
+        component: () =>
+          SafeDynamicImport(import(/* webpackChunkName: "ServerStats" */ 'app/features/admin/ServerStats')),
+      },
+    })
+    .when('/admin/live', {
+      template: '<react-container />',
+      reloadOnSearch: false,
+      resolve: {
+        component: () => SafeDynamicImport(import(/* webpackChunkName: "LiveAdmin" */ 'app/features/admin/LiveAdmin')),
+      },
+    })
+    .when('/admin/ldap', {
+      template: '<react-container />',
+      reloadOnSearch: false,
+      resolve: {
+        component: () => LdapPage,
       },
     })
     // LOGIN / SIGNUP
     .when('/login', {
-      templateUrl: 'public/app/partials/login.html',
-      controller: 'LoginCtrl',
+      template: '<react-container/>',
+      //@ts-ignore
       pageClass: 'login-page sidemenu-hidden',
+      resolve: {
+        component: () => LoginPage,
+      },
     })
     .when('/invite/:code', {
-      templateUrl: 'public/app/partials/signup_invited.html',
-      controller: 'InvitedCtrl',
+      template: '<react-container/>',
+      //@ts-ignore
       pageClass: 'sidemenu-hidden',
+      resolve: {
+        component: () =>
+          SafeDynamicImport(import(/* webpackChunkName: "SignupInvited" */ 'app/features/users/SignupInvited')),
+      },
+    })
+    .when('/verify', {
+      template: '<react-container />',
+      resolve: {
+        component: () =>
+          SafeDynamicImport(
+            import(/* webpackChunkName: "VerifyEmailPage" */ 'app/core/components/Signup/VerifyEmailPage')
+          ),
+      },
+      // @ts-ignore
+      pageClass: 'login-page sidemenu-hidden',
     })
     .when('/signup', {
-      templateUrl: 'public/app/partials/signup_step2.html',
-      controller: 'SignUpCtrl',
-      pageClass: 'sidemenu-hidden',
+      template: '<react-container />',
+      resolve: {
+        component: () =>
+          SafeDynamicImport(import(/* webpackChunkName: "SignupPage" */ 'app/core/components/Signup/SignupPage')),
+      },
+      // @ts-ignore
+      pageClass: 'login-page sidemenu-hidden',
     })
     .when('/user/password/send-reset-email', {
-      templateUrl: 'public/app/partials/reset_password.html',
-      controller: 'ResetPasswordCtrl',
-      pageClass: 'sidemenu-hidden',
+      template: '<react-container />',
+      resolve: {
+        component: () =>
+          SafeDynamicImport(
+            import(
+              /* webpackChunkName: "SendResetMailPage" */ 'app/core/components/ForgottenPassword/SendResetMailPage'
+            )
+          ),
+      },
+      // @ts-ignore
+      pageClass: 'login-page sidemenu-hidden',
     })
     .when('/user/password/reset', {
-      templateUrl: 'public/app/partials/reset_password.html',
-      controller: 'ResetPasswordCtrl',
-      pageClass: 'sidemenu-hidden',
+      template: '<react-container />',
+      resolve: {
+        component: () =>
+          SafeDynamicImport(
+            import(
+              /* webpackChunkName: "ChangePasswordPage" */ 'app/core/components/ForgottenPassword/ChangePasswordPage'
+            )
+          ),
+      },
+      //@ts-ignore
+      pageClass: 'login-page sidemenu-hidden',
     })
     .when('/dashboard/snapshots', {
-      templateUrl: 'public/app/features/manage-dashboards/partials/snapshot_list.html',
-      controller: 'SnapshotListCtrl',
-      controllerAs: 'ctrl',
+      template: '<react-container />',
+      reloadOnSearch: false,
+      resolve: {
+        component: () =>
+          SafeDynamicImport(
+            import(/* webpackChunkName: "SnapshotListPage" */ 'app/features/manage-dashboards/SnapshotListPage')
+          ),
+      },
     })
     .when('/plugins', {
       template: '<react-container />',
+      reloadOnSearch: false,
       resolve: {
-        component: () => PluginListPage,
+        component: () =>
+          SafeDynamicImport(import(/* webpackChunkName: "PluginListPage" */ 'app/features/plugins/PluginListPage')),
       },
     })
     .when('/plugins/:pluginId/', {
       template: '<react-container />',
-      reloadOnSearch: false, // tabs from query parameters
+      reloadOnSearch: false,
       resolve: {
-        component: () => PluginPage,
+        component: () =>
+          SafeDynamicImport(import(/* webpackChunkName: "PluginPage" */ '../features/plugins/PluginPage')),
       },
     })
     .when('/plugins/:pluginId/page/:slug', {
       templateUrl: 'public/app/features/plugins/partials/plugin_page.html',
       controller: 'AppPageCtrl',
       controllerAs: 'ctrl',
-    })
-    .when('/styleguide/:page?', {
-      controller: 'StyleGuideCtrl',
-      controllerAs: 'ctrl',
-      templateUrl: 'public/app/features/admin/partials/styleguide.html',
+      reloadOnSearch: false,
     })
     .when('/alerting', {
       redirectTo: '/alerting/list',
@@ -335,27 +520,44 @@ export function setupAngularRoutes($routeProvider, $locationProvider) {
       template: '<react-container />',
       reloadOnSearch: false,
       resolve: {
-        component: () => AlertRuleList,
+        component: () =>
+          SafeDynamicImport(import(/* webpackChunkName: "AlertRuleList" */ 'app/features/alerting/AlertRuleList')),
       },
     })
     .when('/alerting/notifications', {
-      templateUrl: 'public/app/features/alerting/partials/notifications_list.html',
-      controller: 'AlertNotificationsListCtrl',
-      controllerAs: 'ctrl',
+      template: '<react-container />',
+      reloadOnSearch: false,
+      resolve: {
+        component: () =>
+          SafeDynamicImport(
+            import(/* webpackChunkName: "NotificationsListPage" */ 'app/features/alerting/NotificationsListPage')
+          ),
+      },
     })
     .when('/alerting/notification/new', {
-      templateUrl: 'public/app/features/alerting/partials/notification_edit.html',
-      controller: 'AlertNotificationEditCtrl',
-      controllerAs: 'ctrl',
+      template: '<react-container />',
+      resolve: {
+        component: () =>
+          SafeDynamicImport(
+            import(/* webpackChunkName: "NewNotificationChannel" */ 'app/features/alerting/NewNotificationChannelPage')
+          ),
+      },
     })
     .when('/alerting/notification/:id/edit', {
-      templateUrl: 'public/app/features/alerting/partials/notification_edit.html',
-      controller: 'AlertNotificationEditCtrl',
-      controllerAs: 'ctrl',
+      template: '<react-container />',
+      resolve: {
+        component: () =>
+          SafeDynamicImport(
+            import(/* webpackChunkName: "EditNotificationChannel"*/ 'app/features/alerting/EditNotificationChannelPage')
+          ),
+      },
     })
     .otherwise({
-      templateUrl: 'public/app/partials/error.html',
-      controller: 'ErrorCtrl',
+      template: '<react-container />',
+      resolve: {
+        component: () =>
+          SafeDynamicImport(import(/* webpackChunkName: "ErrorPage" */ 'app/core/components/ErrorPage/ErrorPage')),
+      },
     });
 
   applyRouteRegistrationHandlers($routeProvider);

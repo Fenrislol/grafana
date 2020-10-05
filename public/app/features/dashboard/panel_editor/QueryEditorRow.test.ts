@@ -1,4 +1,4 @@
-import { PanelData, LoadingState, DataQueryRequest } from '@grafana/ui';
+import { DataQueryRequest, dateTime, LoadingState, PanelData, toDataFrame } from '@grafana/data';
 import { filterPanelDataToQuery } from './QueryEditorRow';
 
 function makePretendRequest(requestId: string, subRequests?: DataQueryRequest[]): DataQueryRequest {
@@ -9,14 +9,14 @@ function makePretendRequest(requestId: string, subRequests?: DataQueryRequest[])
 }
 
 describe('filterPanelDataToQuery', () => {
-  const data = {
+  const data: PanelData = {
     state: LoadingState.Done,
     series: [
-      { refId: 'A', fields: [{ name: 'AAA' }], rows: [], meta: {} },
-      { refId: 'B', fields: [{ name: 'B111' }], rows: [], meta: {} },
-      { refId: 'B', fields: [{ name: 'B222' }], rows: [], meta: {} },
-      { refId: 'B', fields: [{ name: 'B333' }], rows: [], meta: {} },
-      { refId: 'C', fields: [{ name: 'CCCC' }], rows: [], meta: { requestId: 'sub3' } },
+      toDataFrame({ refId: 'A', fields: [{ name: 'AAA' }], meta: {} }),
+      toDataFrame({ refId: 'B', fields: [{ name: 'B111' }], meta: {} }),
+      toDataFrame({ refId: 'B', fields: [{ name: 'B222' }], meta: {} }),
+      toDataFrame({ refId: 'B', fields: [{ name: 'B333' }], meta: {} }),
+      toDataFrame({ refId: 'C', fields: [{ name: 'CCCC' }], meta: { requestId: 'sub3' } }),
     ],
     error: {
       refId: 'B',
@@ -27,19 +27,37 @@ describe('filterPanelDataToQuery', () => {
       makePretendRequest('sub2'),
       makePretendRequest('sub3'),
     ]),
-  } as PanelData;
+    timeRange: { from: dateTime(), to: dateTime(), raw: { from: 'now-1d', to: 'now' } },
+  };
 
   it('should not have an error unless the refId matches', () => {
     const panelData = filterPanelDataToQuery(data, 'A');
-    expect(panelData.series.length).toBe(1);
-    expect(panelData.series[0].refId).toBe('A');
-    expect(panelData.error).toBeUndefined();
+    expect(panelData?.series.length).toBe(1);
+    expect(panelData?.series[0].refId).toBe('A');
+    expect(panelData?.error).toBeUndefined();
   });
 
   it('should match the error to the query', () => {
     const panelData = filterPanelDataToQuery(data, 'B');
-    expect(panelData.series.length).toBe(3);
-    expect(panelData.series[0].refId).toBe('B');
-    expect(panelData.error!.refId).toBe('B');
+    expect(panelData?.series.length).toBe(3);
+    expect(panelData?.series[0].refId).toBe('B');
+    expect(panelData?.error!.refId).toBe('B');
+  });
+
+  it('should include errors when missing data', () => {
+    const withError = ({
+      series: [],
+      error: {
+        message: 'Error!!',
+      },
+    } as unknown) as PanelData;
+
+    const panelData = filterPanelDataToQuery(withError, 'B');
+    expect(panelData).toBeDefined();
+
+    // @ts-ignore typescript doesn't understand that panelData can't be undefined here
+    expect(panelData.state).toBe(LoadingState.Error);
+    // @ts-ignore typescript doesn't understand that panelData can't be undefined here
+    expect(panelData.error).toBe(withError.error);
   });
 });

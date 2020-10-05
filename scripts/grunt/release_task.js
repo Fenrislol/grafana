@@ -1,21 +1,13 @@
 var path = require('path');
 
 module.exports = function(grunt) {
-  "use strict";
+  'use strict';
 
   // build then zip
-  grunt.registerTask('release', [
-    'build',
-    'build-post-process',
-    'compress:release'
-  ]);
+  grunt.registerTask('release', ['build', 'build-post-process', 'compress:release']);
 
   // package into archives
-  grunt.registerTask('package', [
-    'clean:temp',
-    'build-post-process',
-    'compress:release'
-  ]);
+  grunt.registerTask('package', ['clean:temp', 'build-post-process', 'compress:release']);
 
   grunt.registerTask('build-post-process', function() {
     grunt.config('copy.public_to_temp', {
@@ -25,17 +17,17 @@ module.exports = function(grunt) {
       dest: '<%= tempDir %>/public/',
     });
     grunt.config('copy.backend_bin', {
-      cwd: 'bin/<%= platform %>-<%= arch %>',
+      cwd: 'bin/<%= platform %>-<%= arch %><%= libc ? "-" + libc : "" %>',
       expand: true,
       src: ['*'],
-      options: { mode: true},
-      dest: '<%= tempDir %>/bin/'
+      options: { mode: true },
+      dest: '<%= tempDir %>/bin/',
     });
     grunt.config('copy.backend_files', {
       expand: true,
-      src: ['conf/**', 'tools/phantomjs/*', 'scripts/*'],
-      options: { mode: true},
-      dest: '<%= tempDir %>'
+      src: ['conf/**', 'tools/**', 'scripts/*'],
+      options: { mode: true },
+      dest: '<%= tempDir %>',
     });
 
     grunt.task.run('copy:public_to_temp');

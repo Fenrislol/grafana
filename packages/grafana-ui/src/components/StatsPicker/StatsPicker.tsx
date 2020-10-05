@@ -1,25 +1,23 @@
 import React, { PureComponent } from 'react';
 
-import isArray from 'lodash/isArray';
 import difference from 'lodash/difference';
 
-import { Select } from '../index';
+import { Select } from '../Select/Select';
 
-import { getFieldReducers } from '../../utils/fieldReducer';
-import { SelectOptionItem } from '../Select/Select';
+import { fieldReducers, SelectableValue } from '@grafana/data';
 
 interface Props {
   placeholder?: string;
   onChange: (stats: string[]) => void;
   stats: string[];
-  width?: number;
   allowMultiple?: boolean;
   defaultStat?: string;
+  className?: string;
+  menuPlacement?: 'auto' | 'bottom' | 'top';
 }
 
 export class StatsPicker extends PureComponent<Props> {
-  static defaultProps = {
-    width: 12,
+  static defaultProps: Partial<Props> = {
     allowMultiple: false,
   };
 
@@ -34,7 +32,7 @@ export class StatsPicker extends PureComponent<Props> {
   checkInput = () => {
     const { stats, allowMultiple, defaultStat, onChange } = this.props;
 
-    const current = getFieldReducers(stats);
+    const current = fieldReducers.list(stats);
     if (current.length !== stats.length) {
       const found = current.map(v => v.id);
       const notFound = difference(stats, found);
@@ -54,37 +52,30 @@ export class StatsPicker extends PureComponent<Props> {
     }
   };
 
-  onSelectionChange = (item: SelectOptionItem<string>) => {
+  onSelectionChange = (item: SelectableValue<string>) => {
     const { onChange } = this.props;
-    if (isArray(item)) {
+    if (Array.isArray(item)) {
       onChange(item.map(v => v.value));
     } else {
-      onChange(item.value ? [item.value] : []);
+      onChange(item && item.value ? [item.value] : []);
     }
   };
 
   render() {
-    const { width, stats, allowMultiple, defaultStat, placeholder } = this.props;
-    const options = getFieldReducers().map(s => {
-      return {
-        value: s.id,
-        label: s.name,
-        description: s.description,
-      };
-    });
+    const { stats, allowMultiple, defaultStat, placeholder, className, menuPlacement } = this.props;
 
-    const value: Array<SelectOptionItem<string>> = options.filter(option => stats.find(stat => option.value === stat));
-
+    const select = fieldReducers.selectOptions(stats);
     return (
       <Select
-        width={width}
-        value={value}
+        value={select.current}
+        className={className}
         isClearable={!defaultStat}
         isMulti={allowMultiple}
         isSearchable={true}
-        options={options}
+        options={select.options}
         placeholder={placeholder}
         onChange={this.onSelectionChange}
+        menuPlacement={menuPlacement}
       />
     );
   }

@@ -5,14 +5,12 @@ module.exports = function(grunt) {
   // prettier-ignore
   grunt.registerTask('default', [
     'clean:build',
-    'phantomjs',
-    'webpack:dev'
   ]);
 
   // prettier-ignore
   grunt.registerTask('test', [
     'sasslint',
-    'tslint',
+    'eslint',
     'typecheck',
     'exec:jest',
     'no-only-tests',
@@ -20,9 +18,8 @@ module.exports = function(grunt) {
   ]);
 
   // prettier-ignore
-  grunt.registerTask('tslint', [
-    'newer:exec:tslintPackages',
-    'newer:exec:tslintRoot'
+  grunt.registerTask('eslint', [
+    'newer:exec:eslint'
   ]);
 
   // prettier-ignore
@@ -31,19 +28,11 @@ module.exports = function(grunt) {
     'newer:exec:typecheckRoot'
   ]);
 
-  // prettier-ignore
-  grunt.registerTask('precommit', [
-    'newer:sasslint',
-    'typecheck',
-    'tslint',
-    'no-only-tests',
-    'no-focus-convey-tests'
-  ]);
-
   grunt.registerTask('no-only-tests', function() {
     var files = grunt.file.expand(
       'public/**/*@(_specs|.test).@(ts|js|tsx|jsx)',
-      'packages/grafana-ui/**/*@(_specs|.test).@(ts|js|tsx|jsx)'
+      'packages/grafana-data/**/*@(_specs|.test).@(ts|js|tsx|jsx)',
+      'packages/**/*@(_specs|.test).@(ts|js|tsx|jsx)'
     );
     grepFiles(files, '.only(', 'found only statement in test: ');
   });
@@ -65,4 +54,3 @@ module.exports = function(grunt) {
     });
   }
 };
-

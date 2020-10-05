@@ -1,16 +1,18 @@
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
+import { Icon } from '@grafana/ui';
 import { SlideDown } from 'app/core/components/Animations/SlideDown';
 import { UserPicker } from 'app/core/components/Select/UserPicker';
 import { TagBadge } from 'app/core/components/TagFilter/TagBadge';
 import { TeamMember, User } from 'app/types';
-import { addTeamMember, setSearchMemberQuery } from './state/actions';
+import { addTeamMember } from './state/actions';
 import { getSearchMemberQuery, isSignedInUserTeamAdmin } from './state/selectors';
 import { FilterInput } from 'app/core/components/FilterInput/FilterInput';
 import { WithFeatureToggle } from 'app/core/components/WithFeatureToggle';
 import { config } from 'app/core/config';
 import { contextSrv, User as SignedInUser } from 'app/core/services/context_srv';
 import TeamMemberRow from './TeamMemberRow';
+import { setSearchMemberQuery } from './state/reducers';
 
 export interface Props {
   members: TeamMember[];
@@ -18,17 +20,17 @@ export interface Props {
   addTeamMember: typeof addTeamMember;
   setSearchMemberQuery: typeof setSearchMemberQuery;
   syncEnabled: boolean;
-  editorsCanAdmin?: boolean;
-  signedInUser?: SignedInUser;
+  editorsCanAdmin: boolean;
+  signedInUser: SignedInUser;
 }
 
 export interface State {
   isAdding: boolean;
-  newTeamMember?: User;
+  newTeamMember?: User | null;
 }
 
 export class TeamMembers extends PureComponent<Props, State> {
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
     this.state = { isAdding: false, newTeamMember: null };
   }
@@ -46,7 +48,7 @@ export class TeamMembers extends PureComponent<Props, State> {
   };
 
   onAddUserToTeam = async () => {
-    this.props.addTeamMember(this.state.newTeamMember.id);
+    this.props.addTeamMember(this.state.newTeamMember!.id);
     this.setState({ newTeamMember: null });
   };
 
@@ -96,7 +98,7 @@ export class TeamMembers extends PureComponent<Props, State> {
         <SlideDown in={isAdding}>
           <div className="cta-form">
             <button className="cta-form__close btn btn-transparent" onClick={this.onToggleAdding}>
-              <i className="fa fa-close" />
+              <Icon name="times" />
             </button>
             <h5>Add team member</h5>
             <div className="gf-form-inline">
@@ -115,8 +117,9 @@ export class TeamMembers extends PureComponent<Props, State> {
             <thead>
               <tr>
                 <th />
-                <th>Name</th>
+                <th>Login</th>
                 <th>Email</th>
+                <th>Name</th>
                 <WithFeatureToggle featureToggle={editorsCanAdmin}>
                   <th>Permission</th>
                 </WithFeatureToggle>
@@ -143,7 +146,7 @@ export class TeamMembers extends PureComponent<Props, State> {
   }
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state: any) {
   return {
     searchMemberQuery: getSearchMemberQuery(state.team),
     editorsCanAdmin: config.editorsCanAdmin, // this makes the feature toggle mockable/controllable from tests,
@@ -156,7 +159,4 @@ const mapDispatchToProps = {
   setSearchMemberQuery,
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(TeamMembers);
+export default connect(mapStateToProps, mapDispatchToProps)(TeamMembers);

@@ -1,147 +1,134 @@
-import _ from 'lodash';
-import AppInsightsQuerystringBuilder from './app_insights_querystring_builder';
-import LogAnalyticsQuerystringBuilder from '../log_analytics/querystring_builder';
+import { ScopedVars, MetricFindValue } from '@grafana/data';
+import { DataQueryRequest, DataSourceInstanceSettings } from '@grafana/data';
+import { getBackendSrv, getTemplateSrv, DataSourceWithBackend } from '@grafana/runtime';
+import _, { isString } from 'lodash';
+
+import TimegrainConverter from '../time_grain_converter';
+import { AzureDataSourceJsonData, AzureMonitorQuery, AzureQueryType } from '../types';
 import ResponseParser from './response_parser';
 
 export interface LogAnalyticsColumn {
   text: string;
   value: string;
 }
-export default class AppInsightsDatasource {
-  id: number;
+export default class AppInsightsDatasource extends DataSourceWithBackend<AzureMonitorQuery, AzureDataSourceJsonData> {
   url: string;
   baseUrl: string;
   version = 'beta';
   applicationId: string;
   logAnalyticsColumns: { [key: string]: LogAnalyticsColumn[] } = {};
 
-  /** @ngInject */
-  constructor(instanceSettings, private backendSrv, private templateSrv, private $q) {
-    this.id = instanceSettings.id;
-    this.applicationId = instanceSettings.jsonData.appInsightsAppId;
-    this.baseUrl = `/appinsights/${this.version}/apps/${this.applicationId}`;
-    this.url = instanceSettings.url;
+  constructor(instanceSettings: DataSourceInstanceSettings<AzureDataSourceJsonData>) {
+    super(instanceSettings);
+    this.applicationId = instanceSettings.jsonData.appInsightsAppId || '';
+
+    switch (instanceSettings.jsonData?.cloudName) {
+      // Azure US Government
+      case 'govazuremonitor':
+        break;
+      // Azure Germany
+      case 'germanyazuremonitor':
+        break;
+      // Azue China
+      case 'chinaazuremonitor':
+        this.baseUrl = `/chinaappinsights/${this.version}/apps/${this.applicationId}`;
+        break;
+      // Azure Global
+      default:
+        this.baseUrl = `/appinsights/${this.version}/apps/${this.applicationId}`;
+    }
+
+    this.url = instanceSettings.url || '';
   }
 
   isConfigured(): boolean {
     return !!this.applicationId && this.applicationId.length > 0;
   }
 
-  query(options) {
-    const queries = _.filter(options.targets, item => {
-      return item.hide !== true;
-    }).map(target => {
-      const item = target.appInsights;
-      if (item.rawQuery) {
-        const querystringBuilder = new LogAnalyticsQuerystringBuilder(
-          this.templateSrv.replace(item.rawQueryString, options.scopedVars),
-          options,
-          'timestamp'
-        );
-        const generated = querystringBuilder.generate();
-
-        const url = `${this.baseUrl}/query?${generated.uriString}`;
-
-        return {
-          refId: target.refId,
-          intervalMs: options.intervalMs,
-          maxDataPoints: options.maxDataPoints,
-          datasourceId: this.id,
-          url: url,
-          format: options.format,
-          alias: item.alias,
-          query: generated.rawQuery,
-          xaxis: item.xaxis,
-          yaxis: item.yaxis,
-          spliton: item.spliton,
-          raw: true,
-        };
-      } else {
-        const querystringBuilder = new AppInsightsQuerystringBuilder(
-          options.range.from,
-          options.range.to,
-          options.interval
-        );
-
-        if (item.groupBy !== 'none') {
-          querystringBuilder.setGroupBy(this.templateSrv.replace(item.groupBy, options.scopedVars));
-        }
-        querystringBuilder.setAggregation(item.aggregation);
-        querystringBuilder.setInterval(
-          item.timeGrainType,
-          this.templateSrv.replace(item.timeGrain, options.scopedVars),
-          item.timeGrainUnit
-        );
-
-        querystringBuilder.setFilter(this.templateSrv.replace(item.filter || ''));
-
-        const url = `${this.baseUrl}/metrics/${this.templateSrv.replace(
-          encodeURI(item.metricName),
-          options.scopedVars
-        )}?${querystringBuilder.generate()}`;
-
-        return {
-          refId: target.refId,
-          intervalMs: options.intervalMs,
-          maxDataPoints: options.maxDataPoints,
-          datasourceId: this.id,
-          url: url,
-          format: options.format,
-          alias: item.alias,
-          xaxis: '',
-          yaxis: '',
-          spliton: '',
-          raw: false,
-        };
-      }
-    });
-
-    if (!queries || queries.length === 0) {
-      return;
+  createRawQueryRequest(item: any, options: DataQueryRequest<AzureMonitorQuery>, target: AzureMonitorQuery) {
+    if (item.xaxis && !item.timeColumn) {
+      item.timeColumn = item.xaxis;
     }
 
-    const promises = this.doQueries(queries);
+    if (item.yaxis && !item.valueColumn) {
+      item.valueColumn = item.yaxis;
+    }
 
-    return this.$q
-      .all(promises)
-      .then(results => {
-        return new ResponseParser(results).parseQueryResult();
-      })
-      .then(results => {
-        const flattened: any[] = [];
+    if (item.spliton && !item.segmentColumn) {
+      item.segmentColumn = item.spliton;
+    }
 
-        for (let i = 0; i < results.length; i++) {
-          if (results[i].columnsForDropdown) {
-            this.logAnalyticsColumns[results[i].refId] = results[i].columnsForDropdown;
-          }
-          flattened.push(results[i]);
-        }
-
-        return flattened;
-      });
+    return {
+      type: 'timeSeriesQuery',
+      raw: false,
+      appInsights: {
+        rawQuery: true,
+        rawQueryString: getTemplateSrv().replace(item.rawQueryString, options.scopedVars),
+        timeColumn: item.timeColumn,
+        valueColumn: item.valueColumn,
+        segmentColumn: item.segmentColumn,
+      },
+    };
   }
 
-  doQueries(queries) {
-    return _.map(queries, query => {
-      return this.doRequest(query.url)
-        .then(result => {
-          return {
-            result: result,
-            query: query,
-          };
-        })
-        .catch(err => {
-          throw {
-            error: err,
-            query: query,
-          };
-        });
-    });
+  applyTemplateVariables(target: AzureMonitorQuery, scopedVars: ScopedVars): Record<string, any> {
+    const item = target.appInsights!;
+
+    const old: any = item;
+    // fix for timeGrainUnit which is a deprecated/removed field name
+    if (old.timeGrainCount) {
+      item.timeGrain = TimegrainConverter.createISO8601Duration(old.timeGrainCount, item.timeGrainUnit);
+    } else if (item.timeGrainUnit && item.timeGrain !== 'auto') {
+      item.timeGrain = TimegrainConverter.createISO8601Duration(item.timeGrain, item.timeGrainUnit);
+    }
+
+    // migration for non-standard names
+    if (old.groupBy && !item.dimension) {
+      item.dimension = [old.groupBy];
+    }
+    if (old.filter && !item.dimensionFilter) {
+      item.dimensionFilter = old.filter;
+    }
+
+    // Migrate single dimension string to array
+    if (isString(item.dimension)) {
+      if (item.dimension === 'None') {
+        item.dimension = [];
+      } else {
+        item.dimension = [item.dimension as string];
+      }
+    }
+    if (!item.dimension) {
+      item.dimension = [];
+    }
+
+    const templateSrv = getTemplateSrv();
+
+    return {
+      type: 'timeSeriesQuery',
+      refId: target.refId,
+      format: target.format,
+      queryType: AzureQueryType.ApplicationInsights,
+      appInsights: {
+        timeGrain: templateSrv.replace((item.timeGrain || '').toString(), scopedVars),
+        allowedTimeGrainsMs: item.allowedTimeGrainsMs,
+        metricName: templateSrv.replace(item.metricName, scopedVars),
+        aggregation: templateSrv.replace(item.aggregation, scopedVars),
+        dimension: item.dimension.map(d => templateSrv.replace(d, scopedVars)),
+        dimensionFilter: templateSrv.replace(item.dimensionFilter, scopedVars),
+        alias: item.alias,
+        format: target.format,
+      },
+    };
   }
 
-  annotationQuery(options) {}
-
-  metricFindQuery(query: string) {
+  /**
+   * This is named differently than DataSourceApi.metricFindQuery
+   * because it's not exposed to Grafana like the main AzureMonitorDataSource.
+   * And some of the azure internal data sources return null in this function, which the
+   * external interface does not support
+   */
+  metricFindQueryInternal(query: string): Promise<MetricFindValue[]> | null {
     const appInsightsMetricNameQuery = query.match(/^AppInsightsMetricNames\(\)/i);
     if (appInsightsMetricNameQuery) {
       return this.getMetricNames();
@@ -150,16 +137,16 @@ export default class AppInsightsDatasource {
     const appInsightsGroupByQuery = query.match(/^AppInsightsGroupBys\(([^\)]+?)(,\s?([^,]+?))?\)/i);
     if (appInsightsGroupByQuery) {
       const metricName = appInsightsGroupByQuery[1];
-      return this.getGroupBys(this.templateSrv.replace(metricName));
+      return this.getGroupBys(getTemplateSrv().replace(metricName));
     }
 
-    return undefined;
+    return null;
   }
 
   testDatasource() {
     const url = `${this.baseUrl}/metrics/metadata`;
     return this.doRequest(url)
-      .then(response => {
+      .then((response: any) => {
         if (response.status === 200) {
           return {
             status: 'success',
@@ -170,10 +157,10 @@ export default class AppInsightsDatasource {
 
         return {
           status: 'error',
-          message: 'Returned http status code ' + response.status,
+          message: 'Application Insights: Returned http status code ' + response.status,
         };
       })
-      .catch(error => {
+      .catch((error: any) => {
         let message = 'Application Insights: ';
         message += error.statusText ? error.statusText + ': ' : '';
 
@@ -192,13 +179,13 @@ export default class AppInsightsDatasource {
       });
   }
 
-  doRequest(url, maxRetries = 1) {
-    return this.backendSrv
+  doRequest(url: any, maxRetries = 1): Promise<any> {
+    return getBackendSrv()
       .datasourceRequest({
         url: this.url + url,
         method: 'GET',
       })
-      .catch(error => {
+      .catch((error: any) => {
         if (maxRetries > 0) {
           return this.doRequest(url, maxRetries - 1);
         }
@@ -214,20 +201,20 @@ export default class AppInsightsDatasource {
 
   getMetricMetadata(metricName: string) {
     const url = `${this.baseUrl}/metrics/metadata`;
-    return this.doRequest(url).then(result => {
+    return this.doRequest(url).then((result: any) => {
       return new ResponseParser(result).parseMetadata(metricName);
     });
   }
 
   getGroupBys(metricName: string) {
-    return this.getMetricMetadata(metricName).then(result => {
+    return this.getMetricMetadata(metricName).then((result: any) => {
       return new ResponseParser(result).parseGroupBys();
     });
   }
 
   getQuerySchema() {
     const url = `${this.baseUrl}/query/schema`;
-    return this.doRequest(url).then(result => {
+    return this.doRequest(url).then((result: any) => {
       const schema = new ResponseParser(result).parseQuerySchema();
       // console.log(schema);
       return schema;

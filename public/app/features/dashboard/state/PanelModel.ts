@@ -1,15 +1,33 @@
 // Libraries
 import _ from 'lodash';
-
 // Utils
+import { getTemplateSrv } from '@grafana/runtime';
 import { Emitter } from 'app/core/utils/emitter';
 import { getNextRefIdChar } from 'app/core/utils/query';
-
 // Types
-import { DataQuery, ScopedVars, DataQueryResponseData, PanelPlugin } from '@grafana/ui';
+import {
+  AppEvent,
+  DataConfigSource,
+  DataLink,
+  DataQuery,
+  DataQueryResponseData,
+  DataTransformerConfig,
+  eventFactory,
+  FieldConfigSource,
+  PanelEvents,
+  PanelPlugin,
+  ScopedVars,
+  ThresholdsConfig,
+  ThresholdsMode,
+} from '@grafana/data';
+import { EDIT_PANEL_ID } from 'app/core/constants';
 import config from 'app/core/config';
-
 import { PanelQueryRunner } from './PanelQueryRunner';
+import { getDatasourceSrv } from '../../plugins/datasource_srv';
+import { CoreEvents } from '../../../types';
+
+export const panelAdded = eventFactory<PanelModel | undefined>('panel-added');
+export const panelRemoved = eventFactory<PanelModel | undefined>('panel-removed');
 
 export interface GridPos {
   x: number;
@@ -21,13 +39,15 @@ export interface GridPos {
 
 const notPersistedProperties: { [str: string]: boolean } = {
   events: true,
-  fullscreen: true,
+  isViewing: true,
   isEditing: true,
   isInView: true,
   hasRefreshed: true,
   cachedPluginOptions: true,
   plugin: true,
   queryRunner: true,
+  replaceVariables: true,
+  editSourceId: true,
 };
 
 // For angular panels we need to clean up properties when changing type
@@ -64,18 +84,26 @@ const mustKeepProps: { [str: string]: boolean } = {
   transparent: true,
   pluginVersion: true,
   queryRunner: true,
+  transformations: true,
+  fieldConfig: true,
+  editSourceId: true,
+  maxDataPoints: true,
+  interval: true,
 };
 
 const defaults: any = {
   gridPos: { x: 0, y: 0, h: 3, w: 6 },
-  datasource: null,
   targets: [{ refId: 'A' }],
   cachedPluginOptions: {},
   transparent: false,
+  options: {},
+  datasource: null,
 };
 
-export class PanelModel {
+export class PanelModel implements DataConfigSource {
+  /* persisted id, used in URL to identify a panel */
   id: number;
+  editSourceId: number;
   gridPos: GridPos;
   type: string;
   title: string;
@@ -88,10 +116,11 @@ export class PanelModel {
   repeatedByRow?: boolean;
   maxPerRow?: number;
   collapsed?: boolean;
+
   panels?: any;
-  soloMode?: boolean;
   targets: DataQuery[];
-  datasource: string;
+  transformations?: DataTransformerConfig[];
+  datasource: string | null;
   thresholds?: any;
   pluginVersion?: string;
 
@@ -102,27 +131,56 @@ export class PanelModel {
   options: {
     [key: string]: any;
   };
+  fieldConfig: FieldConfigSource;
 
   maxDataPoints?: number;
   interval?: string;
   description?: string;
-  links?: [];
+  links?: DataLink[];
   transparent: boolean;
 
   // non persisted
-  fullscreen: boolean;
+  isViewing: boolean;
   isEditing: boolean;
   isInView: boolean;
+
   hasRefreshed: boolean;
   events: Emitter;
   cacheTimeout?: any;
   cachedPluginOptions?: any;
-  legend?: { show: boolean };
+  legend?: { show: boolean; sort?: string; sortDesc?: boolean };
   plugin?: PanelPlugin;
+
   private queryRunner?: PanelQueryRunner;
 
   constructor(model: any) {
     this.events = new Emitter();
+    this.restoreModel(model);
+    this.replaceVariables = this.replaceVariables.bind(this);
+  }
+
+  /** Given a persistened PanelModel restores property values */
+  restoreModel(model: any) {
+    // Start with clean-up
+    for (const property in this) {
+      if (notPersistedProperties[property] || !this.hasOwnProperty(property)) {
+        continue;
+      }
+
+      if (model[property]) {
+        continue;
+      }
+
+      if (typeof (this as any)[property] === 'function') {
+        continue;
+      }
+
+      if (typeof (this as any)[property] === 'symbol') {
+        continue;
+      }
+
+      delete (this as any)[property];
+    }
 
     // copy properties from persisted model
     for (const property in model) {
@@ -134,7 +192,6 @@ export class PanelModel {
 
     // queries must have refId
     this.ensureQueryIds();
-    this.restoreInfintyForThresholds();
   }
 
   ensureQueryIds() {
@@ -147,18 +204,12 @@ export class PanelModel {
     }
   }
 
-  restoreInfintyForThresholds() {
-    if (this.options && this.options.fieldOptions) {
-      for (const threshold of this.options.fieldOptions.thresholds) {
-        if (threshold.value === null) {
-          threshold.value = -Infinity;
-        }
-      }
-    }
+  getOptions() {
+    return this.options;
   }
 
-  getOptions(panelDefaults: any) {
-    return _.defaultsDeep(this.options || {}, panelDefaults);
+  getFieldConfig() {
+    return this.fieldConfig;
   }
 
   updateOptions(options: object) {
@@ -166,8 +217,16 @@ export class PanelModel {
     this.render();
   }
 
+  updateFieldConfig(config: FieldConfigSource) {
+    this.fieldConfig = config;
+
+    this.resendLastResult();
+    this.render();
+  }
+
   getSaveModel() {
     const model: any = {};
+
     for (const property in this) {
       if (notPersistedProperties[property] || !this.hasOwnProperty(property)) {
         continue;
@@ -180,13 +239,17 @@ export class PanelModel {
       model[property] = _.cloneDeep(this[property]);
     }
 
+    if (model.datasource === undefined) {
+      // This is part of defaults as defaults are removed in save model and
+      // this should not be removed in save model as exporter needs to templatize it
+      model.datasource = null;
+    }
+
     return model;
   }
 
-  setViewMode(fullscreen: boolean, isEditing: boolean) {
-    this.fullscreen = fullscreen;
-    this.isEditing = isEditing;
-    this.events.emit('view-mode-changed');
+  setIsViewing(isViewing: boolean) {
+    this.isViewing = isViewing;
   }
 
   updateGridPos(newPos: GridPos) {
@@ -202,29 +265,29 @@ export class PanelModel {
     this.gridPos.h = newPos.h;
 
     if (sizeChanged) {
-      this.events.emit('panel-size-changed');
+      this.events.emit(PanelEvents.panelSizeChanged);
     }
   }
 
   resizeDone() {
-    this.events.emit('panel-size-changed');
+    this.events.emit(PanelEvents.panelSizeChanged);
   }
 
   refresh() {
     this.hasRefreshed = true;
-    this.events.emit('refresh');
+    this.events.emit(PanelEvents.refresh);
   }
 
   render() {
     if (!this.hasRefreshed) {
       this.refresh();
     } else {
-      this.events.emit('render');
+      this.events.emit(PanelEvents.render);
     }
   }
 
   initialized() {
-    this.events.emit('panel-initialized');
+    this.events.emit(PanelEvents.panelInitialized);
   }
 
   private getOptionsToRemember() {
@@ -247,27 +310,41 @@ export class PanelModel {
     });
   }
 
+  private applyPluginOptionDefaults(plugin: PanelPlugin) {
+    if (plugin.angularConfigCtrl) {
+      return;
+    }
+
+    this.options = _.mergeWith({}, plugin.defaults, this.options || {}, (objValue: any, srcValue: any): any => {
+      if (_.isArray(srcValue)) {
+        return srcValue;
+      }
+    });
+
+    this.fieldConfig = applyFieldConfigDefaults(this.fieldConfig, this.plugin!.fieldConfigDefaults);
+  }
+
   pluginLoaded(plugin: PanelPlugin) {
     this.plugin = plugin;
 
-    if (plugin.panel && plugin.onPanelMigration) {
+    if (plugin.onPanelMigration) {
       const version = getPluginVersion(plugin);
+
       if (version !== this.pluginVersion) {
         this.options = plugin.onPanelMigration(this);
         this.pluginVersion = version;
       }
     }
+
+    this.applyPluginOptionDefaults(plugin);
+    this.resendLastResult();
   }
 
   changePlugin(newPlugin: PanelPlugin) {
     const pluginId = newPlugin.meta.id;
     const oldOptions: any = this.getOptionsToRemember();
     const oldPluginId = this.type;
-
-    // for angular panels we must remove all events and let angular panels do some cleanup
-    if (this.plugin.angularPanelCtrl) {
-      this.destroy();
-    }
+    const wasAngular = this.isAngularPlugin();
 
     // remove panel type specific  options
     for (const key of _.keys(this)) {
@@ -281,20 +358,35 @@ export class PanelModel {
     this.cachedPluginOptions[oldPluginId] = oldOptions;
     this.restorePanelOptions(pluginId);
 
+    // Let panel plugins inspect options from previous panel and keep any that it can use
+    if (newPlugin.onPanelTypeChanged) {
+      let old: any = {};
+
+      if (wasAngular) {
+        old = { angular: oldOptions };
+      } else if (oldOptions && oldOptions.options) {
+        old = oldOptions.options;
+      }
+      this.options = this.options || {};
+      Object.assign(this.options, newPlugin.onPanelTypeChanged(this, oldPluginId, old));
+    }
+
     // switch
     this.type = pluginId;
     this.plugin = newPlugin;
 
-    // Let panel plugins inspect options from previous panel and keep any that it can use
-    if (newPlugin.onPanelTypeChanged) {
-      this.options = this.options || {};
-      const old = oldOptions && oldOptions.options ? oldOptions.options : {};
-      Object.assign(this.options, newPlugin.onPanelTypeChanged(this.options, oldPluginId, old));
-    }
+    // For some reason I need to rebind replace variables here, otherwise the viz repeater does not work
+    this.replaceVariables = this.replaceVariables.bind(this);
+    this.applyPluginOptionDefaults(newPlugin);
 
     if (newPlugin.onPanelMigration) {
       this.pluginVersion = getPluginVersion(newPlugin);
     }
+  }
+
+  updateQueries(queries: DataQuery[]) {
+    this.events.emit(CoreEvents.queryChanged);
+    this.targets = queries;
   }
 
   addQuery(query?: Partial<DataQuery>) {
@@ -316,25 +408,146 @@ export class PanelModel {
     });
   }
 
+  getEditClone() {
+    const sourceModel = this.getSaveModel();
+
+    // Temporary id for the clone, restored later in redux action when changes are saved
+    sourceModel.id = EDIT_PANEL_ID;
+    sourceModel.editSourceId = this.id;
+
+    const clone = new PanelModel(sourceModel);
+    clone.isEditing = true;
+    const sourceQueryRunner = this.getQueryRunner();
+
+    // Copy last query result
+    clone.getQueryRunner().useLastResultFrom(sourceQueryRunner);
+
+    return clone;
+  }
+
+  getTransformations() {
+    return this.transformations;
+  }
+
+  getFieldOverrideOptions() {
+    if (!this.plugin) {
+      return undefined;
+    }
+
+    return {
+      fieldConfig: this.fieldConfig,
+      replaceVariables: this.replaceVariables,
+      getDataSourceSettingsByUid: getDatasourceSrv().getDataSourceSettingsByUid.bind(getDatasourceSrv()),
+      fieldConfigRegistry: this.plugin.fieldConfigRegistry,
+      theme: config.theme,
+    };
+  }
+
   getQueryRunner(): PanelQueryRunner {
     if (!this.queryRunner) {
-      this.queryRunner = new PanelQueryRunner();
+      this.queryRunner = new PanelQueryRunner(this);
     }
     return this.queryRunner;
   }
 
   hasTitle() {
-    return !!this.title.length;
+    return this.title && this.title.length > 0;
+  }
+
+  isAngularPlugin(): boolean {
+    return (this.plugin && this.plugin.angularPanelCtrl) !== undefined;
   }
 
   destroy() {
-    this.events.emit('panel-teardown');
+    this.events.emit(PanelEvents.panelTeardown);
     this.events.removeAllListeners();
 
     if (this.queryRunner) {
       this.queryRunner.destroy();
-      this.queryRunner = null;
     }
+  }
+
+  setTransformations(transformations: DataTransformerConfig[]) {
+    this.events.emit(CoreEvents.transformationChanged);
+    this.transformations = transformations;
+    this.resendLastResult();
+  }
+
+  replaceVariables(value: string, extraVars?: ScopedVars, format?: string) {
+    let vars = this.scopedVars;
+    if (extraVars) {
+      vars = vars ? { ...vars, ...extraVars } : extraVars;
+    }
+    return getTemplateSrv().replace(value, vars, format);
+  }
+
+  resendLastResult() {
+    if (!this.plugin) {
+      return;
+    }
+
+    this.getQueryRunner().resendLastResult();
+  }
+
+  /*
+   * Panel have a different id while in edit mode (to more easily be able to discard changes)
+   * Use this to always get the underlying source id
+   * */
+  getSavedId(): number {
+    return this.editSourceId ?? this.id;
+  }
+
+  on<T>(event: AppEvent<T>, callback: (payload?: T) => void) {
+    this.events.on(event, callback);
+  }
+
+  off<T>(event: AppEvent<T>, callback: (payload?: T) => void) {
+    this.events.off(event, callback);
+  }
+}
+
+function applyFieldConfigDefaults(fieldConfig: FieldConfigSource, defaults: FieldConfigSource): FieldConfigSource {
+  const result: FieldConfigSource = {
+    defaults: _.mergeWith(
+      {},
+      defaults.defaults,
+      fieldConfig ? fieldConfig.defaults : {},
+      (objValue: any, srcValue: any): any => {
+        if (_.isArray(srcValue)) {
+          return srcValue;
+        }
+      }
+    ),
+    overrides: fieldConfig?.overrides ?? [],
+  };
+
+  // Thresholds base values are null in JSON but need to be converted to -Infinity
+  if (result.defaults.thresholds) {
+    fixThresholds(result.defaults.thresholds);
+  }
+
+  for (const override of result.overrides) {
+    for (const property of override.properties) {
+      if (property.id === 'thresholds') {
+        fixThresholds(property.value as ThresholdsConfig);
+      }
+    }
+  }
+
+  return result;
+}
+
+function fixThresholds(thresholds: ThresholdsConfig) {
+  if (!thresholds.mode) {
+    thresholds.mode = ThresholdsMode.Absolute;
+  }
+
+  if (!thresholds.steps) {
+    thresholds.steps = [];
+  } else if (thresholds.steps.length) {
+    // First value is always -Infinity
+    // JSON saves it as null
+    thresholds.steps[0].value = -Infinity;
   }
 }
 

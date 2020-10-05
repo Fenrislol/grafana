@@ -1,20 +1,24 @@
 import _ from 'lodash';
 import TableModel from 'app/core/table_model';
-import { FieldType } from '@grafana/ui';
+import { FieldType, QueryResultMeta, TimeSeries, TableData } from '@grafana/data';
 
 export default class InfluxSeries {
+  refId?: string;
   series: any;
   alias: any;
   annotation: any;
+  meta?: QueryResultMeta;
 
-  constructor(options) {
+  constructor(options: { series: any; alias?: any; annotation?: any; meta?: QueryResultMeta; refId?: string }) {
     this.series = options.series;
     this.alias = options.alias;
     this.annotation = options.annotation;
+    this.meta = options.meta;
+    this.refId = options.refId;
   }
 
-  getTimeSeries() {
-    const output = [];
+  getTimeSeries(): TimeSeries[] {
+    const output: TimeSeries[] = [];
     let i, j;
 
     if (this.series.length === 0) {
@@ -47,18 +51,18 @@ export default class InfluxSeries {
           }
         }
 
-        output.push({ target: seriesName, datapoints: datapoints });
+        output.push({ target: seriesName, datapoints: datapoints, meta: this.meta, refId: this.refId });
       }
     });
 
     return output;
   }
 
-  _getSeriesName(series, index) {
+  _getSeriesName(series: any, index: number) {
     const regex = /\$(\w+)|\[\[([\s\S]+?)\]\]/g;
     const segments = series.name.split('.');
 
-    return this.alias.replace(regex, (match, g1, g2) => {
+    return this.alias.replace(regex, (match: any, g1: any, g2: any) => {
       const group = g1 || g2;
       const segIndex = parseInt(group, 10);
 
@@ -84,13 +88,13 @@ export default class InfluxSeries {
   }
 
   getAnnotations() {
-    const list = [];
+    const list: any[] = [];
 
     _.each(this.series, series => {
-      let titleCol = null;
-      let timeCol = null;
-      const tagsCol = [];
-      let textCol = null;
+      let titleCol: any = null;
+      let timeCol: any = null;
+      const tagsCol: any = [];
+      let textCol: any = null;
 
       _.each(series.columns, (column, index) => {
         if (column === 'time') {
@@ -126,10 +130,10 @@ export default class InfluxSeries {
           // Remove empty values, then split in different tags for comma separated values
           tags: _.flatten(
             tagsCol
-              .filter(t => {
+              .filter((t: any) => {
                 return value[t];
               })
-              .map(t => {
+              .map((t: any) => {
                 return value[t].split(',');
               })
           ),
@@ -143,9 +147,12 @@ export default class InfluxSeries {
     return list;
   }
 
-  getTable() {
+  getTable(): TableData {
     const table = new TableModel();
     let i, j;
+
+    table.refId = this.refId;
+    table.meta = this.meta;
 
     if (this.series.length === 0) {
       return table;

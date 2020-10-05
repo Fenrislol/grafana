@@ -7,7 +7,7 @@ export class ThresholdFormCtrl {
   disabled: boolean;
 
   /** @ngInject */
-  constructor($scope) {
+  constructor($scope: any) {
     this.panel = this.panelCtrl.panel;
 
     if (this.panel.alert) {
@@ -35,7 +35,7 @@ export class ThresholdFormCtrl {
     this.panelCtrl.render();
   }
 
-  removeThreshold(index) {
+  removeThreshold(index: number) {
     this.panel.thresholds.splice(index, 1);
     this.panelCtrl.render();
   }
@@ -44,27 +44,27 @@ export class ThresholdFormCtrl {
     this.panelCtrl.render();
   }
 
-  onFillColorChange(index) {
-    return newColor => {
+  onFillColorChange(index: number) {
+    return (newColor: string) => {
       this.panel.thresholds[index].fillColor = newColor;
       this.render();
     };
   }
 
-  onLineColorChange(index) {
-    return newColor => {
+  onLineColorChange(index: number) {
+    return (newColor: string) => {
       this.panel.thresholds[index].lineColor = newColor;
       this.render();
     };
   }
 
-  onThresholdTypeChange(index) {
+  onThresholdTypeChange(index: number) {
     // Because of the ng-model binding, threshold's color mode is already set here
     if (this.panel.thresholds[index].colorMode === 'custom') {
-      this.panel.thresholds[index].fillColor = tinycolor(config.theme.colors.blueBase)
+      this.panel.thresholds[index].fillColor = tinycolor(config.theme.palette.blue85)
         .setAlpha(0.2)
         .toRgbString();
-      this.panel.thresholds[index].lineColor = tinycolor(config.theme.colors.blueShade)
+      this.panel.thresholds[index].lineColor = tinycolor(config.theme.palette.blue77)
         .setAlpha(0.6)
         .toRgbString();
     }

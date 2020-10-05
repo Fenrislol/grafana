@@ -4,17 +4,17 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/maksimmernikov/grafana/pkg/bus"
-	"github.com/maksimmernikov/grafana/pkg/infra/remotecache"
-	m "github.com/maksimmernikov/grafana/pkg/models"
-	"github.com/maksimmernikov/grafana/pkg/services/auth"
-	"github.com/maksimmernikov/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/bus"
+	"github.com/grafana/grafana/pkg/infra/remotecache"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/services/auth"
+	"github.com/grafana/grafana/pkg/setting"
 	. "github.com/smartystreets/goconvey/convey"
 	macaron "gopkg.in/macaron.v1"
 )
 
 func TestRecoveryMiddleware(t *testing.T) {
-	setting.ERR_TEMPLATE_NAME = "error-template"
+	setting.ErrTemplateName = "error-template"
 
 	Convey("Given an api route that panics", t, func() {
 		apiURL := "/api/whatever"
@@ -42,7 +42,7 @@ func TestRecoveryMiddleware(t *testing.T) {
 	})
 }
 
-func PanicHandler(c *m.ReqContext) {
+func PanicHandler(c *models.ReqContext) {
 	panic("Handler has panicked")
 }
 
@@ -68,11 +68,11 @@ func recoveryScenario(t *testing.T, desc string, url string, fn scenarioFunc) {
 		sc.userAuthTokenService = auth.NewFakeUserAuthTokenService()
 		sc.remoteCacheService = remotecache.NewFakeStore(t)
 
-		sc.m.Use(GetContextHandler(sc.userAuthTokenService, sc.remoteCacheService))
+		sc.m.Use(GetContextHandler(sc.userAuthTokenService, sc.remoteCacheService, nil))
 		// mock out gc goroutine
 		sc.m.Use(OrgRedirect())
 
-		sc.defaultHandler = func(c *m.ReqContext) {
+		sc.defaultHandler = func(c *models.ReqContext) {
 			sc.context = c
 			if sc.handlerFunc != nil {
 				sc.handlerFunc(sc.context)

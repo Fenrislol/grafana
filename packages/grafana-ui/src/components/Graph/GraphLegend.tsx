@@ -10,14 +10,14 @@ import { ThemeContext } from '../../themes/ThemeContext';
 import { css } from 'emotion';
 import { selectThemeVariant } from '../../themes/index';
 
-interface GraphLegendProps extends LegendProps {
+export interface GraphLegendProps extends LegendProps {
   displayMode: LegendDisplayMode;
   sortBy?: string;
   sortDesc?: boolean;
-  onSeriesColorChange: SeriesColorChangeHandler;
+  onSeriesColorChange?: SeriesColorChangeHandler;
   onSeriesAxisToggle?: SeriesAxisToggleHandler;
-  onToggleSort: (sortBy: string) => void;
-  onLabelClick: (item: LegendItem, event: React.MouseEvent<HTMLElement>) => void;
+  onToggleSort?: (sortBy: string) => void;
+  onLabelClick?: (item: LegendItem, event: React.MouseEvent<HTMLElement>) => void;
 }
 
 export const GraphLegend: React.FunctionComponent<GraphLegendProps> = ({
@@ -43,7 +43,10 @@ export const GraphLegend: React.FunctionComponent<GraphLegendProps> = ({
       })
       .reduce(
         (acc, current) => {
-          return union(acc, current.filter(item => !!item));
+          return union(
+            acc,
+            current.filter(item => !!item)
+          );
         },
         ['']
       ) as string[];
@@ -60,8 +63,8 @@ export const GraphLegend: React.FunctionComponent<GraphLegendProps> = ({
 
     const legendTableEvenRowBackground = selectThemeVariant(
       {
-        dark: theme.colors.dark6,
-        light: theme.colors.gray5,
+        dark: theme.palette.dark6,
+        light: theme.palette.gray5,
       },
       theme.type
     );
@@ -116,3 +119,5 @@ export const GraphLegend: React.FunctionComponent<GraphLegendProps> = ({
     />
   );
 };
+
+GraphLegend.displayName = 'GraphLegend';

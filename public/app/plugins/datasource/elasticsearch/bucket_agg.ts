@@ -1,10 +1,12 @@
 import coreModule from 'app/core/core_module';
 import _ from 'lodash';
 import * as queryDef from './query_def';
+import { GrafanaRootScope } from 'app/routes/GrafanaCtrl';
+import { CoreEvents } from 'app/types';
 
 export class ElasticBucketAggCtrl {
   /** @ngInject */
-  constructor($scope, uiSegmentSrv, $q, $rootScope) {
+  constructor($scope: any, uiSegmentSrv: any, $rootScope: GrafanaRootScope) {
     const bucketAggs = $scope.target.bucketAggs;
 
     $scope.orderByOptions = [];
@@ -22,7 +24,7 @@ export class ElasticBucketAggCtrl {
     };
 
     $rootScope.onAppEvent(
-      'elastic-query-updated',
+      CoreEvents.elasticQueryUpdated,
       () => {
         $scope.validateModel();
       },
@@ -30,7 +32,7 @@ export class ElasticBucketAggCtrl {
     );
 
     $scope.init = () => {
-      $scope.agg = bucketAggs[$scope.index];
+      $scope.agg = bucketAggs[$scope.index] || {};
       $scope.validateModel();
     };
 
@@ -77,7 +79,7 @@ export class ElasticBucketAggCtrl {
         case 'terms': {
           settings.order = settings.order || 'desc';
           settings.size = settings.size || '10';
-          settings.min_doc_count = settings.min_doc_count || 1;
+          settings.min_doc_count = settings.min_doc_count || 0;
           settings.orderBy = settings.orderBy || '_term';
 
           if (settings.size !== '0') {
@@ -142,8 +144,8 @@ export class ElasticBucketAggCtrl {
           break;
         }
         case 'geohash_grid': {
-          // limit precision to 7
-          settings.precision = Math.max(Math.min(settings.precision, 7), 1);
+          // limit precision to 12
+          settings.precision = Math.max(Math.min(settings.precision, 12), 1);
           settingsLinkText = 'Precision: ' + settings.precision;
           break;
         }
@@ -158,7 +160,7 @@ export class ElasticBucketAggCtrl {
       $scope.agg.settings.filters.push({ query: '*' });
     };
 
-    $scope.removeFiltersQuery = filter => {
+    $scope.removeFiltersQuery = (filter: any) => {
       $scope.agg.settings.filters = _.without($scope.agg.settings.filters, filter);
     };
 
@@ -179,7 +181,7 @@ export class ElasticBucketAggCtrl {
     };
 
     $scope.getIntervalOptions = () => {
-      return $q.when(uiSegmentSrv.transformToSegments(true, 'interval')(queryDef.intervalOptions));
+      return Promise.resolve(uiSegmentSrv.transformToSegments(true, 'interval')(queryDef.intervalOptions));
     };
 
     $scope.addBucketAgg = () => {

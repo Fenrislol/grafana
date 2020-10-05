@@ -5,8 +5,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-xorm/xorm"
 	"github.com/lib/pq"
+
+	"github.com/grafana/grafana/pkg/util/errutil"
+	"xorm.io/xorm"
 )
 
 type Postgres struct {
@@ -128,22 +130,49 @@ func (db *Postgres) CleanDB() error {
 	defer sess.Close()
 
 	if _, err := sess.Exec("DROP SCHEMA public CASCADE;"); err != nil {
-		return fmt.Errorf("Failed to drop schema public")
+		return errutil.Wrap("failed to drop schema public", err)
 	}
 
 	if _, err := sess.Exec("CREATE SCHEMA public;"); err != nil {
-		return fmt.Errorf("Failed to create schema public")
+		return errutil.Wrap("failed to create schema public", err)
 	}
 
 	return nil
 }
 
-func (db *Postgres) IsUniqueConstraintViolation(err error) bool {
+func (db *Postgres) isThisError(err error, errcode string) bool {
 	if driverErr, ok := err.(*pq.Error); ok {
-		if driverErr.Code == "23505" {
+		if string(driverErr.Code) == errcode {
 			return true
 		}
 	}
 
 	return false
+}
+
+func (db *Postgres) ErrorMessage(err error) string {
+	if driverErr, ok := err.(*pq.Error); ok {
+		return driverErr.Message
+	}
+	return ""
+}
+
+func (db *Postgres) IsUniqueConstraintViolation(err error) bool {
+	return db.isThisError(err, "23505")
+}
+
+func (db *Postgres) IsDeadlock(err error) bool {
+	return db.isThisError(err, "40P01")
+}
+
+func (db *Postgres) PostInsertId(table string, sess *xorm.Session) error {
+	if table != "org" {
+		return nil
+	}
+
+	// sync primary key sequence of org table
+	if _, err := sess.Exec("SELECT setval('org_id_seq', (SELECT max(id) FROM org));"); err != nil {
+		return errutil.Wrapf(err, "failed to sync primary key for org table")
+	}
+	return nil
 }

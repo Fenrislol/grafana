@@ -33,6 +33,7 @@ $panel-header-no-title-zindex: 1;
   flex-wrap: nowrap;
   justify-content: center;
   height: $panel-header-height;
+  line-height: $panel-header-height;
   align-items: center;
 }
 
@@ -53,7 +54,7 @@ $panel-header-no-title-zindex: 1;
 }
 
 .panel-menu-container {
-  width: 1px;
+  width: 0px;
   height: 19px;
   display: inline-block;
 }
@@ -61,13 +62,9 @@ $panel-header-no-title-zindex: 1;
 .panel-menu-toggle {
   color: $text-color-weak;
   cursor: pointer;
-  padding: 3px 5px;
+  margin: 2px 0 0 2px;
   visibility: hidden;
   opacity: 0;
-  width: 16px;
-  height: 16px;
-  left: 1px;
-  top: 2px;
 
   &:hover {
     color: $link-hover-color;
@@ -76,11 +73,15 @@ $panel-header-no-title-zindex: 1;
 
 .panel-loading {
   position: absolute;
-  top: 4px;
+  top: 0px;
   right: 4px;
   z-index: $panel-header-z-index + 1;
-  font-size: $font-size-sm;
+  font-size: $font-size-lg;
   color: $text-color-weak;
+
+  &:hover {
+    cursor: pointer;
+  }
 }
 
 .panel-empty {
@@ -126,6 +127,7 @@ $panel-header-no-title-zindex: 1;
   left: 0;
   width: $panel-header-height;
   height: $panel-header-height;
+  z-index: $panel-header-no-title-zindex + 1;
   top: 0;
 
   .fa {
@@ -138,7 +140,8 @@ $panel-header-no-title-zindex: 1;
 
   &--info {
     display: block;
-    @include panel-corner-color(lighten($panel-corner, 4%));
+    @include panel-corner-color(lighten($panel-corner, 6%));
+
     .fa:before {
       content: '\f129';
     }
@@ -146,7 +149,7 @@ $panel-header-no-title-zindex: 1;
 
   &--links {
     display: block;
-    @include panel-corner-color(lighten($panel-corner, 4%));
+    @include panel-corner-color(lighten($panel-corner, 6%));
     .fa {
       left: 4px;
     }
@@ -162,6 +165,21 @@ $panel-header-no-title-zindex: 1;
     .fa:before {
       content: '\f12a';
     }
+  }
+}
+
+.panel-info-content {
+  a {
+    color: $gray-6;
+
+    &:hover {
+      color: darken($white, 10%);
+    }
+  }
+
+  .panel-info-corner-links {
+    list-style: none;
+    padding-left: 0;
   }
 }
 

@@ -3,18 +3,20 @@ title = "LDAP Authentication"
 description = "Grafana LDAP Authentication Guide "
 keywords = ["grafana", "configuration", "documentation", "ldap", "active directory"]
 type = "docs"
-aliases = ["/installation/ldap/"]
+aliases = ["/docs/grafana/latest/installation/ldap/"]
 [menu.docs]
 name = "LDAP"
 identifier = "ldap"
 parent = "authentication"
-weight = 2
+weight = 300
 +++
 
 # LDAP Authentication
 
 The LDAP integration in Grafana allows your Grafana users to login with their LDAP credentials. You can also specify mappings between LDAP
 group memberships and Grafana Organization user roles.
+
+> [Enhanced LDAP authentication]({{< relref "../enterprise/enhanced_ldap.md" >}}) is available in [Grafana Enterprise]({{< relref "../enterprise" >}}).
 
 ## Supported LDAP Servers
 
@@ -24,7 +26,7 @@ This means that you should be able to configure LDAP integration using any compl
 
 ## Enable LDAP
 
-In order to use LDAP integration you'll first need to enable LDAP in the [main config file]({{< relref "installation/configuration.md" >}}) as well as specify the path to the LDAP
+In order to use LDAP integration you'll first need to enable LDAP in the [main config file]({{< relref "../administration/configuration.md" >}}) as well as specify the path to the LDAP
 specific configuration file (default: `/etc/grafana/ldap.toml`).
 
 ```bash
@@ -35,8 +37,8 @@ enabled = true
 # Path to the LDAP specific configuration file (default: `/etc/grafana/ldap.toml`)
 config_file = /etc/grafana/ldap.toml
 
-# Allow sign up should almost always be true (default) to allow new Grafana users to be created (if ldap authentication is ok). If set to
-# false only pre-existing Grafana users will be able to login (if ldap authentication is ok).
+# Allow sign up should almost always be true (default) to allow new Grafana users to be created (if LDAP authentication is ok). If set to
+# false only pre-existing Grafana users will be able to login (if LDAP authentication is ok).
 allow_sign_up = true
 ```
 
@@ -52,11 +54,11 @@ See [configuration examples](#configuration-examples) for more information.
 host = "127.0.0.1"
 # Default port is 389 or 636 if use_ssl = true
 port = 389
-# Set to true if ldap server supports TLS
+# Set to true if LDAP server supports TLS
 use_ssl = false
-# Set to true if connect ldap server with STARTTLS pattern (create connection in insecure, then upgrade to secure connection with TLS)
+# Set to true if connect LDAP server with STARTTLS pattern (create connection in insecure, then upgrade to secure connection with TLS)
 start_tls = false
-# set to true if you want to skip ssl cert validation
+# set to true if you want to skip SSL cert validation
 ssl_skip_verify = false
 # set to the path to your root CA certificate or leave unset to use system defaults
 # root_ca_cert = "/path/to/certificate.crt"
@@ -81,7 +83,7 @@ search_base_dns = ["dc=grafana,dc=org"]
 # group_search_filter_user_attribute = "distinguishedName"
 # group_search_base_dns = ["ou=groups,dc=grafana,dc=org"]
 
-# Specify names of the ldap attributes your ldap uses
+# Specify names of the LDAP attributes your LDAP uses
 [servers.attributes]
 name = "givenName"
 surname = "sn"
@@ -90,12 +92,39 @@ member_of = "memberOf"
 email =  "email"
 ```
 
+### Using environment variables
+
+You can interpolate variables in the TOML config from environment variables. For instance, you could externalize your `bind_password` that way:
+
+```bash
+bind_password = "${LDAP_ADMIN_PASSWORD}"
+```
+
+## LDAP Debug View
+
+> Only available in Grafana v6.4+
+
+Grafana has an LDAP debug view built-in which allows you to test your LDAP configuration directly within Grafana. At the moment of writing, only Grafana admins can use the LDAP debug view.
+ 
+Within this view, you'll be able to see which LDAP servers are currently reachable and test your current configuration.
+
+{{< docs-imagebox img="/img/docs/ldap_debug.png" class="docs-image--no-shadow" max-width="600px" >}}
+
+
+To use the debug view:
+
+ 1. Type the username of a user that exists within any of your LDAP server(s)
+ 1. Then, press "Run"
+ 1. If the user is found within any of your LDAP instances, the mapping information is displayed
+
+{{< docs-imagebox img="/img/docs/ldap_debug_mapping_testing.png" class="docs-image--no-shadow" max-width="600px" >}}
+
 ### Bind
 
-#### Bind & Bind Password
+#### Bind and Bind Password
 
 By default the configuration expects you to specify a bind DN and bind password. This should be a read only user that can perform LDAP searches.
-When the user DN is found a second bind is performed with the user provided username & password (in the normal Grafana login form).
+When the user DN is found a second bind is performed with the user provided username and password (in the normal Grafana login form).
 
 ```bash
 bind_dn = "cn=admin,dc=grafana,dc=org"
@@ -115,7 +144,7 @@ In this case you skip providing a `bind_password` and instead provide a `bind_dn
 The search filter and search bases settings are still needed to perform the LDAP search to retrieve the other LDAP information (like LDAP groups and email).
 
 ### POSIX schema
-If your ldap server does not support the memberOf attribute add these options:
+If your LDAP server does not support the memberOf attribute add these options:
 
 ```bash
 ## Group search filter, to retrieve the groups of which the user is a member (only set if memberOf attribute is not available)
@@ -125,8 +154,6 @@ group_search_base_dns = ["ou=groups,dc=grafana,dc=org"]
 ## the %s in the search filter will be replaced with the attribute defined below
 group_search_filter_user_attribute = "uid"
 ```
-
-Also set `member_of = "dn"` in the `[servers.attributes]` section.
 
 ### Group Mappings
 
@@ -172,16 +199,27 @@ Setting | Required | Description | Default
 Users with nested/recursive group membership must have an LDAP server that supports `LDAP_MATCHING_RULE_IN_CHAIN`
 and configure `group_search_filter` in a way that it returns the groups the submitted username is a member of.
 
+To configure `group_search_filter`:
+- You can set `group_search_base_dns` to specify where the matching groups are defined.
+- If you do not use `group_search_base_dns`, then the previously defined `search_base_dns` is used.
+
 **Active Directory example:**
 
 Active Directory groups store the Distinguished Names (DNs) of members, so your filter will need to know the DN for the user based only on the submitted username.
-Multiple DN templates can be searched by combining filters with the LDAP OR-operator. Examples:
+Multiple DN templates can be searched by combining filters with the LDAP OR-operator. Two examples:
+
+```bash
+group_search_filter = "(member:1.2.840.113556.1.4.1941:=%s)"
+group_search_base_dns = ["DC=mycorp,DC=mytld"]
+group_search_filter_user_attribute = "dn"
+```
 
 ```bash
 group_search_filter = "(member:1.2.840.113556.1.4.1941:=CN=%s,[user container/OU])"
 group_search_filter = "(|(member:1.2.840.113556.1.4.1941:=CN=%s,[user container/OU])(member:1.2.840.113556.1.4.1941:=CN=%s,[another user container/OU]))"
 group_search_filter_user_attribute = "cn"
 ```
+
 For more information on AD searches see [Microsoft's Search Filter Syntax](https://docs.microsoft.com/en-us/windows/desktop/adsi/search-filter-syntax) documentation.
 
 For troubleshooting, by changing `member_of` in `[servers.attributes]` to "dn" it will show you more accurate group memberships when [debug is enabled](#troubleshooting).
@@ -215,15 +253,76 @@ email =  "email"
 # [[servers.group_mappings]] omitted for clarity
 ```
 
+### Multiple LDAP servers
+
+Grafana does support receiving information from multiple LDAP servers.
+
+**LDAP specific configuration file (ldap.toml):**
+```bash
+# --- First LDAP Server ---
+
+[[servers]]
+host = "10.0.0.1"
+port = 389
+use_ssl = false
+start_tls = false
+ssl_skip_verify = false
+bind_dn = "cn=admin,dc=grafana,dc=org"
+bind_password = 'grafana'
+search_filter = "(cn=%s)"
+search_base_dns = ["ou=users,dc=grafana,dc=org"]
+
+[servers.attributes]
+name = "givenName"
+surname = "sn"
+username = "cn"
+member_of = "memberOf"
+email =  "email"
+
+[[servers.group_mappings]]
+group_dn = "cn=admins,ou=groups,dc=grafana,dc=org"
+org_role = "Admin"
+grafana_admin = true
+
+# --- Second LDAP Server ---
+
+[[servers]]
+host = "10.0.0.2"
+port = 389
+use_ssl = false
+start_tls = false
+ssl_skip_verify = false
+
+bind_dn = "cn=admin,dc=grafana,dc=org"
+bind_password = 'grafana'
+search_filter = "(cn=%s)"
+search_base_dns = ["ou=users,dc=grafana,dc=org"]
+
+[servers.attributes]
+name = "givenName"
+surname = "sn"
+username = "cn"
+member_of = "memberOf"
+email =  "email"
+
+[[servers.group_mappings]]
+group_dn = "cn=editors,ou=groups,dc=grafana,dc=org"
+org_role = "Editor"
+
+[[servers.group_mappings]]
+group_dn = "*"
+org_role = "Viewer"
+```
+
 ### Active Directory
 
 [Active Directory](https://technet.microsoft.com/en-us/library/hh831484(v=ws.11).aspx) is a directory service which is commonly used in Windows environments.
 
 Assuming the following Active Directory server setup:
 
-* IP address: `10.0.0.1`
-* Domain: `CORP`
-* DNS name: `corp.local`
+- IP address: `10.0.0.1`
+- Domain: `CORP`
+- DNS name: `corp.local`
 
 **LDAP specific configuration file (ldap.toml):**
 ```bash
@@ -247,6 +346,8 @@ email =  "mail"
 # [[servers.group_mappings]] omitted for clarity
 ```
 
+
+
 #### Port requirements
 
 In above example SSL is enabled and an encrypted port have been configured. If your Active Directory don't support SSL please change `enable_ssl = false` and `port = 389`.
@@ -254,7 +355,7 @@ Please inspect your Active Directory configuration and documentation to find the
 
 ## Troubleshooting
 
-To troubleshoot and get more log info enable ldap debug logging in the [main config file]({{< relref "installation/configuration.md" >}}).
+To troubleshoot and get more log info enable LDAP debug logging in the [main config file]({{< relref "../administration/configuration.md" >}}).
 
 ```bash
 [log]

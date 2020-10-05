@@ -164,7 +164,7 @@ export function metricSegment($compile: any, $sce: any, templateSrv: TemplateSrv
 
       $button.click(() => {
         options = null;
-        $input.css('width', Math.max($button.width(), 80) + 16 + 'px');
+        $input.css('width', Math.max($button.width()!, 80) + 16 + 'px');
 
         $button.hide();
         $input.show();
@@ -187,7 +187,7 @@ export function metricSegment($compile: any, $sce: any, templateSrv: TemplateSrv
 }
 
 /** @ngInject */
-export function metricSegmentModel(uiSegmentSrv: any, $q: any) {
+export function metricSegmentModel(uiSegmentSrv: any) {
   return {
     template:
       '<metric-segment segment="segment" get-options="getOptionsInternal()" on-change="onSegmentChange()"></metric-segment>',
@@ -217,7 +217,7 @@ export function metricSegmentModel(uiSegmentSrv: any, $q: any) {
         $scope.getOptionsInternal = () => {
           if ($scope.options) {
             cachedOptions = $scope.options;
-            return $q.when(
+            return Promise.resolve(
               _.map($scope.options, option => {
                 return { value: option.text };
               })

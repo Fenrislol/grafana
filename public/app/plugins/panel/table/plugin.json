@@ -3,12 +3,10 @@
   "name": "Table",
   "id": "table",
 
-  "dataFormats": ["table", "time_series"],
-
   "info": {
     "description": "Table Panel for Grafana",
     "author": {
-      "name": "Grafana Project",
+      "name": "Grafana Labs",
       "url": "https://grafana.com"
     },
     "logos": {

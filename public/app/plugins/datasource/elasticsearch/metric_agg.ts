@@ -1,11 +1,14 @@
 import coreModule from 'app/core/core_module';
 import _ from 'lodash';
 import * as queryDef from './query_def';
+import { ElasticsearchAggregation } from './types';
+import { GrafanaRootScope } from 'app/routes/GrafanaCtrl';
+import { CoreEvents } from 'app/types';
 
 export class ElasticMetricAggCtrl {
   /** @ngInject */
-  constructor($scope, uiSegmentSrv, $q, $rootScope) {
-    const metricAggs = $scope.target.metrics;
+  constructor($scope: any, uiSegmentSrv: any, $rootScope: GrafanaRootScope) {
+    const metricAggs: ElasticsearchAggregation[] = $scope.target.metrics;
     $scope.metricAggTypes = queryDef.getMetricAggTypes($scope.esVersion);
     $scope.extendedStats = queryDef.extendedStats;
     $scope.pipelineAggOptions = [];
@@ -22,7 +25,7 @@ export class ElasticMetricAggCtrl {
     };
 
     $rootScope.onAppEvent(
-      'elastic-query-updated',
+      CoreEvents.elasticQueryUpdated,
       () => {
         $scope.index = _.indexOf(metricAggs, $scope.agg);
         $scope.updatePipelineAggOptions();
@@ -86,7 +89,7 @@ export class ElasticMetricAggCtrl {
               }
               return memo;
             },
-            []
+            [] as string[]
           );
 
           $scope.settingsLinkText = 'Stats: ' + stats.join(', ');
@@ -98,7 +101,8 @@ export class ElasticMetricAggCtrl {
           $scope.updateMovingAvgModelSettings();
           break;
         }
-        case 'raw_document': {
+        case 'raw_document':
+        case 'raw_data': {
           $scope.agg.settings.size = $scope.agg.settings.size || 500;
           $scope.settingsLinkText = 'Size: ' + $scope.agg.settings.size;
           $scope.target.metrics.splice(0, $scope.target.metrics.length, $scope.agg);
@@ -161,7 +165,10 @@ export class ElasticMetricAggCtrl {
       $scope.showOptions = false;
 
       // reset back to metric/group by query
-      if ($scope.target.bucketAggs.length === 0 && $scope.agg.type !== 'raw_document') {
+      if (
+        $scope.target.bucketAggs.length === 0 &&
+        ($scope.agg.type !== 'raw_document' || $scope.agg.type !== 'raw_data')
+      ) {
         $scope.target.bucketAggs = [queryDef.defaultBucketAgg()];
       }
 

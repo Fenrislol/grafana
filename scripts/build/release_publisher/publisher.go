@@ -93,17 +93,32 @@ type buildArtifact struct {
 
 func (t buildArtifact) getURL(baseArchiveURL, version string, releaseType releaseType) string {
 	prefix := "-"
-	rhelReleaseExtra := ""
+	rev := ""
 
 	if t.os == "deb" {
 		prefix = "_"
 	}
 
-	if releaseType.stable() && t.os == "rhel" {
-		rhelReleaseExtra = "-1"
+	if t.os == "rhel" {
+		rev = "-1"
 	}
 
-	url := strings.Join([]string{baseArchiveURL, t.packagePostfix, prefix, version, rhelReleaseExtra, t.urlPostfix}, "")
+	verComponents := strings.Split(version, "-")
+	if len(verComponents) > 2 {
+		panic(fmt.Sprintf("Version string contains more than one hyphen: %q", version))
+	}
+
+	switch t.os {
+	case "deb", "rhel":
+		if len(verComponents) > 1 {
+			// With Debian and RPM packages, it's customary to prefix any pre-release component with a ~, since this
+			// is considered of lower lexical value than the empty character, and this way pre-release versions are
+			// considered to be of a lower version than the final version (which lacks this suffix).
+			version = fmt.Sprintf("%s~%s", verComponents[0], verComponents[1])
+		}
+	}
+
+	url := fmt.Sprintf("%s%s%s%s%s%s", baseArchiveURL, t.packagePostfix, prefix, version, rev, t.urlPostfix)
 	return url
 }
 
@@ -174,6 +189,11 @@ var completeBuildArtifactConfigurations = []buildArtifact{
 		arch:       "amd64",
 		urlPostfix: ".windows-amd64.zip",
 	},
+	{
+		os:         "win-installer",
+		arch:       "amd64",
+		urlPostfix: ".windows-amd64.msi",
+	},
 }
 
 type artifactFilter struct {
@@ -181,30 +201,41 @@ type artifactFilter struct {
 	arch string
 }
 
-func filterBuildArtifacts(filters []artifactFilter) ([]buildArtifact, error) {
-	var artifacts []buildArtifact
-	for _, f := range filters {
-		matched := false
+type filterType string
 
-		for _, a := range completeBuildArtifactConfigurations {
+const (
+	Add    filterType = "add"
+	Remove filterType = "remove"
+)
+
+func filterBuildArtifacts(filterFrom []buildArtifact, ft filterType, filters []artifactFilter) ([]buildArtifact, error) {
+	var artifacts []buildArtifact
+
+	for _, a := range filterFrom {
+		matched := false
+		var match buildArtifact
+
+		for _, f := range filters {
 			if f.os == a.os && f.arch == a.arch {
-				artifacts = append(artifacts, a)
+				match = a
 				matched = true
 				break
 			}
 		}
 
-		if !matched {
-			return nil, fmt.Errorf("No buildArtifact for os=%v, arch=%v", f.os, f.arch)
+		if matched && ft == Add {
+			artifacts = append(artifacts, match)
+		} else if !matched && ft == Remove {
+			artifacts = append(artifacts, a)
 		}
 	}
 	return artifacts, nil
 }
 
-func newBuild(baseArchiveURL string, ba buildArtifact, version string, rt releaseType, sha256 string) build {
+func newBuild(url string, ba buildArtifact, sha256 string) build {
 	return build{
 		Os:     ba.os,
-		URL:    ba.getURL(baseArchiveURL, version, rt),
+		URL:    url,
 		Sha256: sha256,
 		Arch:   ba.arch,
 	}

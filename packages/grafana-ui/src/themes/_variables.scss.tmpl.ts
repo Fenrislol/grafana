@@ -1,6 +1,6 @@
-/* tslint:disable:max-line-length */
+/* eslint-disable max-len */
 
-import { GrafanaThemeCommons } from '../types';
+import { GrafanaThemeCommons } from '@grafana/data';
 import { renderGeneratedFileBanner } from '../utils/generatedFileBanner';
 
 export const commonThemeVarsTemplate = (theme: GrafanaThemeCommons) =>
@@ -99,7 +99,6 @@ $height-lg: ${theme.height.lg};
 $font-family-sans-serif: ${theme.typography.fontFamily.sansSerif};
 $font-family-monospace: ${theme.typography.fontFamily.monospace};
 
-$font-size-root: ${theme.typography.size.root} !default;
 $font-size-base: ${theme.typography.size.base} !default;
 
 $font-size-lg: ${theme.typography.size.lg} !default;
@@ -107,7 +106,7 @@ $font-size-md: ${theme.typography.size.md} !default;
 $font-size-sm: ${theme.typography.size.sm} !default;
 $font-size-xs: ${theme.typography.size.xs} !default;
 
-$line-height-base: ${theme.typography.lineHeight.lg} !default;
+$line-height-base: ${theme.typography.lineHeight.md} !default;
 
 $font-weight-regular: ${theme.typography.weight.regular} !default;
 $font-weight-semi-bold: ${theme.typography.weight.semibold} !default;
@@ -143,15 +142,9 @@ $link-hover-decoration: ${theme.typography.link.hoverDecoration} !default;
 
 // Forms
 $input-line-height: 18px !default;
-
-$input-border-radius: 0 $border-radius $border-radius 0 !default;
-$input-border-radius-sm: 0 $border-radius-sm $border-radius-sm 0 !default;
-
-$label-border-radius: $border-radius 0 0 $border-radius !default;
-$label-border-radius-sm: $border-radius-sm 0 0 $border-radius-sm !default;
-
-$input-padding: ${theme.spacing.sm};
-$input-height: 35px !default;
+$input-border-radius: $border-radius;
+$input-padding: 0 ${theme.spacing.sm};
+$input-height: 32px !default;
 
 $cursor-disabled: not-allowed !default;
 
@@ -171,14 +164,13 @@ $zindex-tooltip: ${theme.zIndex.tooltip};
 $zindex-modal-backdrop: ${theme.zIndex.modalBackdrop};
 $zindex-modal: ${theme.zIndex.modal};
 $zindex-typeahead: ${theme.zIndex.typeahead};
-$zindex-timepicker-popover: 1070;
 
 // Buttons
 //
 
 $btn-padding-x: 14px !default;
-$btn-padding-y: 10px !default;
-$btn-line-height: 1 !default;
+$btn-padding-y: 0 !default;
+$btn-line-height: $line-height-base;
 $btn-font-weight: ${theme.typography.weight.semibold} !default;
 
 $btn-padding-x-sm: 7px !default;
@@ -194,6 +186,7 @@ $btn-semi-transparent: rgba(0, 0, 0, 0.2) !default;
 
 // sidemenu
 $side-menu-width: 60px;
+$navbar-padding: 20px;
 
 // dashboard
 $dashboard-padding: $space-md;
@@ -220,8 +213,18 @@ $external-services: (
     borderColor: #b83e31,
     icon: '',
   ),
+  azuread: (
+    bgColor: #2f2f2f,
+    borderColor: #2f2f2f,
+    icon: '',
+  ),
   grafanacom: (
     bgColor: #262628,
+    borderColor: #393939,
+    icon: '',
+  ),
+  okta: (
+    bgColor: #2f2f2f,
     borderColor: #393939,
     icon: '',
   ),

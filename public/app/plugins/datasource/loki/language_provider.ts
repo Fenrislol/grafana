@@ -1,42 +1,55 @@
 // Libraries
 import _ from 'lodash';
-import moment from 'moment';
+import LRU from 'lru-cache';
 
 // Services & Utils
-import { parseSelector, labelRegexp, selectorRegexp } from 'app/plugins/datasource/prometheus/language_utils';
-import syntax from './syntax';
+import {
+  parseSelector,
+  labelRegexp,
+  selectorRegexp,
+  processLabels,
+} from 'app/plugins/datasource/prometheus/language_utils';
+import syntax, { FUNCTIONS } from './syntax';
 
 // Types
-import {
-  CompletionItem,
-  CompletionItemGroup,
-  LanguageProvider,
-  TypeaheadInput,
-  TypeaheadOutput,
-  HistoryItem,
-} from 'app/types/explore';
 import { LokiQuery } from './types';
+import { dateTime, AbsoluteTimeRange, LanguageProvider, HistoryItem } from '@grafana/data';
+import { PromQuery } from '../prometheus/types';
+import { RATE_RANGES } from '../prometheus/promql';
+
+import LokiDatasource from './datasource';
+import { CompletionItem, TypeaheadInput, TypeaheadOutput, CompletionItemGroup } from '@grafana/ui';
+import { Grammar } from 'prismjs';
 
 const DEFAULT_KEYS = ['job', 'namespace'];
 const EMPTY_SELECTOR = '{}';
 const HISTORY_ITEM_COUNT = 10;
 const HISTORY_COUNT_CUTOFF = 1000 * 60 * 60 * 24; // 24h
+const NS_IN_MS = 1000000;
 export const LABEL_REFRESH_INTERVAL = 1000 * 30; // 30sec
 
-const wrapLabel = (label: string) => ({ label });
+const wrapLabel = (label: string) => ({ label, filterText: `\"${label}\"` });
 
-type LokiHistoryItem = HistoryItem<LokiQuery>;
+export const rangeToParams = (range: AbsoluteTimeRange) => ({ start: range.from * NS_IN_MS, end: range.to * NS_IN_MS });
+
+export type LokiHistoryItem = HistoryItem<LokiQuery>;
+
+type TypeaheadContext = {
+  history?: LokiHistoryItem[];
+  absoluteRange?: AbsoluteTimeRange;
+};
 
 export function addHistoryMetadata(item: CompletionItem, history: LokiHistoryItem[]): CompletionItem {
   const cutoffTs = Date.now() - HISTORY_COUNT_CUTOFF;
-  const historyForItem = history.filter(h => h.ts > cutoffTs && (h.query.expr as string) === item.label);
-  const count = historyForItem.length;
+  const historyForItem = history.filter(h => h.ts > cutoffTs && h.query.expr === item.label);
+  let hint = `Queried ${historyForItem.length} times in the last 24h.`;
   const recent = historyForItem[0];
-  let hint = `Queried ${count} times in the last 24h.`;
+
   if (recent) {
-    const lastQueried = moment(recent.ts).fromNow();
+    const lastQueried = dateTime(recent.ts).fromNow();
     hint = `${hint} Last queried ${lastQueried}.`;
   }
+
   return {
     ...item,
     documentation: hint,
@@ -44,68 +57,146 @@ export function addHistoryMetadata(item: CompletionItem, history: LokiHistoryIte
 }
 
 export default class LokiLanguageProvider extends LanguageProvider {
-  labelKeys?: { [index: string]: string[] }; // metric -> [labelKey,...]
-  labelValues?: { [index: string]: { [index: string]: string[] } }; // metric -> labelKey -> [labelValue,...]
+  labelKeys: string[];
   logLabelOptions: any[];
-  logLabelFetchTs?: number;
+  logLabelFetchTs: number;
   started: boolean;
+  initialRange: AbsoluteTimeRange;
+  datasource: LokiDatasource;
+  lookupsDisabled: boolean; // Dynamically set to true for big/slow instances
 
-  constructor(datasource: any, initialValues?: any) {
+  /**
+   *  Cache for labels of series. This is bit simplistic in the sense that it just counts responses each as a 1 and does
+   *  not account for different size of a response. If that is needed a `length` function can be added in the options.
+   *  10 as a max size is totally arbitrary right now.
+   */
+  private seriesCache = new LRU<string, Record<string, string[]>>(10);
+  private labelsCache = new LRU<string, string[]>(10);
+
+  constructor(datasource: LokiDatasource, initialValues?: any) {
     super();
 
     this.datasource = datasource;
-    this.labelKeys = {};
-    this.labelValues = {};
+    this.labelKeys = [];
+    this.logLabelFetchTs = 0;
 
     Object.assign(this, initialValues);
   }
+
   // Strip syntax chars
   cleanText = (s: string) => s.replace(/[{}[\]="(),!~+\-*/^%]/g, '').trim();
 
-  getSyntax() {
+  getSyntax(): Grammar {
     return syntax;
   }
 
-  request = (url: string) => {
-    return this.datasource.metadataRequest(url);
+  request = async (url: string, params?: any): Promise<any> => {
+    try {
+      return await this.datasource.metadataRequest(url, params);
+    } catch (error) {
+      console.error(error);
+    }
+
+    return undefined;
   };
 
+  /**
+   * Initialise the language provider by fetching set of labels. Without this initialisation the provider would return
+   * just a set of hardcoded default labels on provideCompletionItems or a recent queries from history.
+   */
   start = () => {
     if (!this.startTask) {
-      this.startTask = this.fetchLogLabels();
+      this.startTask = this.fetchLogLabels(this.initialRange).then(() => {
+        this.started = true;
+        return [];
+      });
     }
+
     return this.startTask;
   };
 
-  // Keep this DOM-free for testing
-  provideCompletionItems({ prefix, wrapperClasses, text, value }: TypeaheadInput, context?: any): TypeaheadOutput {
-    // Local text properties
-    const empty = value.document.text.length === 0;
-    // Determine candidates by CSS context
-    if (_.includes(wrapperClasses, 'context-labels')) {
-      // Suggestions for {|} and {foo=|}
-      return this.getLabelCompletionItems.apply(this, arguments);
-    } else if (empty) {
-      return this.getEmptyCompletionItems(context || {});
-    }
-
-    return {
-      suggestions: [],
-    };
+  getLabelKeys(): string[] {
+    return this.labelKeys;
   }
 
-  getEmptyCompletionItems(context: any): TypeaheadOutput {
-    const { history } = context;
-    const suggestions: CompletionItemGroup[] = [];
+  /**
+   * Return suggestions based on input that can be then plugged into a typeahead dropdown.
+   * Keep this DOM-free for testing
+   * @param input
+   * @param context Is optional in types but is required in case we are doing getLabelCompletionItems
+   * @param context.absoluteRange Required in case we are doing getLabelCompletionItems
+   * @param context.history Optional used only in getEmptyCompletionItems
+   */
+  async provideCompletionItems(input: TypeaheadInput, context?: TypeaheadContext): Promise<TypeaheadOutput> {
+    const { wrapperClasses, value, prefix, text } = input;
+    const emptyResult: TypeaheadOutput = { suggestions: [] };
 
-    if (history && history.length > 0) {
+    if (!value) {
+      return emptyResult;
+    }
+
+    // Local text properties
+    const empty = value?.document.text.length === 0;
+    const selectedLines = value.document.getTextsAtRange(value.selection);
+    const currentLine = selectedLines.size === 1 ? selectedLines.first().getText() : null;
+
+    const nextCharacter = currentLine ? currentLine[value.selection.anchor.offset] : null;
+
+    // Syntax spans have 3 classes by default. More indicate a recognized token
+    const tokenRecognized = wrapperClasses.length > 3;
+
+    // Non-empty prefix, but not inside known token
+    const prefixUnrecognized = prefix && !tokenRecognized;
+
+    // Prevent suggestions in `function(|suffix)`
+    const noSuffix = !nextCharacter || nextCharacter === ')';
+
+    // Prefix is safe if it does not immediately follow a complete expression and has no text after it
+    const safePrefix = prefix && !text.match(/^['"~=\]})\s]+$/) && noSuffix;
+
+    // About to type next operand if preceded by binary operator
+    const operatorsPattern = /[+\-*/^%]/;
+    const isNextOperand = text.match(operatorsPattern);
+
+    // Determine candidates by CSS context
+    if (wrapperClasses.includes('context-range')) {
+      // Suggestions for metric[|]
+      return this.getRangeCompletionItems();
+    } else if (wrapperClasses.includes('context-labels')) {
+      // Suggestions for {|} and {foo=|}
+      return await this.getLabelCompletionItems(input, context);
+    } else if (empty) {
+      // Suggestions for empty query field
+      return this.getEmptyCompletionItems(context);
+    } else if (prefixUnrecognized && noSuffix && !isNextOperand) {
+      // Show term suggestions in a couple of scenarios
+      return this.getBeginningCompletionItems(context);
+    } else if (prefixUnrecognized && safePrefix) {
+      // Show term suggestions in a couple of scenarios
+      return this.getTermCompletionItems();
+    }
+
+    return emptyResult;
+  }
+
+  getBeginningCompletionItems = (context?: TypeaheadContext): TypeaheadOutput => {
+    return {
+      suggestions: [...this.getEmptyCompletionItems(context).suggestions, ...this.getTermCompletionItems().suggestions],
+    };
+  };
+
+  getEmptyCompletionItems(context?: TypeaheadContext): TypeaheadOutput {
+    const history = context?.history;
+    const suggestions = [];
+
+    if (history?.length) {
       const historyItems = _.chain(history)
-        .map((h: any) => h.query.expr)
+        .map(h => h.query.expr)
         .filter()
         .uniq()
         .take(HISTORY_ITEM_COUNT)
         .map(wrapLabel)
-        .map((item: CompletionItem) => addHistoryMetadata(item, history))
+        .map(item => addHistoryMetadata(item, history))
         .value();
 
       suggestions.push({
@@ -119,48 +210,102 @@ export default class LokiLanguageProvider extends LanguageProvider {
     return { suggestions };
   }
 
-  getLabelCompletionItems({ text, wrapperClasses, labelKey, value }: TypeaheadInput): TypeaheadOutput {
-    let context: string;
-    let refresher: Promise<any> = null;
-    const suggestions: CompletionItemGroup[] = [];
-    const line = value.anchorBlock.getText();
-    const cursorOffset: number = value.anchorOffset;
+  getTermCompletionItems = (): TypeaheadOutput => {
+    const suggestions = [];
 
-    // Use EMPTY_SELECTOR until series API is implemented for facetting
-    const selector = EMPTY_SELECTOR;
+    suggestions.push({
+      prefixMatch: true,
+      label: 'Functions',
+      items: FUNCTIONS.map(suggestion => ({ ...suggestion, kind: 'function' })),
+    });
+
+    return { suggestions };
+  };
+
+  getRangeCompletionItems(): TypeaheadOutput {
+    return {
+      context: 'context-range',
+      suggestions: [
+        {
+          label: 'Range vector',
+          items: [...RATE_RANGES],
+        },
+      ],
+    };
+  }
+
+  async getLabelCompletionItems(
+    { text, wrapperClasses, labelKey, value }: TypeaheadInput,
+    { absoluteRange }: any
+  ): Promise<TypeaheadOutput> {
+    let context = 'context-labels';
+    const suggestions: CompletionItemGroup[] = [];
+    if (!value) {
+      return { context, suggestions: [] };
+    }
+    const line = value.anchorBlock.getText();
+    const cursorOffset = value.selection.anchor.offset;
+    const isValueStart = text.match(/^(=|=~|!=|!~)/);
+
+    // Get normalized selector
+    let selector;
     let parsedSelector;
     try {
       parsedSelector = parseSelector(line, cursorOffset);
-    } catch {}
+      selector = parsedSelector.selector;
+    } catch {
+      selector = EMPTY_SELECTOR;
+    }
+
+    if (!isValueStart && selector === EMPTY_SELECTOR) {
+      // start task gets all labels
+      await this.start();
+      const allLabels = this.getLabelKeys();
+      return { context, suggestions: [{ label: `Labels`, items: allLabels.map(wrapLabel) }] };
+    }
+
     const existingKeys = parsedSelector ? parsedSelector.labelKeys : [];
 
-    if ((text && text.match(/^!?=~?/)) || _.includes(wrapperClasses, 'attr-value')) {
+    let labelValues;
+    // Query labels for selector
+    if (selector) {
+      if (selector === EMPTY_SELECTOR && labelKey) {
+        const labelValuesForKey = await this.getLabelValues(labelKey, absoluteRange);
+        labelValues = { [labelKey]: labelValuesForKey };
+      } else {
+        labelValues = await this.getSeriesLabels(selector, absoluteRange);
+      }
+    }
+
+    if (!labelValues) {
+      console.warn(`Server did not return any values for selector = ${selector}`);
+      return { context, suggestions };
+    }
+
+    if ((text && isValueStart) || wrapperClasses.includes('attr-value')) {
       // Label values
-      if (labelKey && this.labelValues[selector]) {
-        const labelValues = this.labelValues[selector][labelKey];
-        if (labelValues) {
-          context = 'context-label-values';
-          suggestions.push({
-            label: `Label values for "${labelKey}"`,
-            items: labelValues.map(wrapLabel),
-          });
-        } else {
-          refresher = this.fetchLabelValues(labelKey);
-        }
+      if (labelKey && labelValues[labelKey]) {
+        context = 'context-label-values';
+        suggestions.push({
+          label: `Label values for "${labelKey}"`,
+          // Filter to prevent previously selected values from being repeatedly suggested
+          items: labelValues[labelKey].map(wrapLabel).filter(({ filterText }) => filterText !== text),
+        });
       }
     } else {
       // Label keys
-      const labelKeys = this.labelKeys[selector] || DEFAULT_KEYS;
+      const labelKeys = labelValues ? Object.keys(labelValues) : DEFAULT_KEYS;
       if (labelKeys) {
         const possibleKeys = _.difference(labelKeys, existingKeys);
-        if (possibleKeys.length > 0) {
-          context = 'context-labels';
-          suggestions.push({ label: `Labels`, items: possibleKeys.map(wrapLabel) });
+        if (possibleKeys.length) {
+          const newItems = possibleKeys.map(key => ({ label: key }));
+          const newSuggestion: CompletionItemGroup = { label: `Labels`, items: newItems };
+          suggestions.push(newSuggestion);
         }
       }
     }
 
-    return { context, refresher, suggestions };
+    return { context, suggestions };
   }
 
   async importQueries(queries: LokiQuery[], datasourceType: string): Promise<LokiQuery[]> {
@@ -168,8 +313,9 @@ export default class LokiLanguageProvider extends LanguageProvider {
       return Promise.all(
         queries.map(async query => {
           const expr = await this.importPrometheusQuery(query.expr);
+          const { ...rest } = query as PromQuery;
           return {
-            ...query,
+            ...rest,
             expr,
           };
         })
@@ -189,103 +335,157 @@ export default class LokiLanguageProvider extends LanguageProvider {
 
     // Consider only first selector in query
     const selectorMatch = query.match(selectorRegexp);
-    if (selectorMatch) {
-      const selector = selectorMatch[0];
-      const labels: { [key: string]: { value: any; operator: any } } = {};
-      selector.replace(labelRegexp, (_, key, operator, value) => {
-        labels[key] = { value, operator };
-        return '';
-      });
-
-      // Keep only labels that exist on origin and target datasource
-      await this.start(); // fetches all existing label keys
-      const existingKeys = this.labelKeys[EMPTY_SELECTOR];
-      let labelsToKeep: { [key: string]: { value: any; operator: any } } = {};
-      if (existingKeys && existingKeys.length > 0) {
-        // Check for common labels
-        for (const key in labels) {
-          if (existingKeys && existingKeys.indexOf(key) > -1) {
-            // Should we check for label value equality here?
-            labelsToKeep[key] = labels[key];
-          }
-        }
-      } else {
-        // Keep all labels by default
-        labelsToKeep = labels;
-      }
-
-      const labelKeys = Object.keys(labelsToKeep).sort();
-      const cleanSelector = labelKeys
-        .map(key => `${key}${labelsToKeep[key].operator}${labelsToKeep[key].value}`)
-        .join(',');
-
-      return ['{', cleanSelector, '}'].join('');
+    if (!selectorMatch) {
+      return '';
     }
 
-    return '';
+    const selector = selectorMatch[0];
+    const labels: { [key: string]: { value: any; operator: any } } = {};
+    selector.replace(labelRegexp, (_, key, operator, value) => {
+      labels[key] = { value, operator };
+      return '';
+    });
+
+    // Keep only labels that exist on origin and target datasource
+    await this.start(); // fetches all existing label keys
+    const existingKeys = this.labelKeys;
+    let labelsToKeep: { [key: string]: { value: any; operator: any } } = {};
+    if (existingKeys && existingKeys.length) {
+      // Check for common labels
+      for (const key in labels) {
+        if (existingKeys && existingKeys.includes(key)) {
+          // Should we check for label value equality here?
+          labelsToKeep[key] = labels[key];
+        }
+      }
+    } else {
+      // Keep all labels by default
+      labelsToKeep = labels;
+    }
+
+    const labelKeys = Object.keys(labelsToKeep).sort();
+    const cleanSelector = labelKeys
+      .map(key => `${key}${labelsToKeep[key].operator}${labelsToKeep[key].value}`)
+      .join(',');
+
+    return ['{', cleanSelector, '}'].join('');
   }
 
-  async fetchLogLabels(): Promise<any> {
-    const url = '/api/prom/label';
+  async getSeriesLabels(selector: string, absoluteRange: AbsoluteTimeRange) {
+    if (this.lookupsDisabled) {
+      return undefined;
+    }
     try {
-      this.logLabelFetchTs = Date.now();
-      const res = await this.request(url);
-      const body = await (res.data || res.json());
-      const labelKeys = body.data.slice().sort();
-      this.labelKeys = {
-        ...this.labelKeys,
-        [EMPTY_SELECTOR]: labelKeys,
-      };
-      this.logLabelOptions = labelKeys.map((key: string) => ({ label: key, value: key, isLeaf: false }));
+      return await this.fetchSeriesLabels(selector, absoluteRange);
+    } catch (error) {
+      // TODO: better error handling
+      console.error(error);
+      return undefined;
+    }
+  }
 
-      // Pre-load values for default labels
-      return Promise.all(
-        labelKeys
-          .filter((key: string) => DEFAULT_KEYS.indexOf(key) > -1)
-          .map((key: string) => this.fetchLabelValues(key))
-      );
+  /**
+   * Fetches all label keys
+   * @param absoluteRange Fetches
+   */
+  async fetchLogLabels(absoluteRange: AbsoluteTimeRange): Promise<any> {
+    const url = '/loki/api/v1/label';
+    try {
+      this.logLabelFetchTs = Date.now().valueOf();
+      const rangeParams = absoluteRange ? rangeToParams(absoluteRange) : {};
+      const res = await this.request(url, rangeParams);
+      this.labelKeys = res.slice().sort();
+      this.logLabelOptions = this.labelKeys.map((key: string) => ({ label: key, value: key, isLeaf: false }));
     } catch (e) {
       console.error(e);
     }
     return [];
   }
 
-  async refreshLogLabels(forceRefresh?: boolean) {
-    if ((this.labelKeys && Date.now() - this.logLabelFetchTs > LABEL_REFRESH_INTERVAL) || forceRefresh) {
-      await this.fetchLogLabels();
+  async refreshLogLabels(absoluteRange: AbsoluteTimeRange, forceRefresh?: boolean) {
+    if ((this.labelKeys && Date.now().valueOf() - this.logLabelFetchTs > LABEL_REFRESH_INTERVAL) || forceRefresh) {
+      await this.fetchLogLabels(absoluteRange);
     }
   }
 
-  async fetchLabelValues(key: string) {
-    const url = `/api/prom/label/${key}/values`;
-    try {
-      const res = await this.request(url);
-      const body = await (res.data || res.json());
-      const values = body.data.slice().sort();
+  /**
+   * Fetch labels for a selector. This is cached by it's args but also by the global timeRange currently selected as
+   * they can change over requested time.
+   * @param name
+   */
+  fetchSeriesLabels = async (match: string, absoluteRange: AbsoluteTimeRange): Promise<Record<string, string[]>> => {
+    const rangeParams = absoluteRange ? rangeToParams(absoluteRange) : { start: 0, end: 0 };
+    const url = '/loki/api/v1/series';
+    const { start, end } = rangeParams;
 
-      // Add to label options
-      this.logLabelOptions = this.logLabelOptions.map(keyOption => {
-        if (keyOption.value === key) {
-          return {
+    const cacheKey = this.generateCacheKey(url, start, end, match);
+    const params = { match, start, end };
+    let value = this.seriesCache.get(cacheKey);
+    if (!value) {
+      // Clear value when requesting new one. Empty object being truthy also makes sure we don't request twice.
+      this.seriesCache.set(cacheKey, {});
+      const data = await this.request(url, params);
+      const { values } = processLabels(data);
+      value = values;
+      this.seriesCache.set(cacheKey, value);
+    }
+    return value;
+  };
+
+  // Cache key is a bit different here. We round up to a minute the intervals.
+  // The rounding may seem strange but makes relative intervals like now-1h less prone to need separate request every
+  // millisecond while still actually getting all the keys for the correct interval. This still can create problems
+  // when user does not the newest values for a minute if already cached.
+  generateCacheKey(url: string, start: number, end: number, param: string): string {
+    return [url, this.roundTime(start), this.roundTime(end), param].join();
+  }
+
+  // Round nanos epoch to nearest 5 minute interval
+  roundTime(nanos: number): number {
+    return nanos ? Math.floor(nanos / NS_IN_MS / 1000 / 60 / 5) : 0;
+  }
+
+  async getLabelValues(key: string, absoluteRange = this.initialRange): Promise<string[]> {
+    return await this.fetchLabelValues(key, absoluteRange);
+  }
+
+  async fetchLabelValues(key: string, absoluteRange: AbsoluteTimeRange): Promise<string[]> {
+    const url = `/loki/api/v1/label/${key}/values`;
+    let values: string[] = [];
+    const rangeParams = absoluteRange ? rangeToParams(absoluteRange) : { start: 0, end: 0 };
+    const { start, end } = rangeParams;
+
+    const cacheKey = this.generateCacheKey(url, start, end, key);
+    const params = { start, end };
+
+    let value = this.labelsCache.get(cacheKey);
+    if (!value) {
+      try {
+        // Clear value when requesting new one. Empty object being truthy also makes sure we don't request twice.
+        this.labelsCache.set(cacheKey, []);
+        const res = await this.request(url, params);
+        values = res.slice().sort();
+        value = values;
+        this.labelsCache.set(cacheKey, value);
+
+        this.logLabelOptions = this.addLabelValuesToOptions(key, values);
+      } catch (e) {
+        console.error(e);
+      }
+    } else {
+      this.logLabelOptions = this.addLabelValuesToOptions(key, value);
+    }
+    return value ?? [];
+  }
+
+  private addLabelValuesToOptions = (labelKey: string, values: string[]) => {
+    return this.logLabelOptions.map(keyOption =>
+      keyOption.value === labelKey
+        ? {
             ...keyOption,
-            children: values.map((value: string) => ({ label: value, value })),
-          };
-        }
-        return keyOption;
-      });
-
-      // Add to key map
-      const exisingValues = this.labelValues[EMPTY_SELECTOR];
-      const nextValues = {
-        ...exisingValues,
-        [key]: values,
-      };
-      this.labelValues = {
-        ...this.labelValues,
-        [EMPTY_SELECTOR]: nextValues,
-      };
-    } catch (e) {
-      console.error(e);
-    }
-  }
+            children: values.map(value => ({ label: value, value })),
+          }
+        : keyOption
+    );
+  };
 }

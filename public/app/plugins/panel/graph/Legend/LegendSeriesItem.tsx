@@ -1,7 +1,8 @@
 import React, { PureComponent } from 'react';
 import classNames from 'classnames';
 import { TimeSeries } from 'app/core/core';
-import { SeriesColorPicker } from '@grafana/ui';
+import { Icon, SeriesColorPicker } from '@grafana/ui';
+import { selectors } from '@grafana/e2e-selectors';
 
 export const LEGEND_STATS = ['min', 'max', 'avg', 'current', 'total'];
 
@@ -9,9 +10,9 @@ export interface LegendLabelProps {
   series: TimeSeries;
   asTable?: boolean;
   hidden?: boolean;
-  onLabelClick?: (series, event) => void;
-  onColorChange?: (series, color: string) => void;
-  onToggleAxis?: (series) => void;
+  onLabelClick: (series: any, event: any) => void;
+  onColorChange: (series: any, color: string) => void;
+  onToggleAxis: (series: any) => void;
 }
 
 export interface LegendValuesProps {
@@ -38,14 +39,14 @@ export class LegendItem extends PureComponent<LegendItemProps, LegendItemState> 
     onToggleAxis: () => {},
   };
 
-  constructor(props) {
+  constructor(props: LegendItemProps) {
     super(props);
     this.state = {
       yaxis: this.props.series.yaxis,
     };
   }
 
-  onLabelClick = e => this.props.onLabelClick(this.props.series, e);
+  onLabelClick = (e: any) => this.props.onLabelClick(this.props.series, e);
 
   onToggleAxis = () => {
     const yaxis = this.state.yaxis === 2 ? 1 : 2;
@@ -54,7 +55,7 @@ export class LegendItem extends PureComponent<LegendItemProps, LegendItemState> 
     this.props.onToggleAxis(info);
   };
 
-  onColorChange = color => {
+  onColorChange = (color: string) => {
     this.props.onColorChange(this.props.series, color);
     // Because of PureComponent nature it makes only shallow props comparison and changing of series.color doesn't run
     // component re-render. In this case we can't rely on color, selected by user, because it may be overwritten
@@ -66,10 +67,17 @@ export class LegendItem extends PureComponent<LegendItemProps, LegendItemState> 
     const { series, asTable } = this.props;
     const legendValueItems = [];
     for (const valueName of LEGEND_STATS) {
+      // @ts-ignore
       if (this.props[valueName]) {
         const valueFormatted = series.formatValue(series.stats[valueName]);
         legendValueItems.push(
-          <LegendValue key={valueName} valueName={valueName} value={valueFormatted} asTable={asTable} />
+          <LegendValue
+            key={valueName}
+            valueName={valueName}
+            value={valueFormatted}
+            asTable={asTable}
+            onValueClick={this.onLabelClick}
+          />
         );
       }
     }
@@ -116,11 +124,11 @@ interface LegendSeriesLabelProps {
   label: string;
   color: string;
   yaxis?: number;
-  onLabelClick?: (event) => void;
+  onLabelClick: (event: any) => void;
 }
 
 class LegendSeriesLabel extends PureComponent<LegendSeriesLabelProps & LegendSeriesIconProps> {
-  static defaultProps = {
+  static defaultProps: Partial<LegendSeriesLabelProps> = {
     yaxis: undefined,
     onLabelClick: () => {},
   };
@@ -128,6 +136,8 @@ class LegendSeriesLabel extends PureComponent<LegendSeriesLabelProps & LegendSer
   render() {
     const { label, color, yaxis } = this.props;
     const { onColorChange, onToggleAxis } = this.props;
+    const onLabelClick = this.props.onLabelClick ? this.props.onLabelClick : () => {};
+
     return [
       <LegendSeriesIcon
         key="icon"
@@ -136,7 +146,13 @@ class LegendSeriesLabel extends PureComponent<LegendSeriesLabelProps & LegendSer
         onColorChange={onColorChange}
         onToggleAxis={onToggleAxis}
       />,
-      <a className="graph-legend-alias pointer" title={label} key="label" onClick={e => this.props.onLabelClick(e)}>
+      <a
+        className="graph-legend-alias pointer"
+        title={label}
+        key="label"
+        onClick={onLabelClick}
+        aria-label={selectors.components.Panels.Visualization.Graph.Legend.legendItemAlias(label)}
+      >
         {label}
       </a>,
     ];
@@ -154,23 +170,29 @@ interface LegendSeriesIconState {
   color: string;
 }
 
-function SeriesIcon({ color }) {
-  return <i className="fa fa-minus pointer" style={{ color }} />;
+function SeriesIcon({ color }: { color: string }) {
+  return <Icon name="minus" style={{ color }} />;
 }
 
 class LegendSeriesIcon extends PureComponent<LegendSeriesIconProps, LegendSeriesIconState> {
-  static defaultProps = {
+  static defaultProps: Partial<LegendSeriesIconProps> = {
     yaxis: undefined,
     onColorChange: () => {},
     onToggleAxis: () => {},
   };
 
+  onColorChange = (color: string) => {
+    const { onColorChange } = this.props;
+    if (onColorChange) {
+      onColorChange(color);
+    }
+  };
   render() {
     return (
       <SeriesColorPicker
         yaxis={this.props.yaxis}
         color={this.props.color}
-        onChange={this.props.onColorChange}
+        onChange={this.onColorChange}
         onToggleAxis={this.props.onToggleAxis}
         enableNamedColors
       >
@@ -188,13 +210,20 @@ interface LegendValueProps {
   value: string;
   valueName: string;
   asTable?: boolean;
+  onValueClick?: (event: any) => void;
 }
 
-function LegendValue(props: LegendValueProps) {
-  const value = props.value;
-  const valueName = props.valueName;
-  if (props.asTable) {
-    return <td className={`graph-legend-value ${valueName}`}>{value}</td>;
+function LegendValue({ value, valueName, asTable, onValueClick }: LegendValueProps) {
+  if (asTable) {
+    return (
+      <td className={`graph-legend-value ${valueName}`} onClick={onValueClick}>
+        {value}
+      </td>
+    );
   }
-  return <div className={`graph-legend-value ${valueName}`}>{value}</div>;
+  return (
+    <div className={`graph-legend-value ${valueName}`} onClick={onValueClick}>
+      {value}
+    </div>
+  );
 }

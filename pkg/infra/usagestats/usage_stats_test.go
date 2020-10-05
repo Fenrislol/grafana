@@ -8,6 +8,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/grafana/grafana/pkg/services/alerting"
+	"github.com/grafana/grafana/pkg/services/licensing"
+
 	"net/http"
 	"net/http/httptest"
 
@@ -25,11 +28,11 @@ func TestMetrics(t *testing.T) {
 		uss := &UsageStatsService{
 			Bus:      bus.New(),
 			SQLStore: sqlstore.InitTestDB(t),
+			License:  &licensing.OSSLicensingService{},
 		}
 
 		var getSystemStatsQuery *models.GetSystemStatsQuery
 		uss.Bus.AddHandler(func(query *models.GetSystemStatsQuery) error {
-
 			query.Result = &models.SystemStats{
 				Dashboards:            1,
 				Datasources:           2,
@@ -46,6 +49,8 @@ func TestMetrics(t *testing.T) {
 				Snapshots:             13,
 				Teams:                 14,
 				AuthTokens:            15,
+				DashboardVersions:     16,
+				Annotations:           17,
 			}
 			getSystemStatsQuery = query
 			return nil
@@ -141,6 +146,8 @@ func TestMetrics(t *testing.T) {
 			return nil
 		})
 
+		uss.AlertingUsageStats = &alertingUsageMock{}
+
 		var wg sync.WaitGroup
 		var responseBuffer *bytes.Buffer
 		var req *http.Request
@@ -155,19 +162,20 @@ func TestMetrics(t *testing.T) {
 		}))
 		usageStatsURL = ts.URL
 
-		oauthProviders := map[string]bool{
+		uss.oauthProviders = map[string]bool{
 			"github":        true,
 			"gitlab":        true,
+			"azuread":       true,
 			"google":        true,
 			"generic_oauth": true,
 			"grafana_com":   true,
 		}
 
-		uss.sendUsageStats(oauthProviders)
+		uss.sendUsageStats()
 
 		Convey("Given reporting not enabled and sending usage stats", func() {
 			setting.ReportingEnabled = false
-			uss.sendUsageStats(oauthProviders)
+			uss.sendUsageStats()
 
 			Convey("Should not gather stats or call http endpoint", func() {
 				So(getSystemStatsQuery, ShouldBeNil)
@@ -182,12 +190,12 @@ func TestMetrics(t *testing.T) {
 			setting.BuildVersion = "5.0.0"
 			setting.AnonymousEnabled = true
 			setting.BasicAuthEnabled = true
-			setting.LdapEnabled = true
+			setting.LDAPEnabled = true
 			setting.AuthProxyEnabled = true
 			setting.Packaging = "deb"
 
 			wg.Add(1)
-			uss.sendUsageStats(oauthProviders)
+			uss.sendUsageStats()
 
 			Convey("Should gather stats and call http endpoint", func() {
 				if waitTimeout(&wg, 2*time.Second) {
@@ -231,6 +239,8 @@ func TestMetrics(t *testing.T) {
 				So(metrics.Get("stats.teams.count").MustInt(), ShouldEqual, getSystemStatsQuery.Result.Teams)
 				So(metrics.Get("stats.total_auth_token.count").MustInt64(), ShouldEqual, 15)
 				So(metrics.Get("stats.avg_auth_token_per_user.count").MustInt64(), ShouldEqual, 5)
+				So(metrics.Get("stats.dashboard_versions.count").MustInt64(), ShouldEqual, 16)
+				So(metrics.Get("stats.annotations.count").MustInt64(), ShouldEqual, 17)
 
 				So(metrics.Get("stats.ds."+models.DS_ES+".count").MustInt(), ShouldEqual, 9)
 				So(metrics.Get("stats.ds."+models.DS_PROMETHEUS+".count").MustInt(), ShouldEqual, 10)
@@ -242,6 +252,11 @@ func TestMetrics(t *testing.T) {
 				So(metrics.Get("stats.ds_access.other.direct.count").MustInt(), ShouldEqual, 6+7)
 				So(metrics.Get("stats.ds_access.other.proxy.count").MustInt(), ShouldEqual, 4+8)
 
+				So(metrics.Get("stats.alerting.ds.prometheus.count").MustInt(), ShouldEqual, 1)
+				So(metrics.Get("stats.alerting.ds.graphite.count").MustInt(), ShouldEqual, 2)
+				So(metrics.Get("stats.alerting.ds.mysql.count").MustInt(), ShouldEqual, 5)
+				So(metrics.Get("stats.alerting.ds.other.count").MustInt(), ShouldEqual, 90)
+
 				So(metrics.Get("stats.alert_notifiers.slack.count").MustInt(), ShouldEqual, 1)
 				So(metrics.Get("stats.alert_notifiers.webhook.count").MustInt(), ShouldEqual, 2)
 
@@ -252,16 +267,59 @@ func TestMetrics(t *testing.T) {
 				So(metrics.Get("stats.auth_enabled.oauth_github.count").MustInt(), ShouldEqual, 1)
 				So(metrics.Get("stats.auth_enabled.oauth_gitlab.count").MustInt(), ShouldEqual, 1)
 				So(metrics.Get("stats.auth_enabled.oauth_google.count").MustInt(), ShouldEqual, 1)
+				So(metrics.Get("stats.auth_enabled.oauth_azuread.count").MustInt(), ShouldEqual, 1)
 				So(metrics.Get("stats.auth_enabled.oauth_generic_oauth.count").MustInt(), ShouldEqual, 1)
 				So(metrics.Get("stats.auth_enabled.oauth_grafana_com.count").MustInt(), ShouldEqual, 1)
 
 				So(metrics.Get("stats.packaging.deb.count").MustInt(), ShouldEqual, 1)
-
 			})
 		})
 
 		Reset(func() {
 			ts.Close()
+		})
+	})
+
+	Convey("Test update total stats", t, func() {
+		uss := &UsageStatsService{
+			Bus: bus.New(),
+			Cfg: setting.NewCfg(),
+		}
+		uss.Cfg.MetricsEndpointEnabled = true
+		uss.Cfg.MetricsEndpointDisableTotalStats = false
+		getSystemStatsWasCalled := false
+		uss.Bus.AddHandler(func(query *models.GetSystemStatsQuery) error {
+			query.Result = &models.SystemStats{}
+			getSystemStatsWasCalled = true
+			return nil
+		})
+
+		Convey("should not update stats when metrics is disabled and total stats is disabled", func() {
+			uss.Cfg.MetricsEndpointEnabled = false
+			uss.Cfg.MetricsEndpointDisableTotalStats = true
+			uss.updateTotalStats()
+			So(getSystemStatsWasCalled, ShouldBeFalse)
+		})
+
+		Convey("should not update stats when metrics is disabled and total stats enabled", func() {
+			uss.Cfg.MetricsEndpointEnabled = false
+			uss.Cfg.MetricsEndpointDisableTotalStats = false
+			uss.updateTotalStats()
+			So(getSystemStatsWasCalled, ShouldBeFalse)
+		})
+
+		Convey("should not update stats when metrics is enabled and total stats disabled", func() {
+			uss.Cfg.MetricsEndpointEnabled = true
+			uss.Cfg.MetricsEndpointDisableTotalStats = true
+			uss.updateTotalStats()
+			So(getSystemStatsWasCalled, ShouldBeFalse)
+		})
+
+		Convey("should update stats when metrics is enabled and total stats enabled", func() {
+			uss.Cfg.MetricsEndpointEnabled = true
+			uss.Cfg.MetricsEndpointDisableTotalStats = false
+			uss.updateTotalStats()
+			So(getSystemStatsWasCalled, ShouldBeTrue)
 		})
 	})
 }
@@ -278,4 +336,17 @@ func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
 	case <-time.After(timeout):
 		return true // timed out
 	}
+}
+
+type alertingUsageMock struct{}
+
+func (aum *alertingUsageMock) QueryUsageStats() (*alerting.UsageStats, error) {
+	return &alerting.UsageStats{
+		DatasourceUsage: map[string]int{
+			"prometheus":         1,
+			"graphite":           2,
+			"mysql":              5,
+			"unknown-datasource": 90,
+		},
+	}, nil
 }

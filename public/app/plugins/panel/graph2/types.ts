@@ -1,9 +1,10 @@
-import { LegendOptions } from '@grafana/ui';
-import { GraphLegendEditorLegendOptions } from './GraphLegendEditor';
+import { LegendOptions, GraphTooltipOptions } from '@grafana/ui';
+import { YAxis } from '@grafana/data';
 
 export interface SeriesOptions {
   color?: string;
-  yAxis?: number;
+  yAxis?: YAxis;
+  [key: string]: any;
 }
 export interface GraphOptions {
   showBars: boolean;
@@ -17,6 +18,7 @@ export interface Options {
   series: {
     [alias: string]: SeriesOptions;
   };
+  tooltipOptions: GraphTooltipOptions;
 }
 
 export const defaults: Options = {
@@ -31,4 +33,12 @@ export const defaults: Options = {
     placement: 'under',
   },
   series: {},
+  tooltipOptions: { mode: 'single' },
 };
+
+export interface GraphLegendEditorLegendOptions extends LegendOptions {
+  stats?: string[];
+  decimals?: number;
+  sortBy?: string;
+  sortDesc?: boolean;
+}

@@ -2,7 +2,22 @@
   <div class="gf-form">
     <label class="gf-form-label query-keyword width-9">Service</label>
     <div class="gf-form-select-wrapper gf-form-select-wrapper--caret-indent">
-      <select class="gf-form-input service-dropdown" ng-model="ctrl.annotation.queryType" ng-options="f as f for f in ['Application Insights', 'Azure Monitor', 'Azure Log Analytics']"></select>
+      <select
+        class="gf-form-input service-dropdown"
+        ng-model="ctrl.annotation.queryType"
+        ng-options="f as f for f in ['Application Insights', 'Azure Monitor', 'Azure Log Analytics']"
+      ></select>
+    </div>
+  </div>
+  <div class="gf-form" ng-show="ctrl.annotation.queryType === 'Azure Log Analytics'">
+    <label class="gf-form-label query-keyword width-9">Subscription</label>
+    <div class="gf-form-select-wrapper gf-form-select-wrapper--caret-indent">
+      <select
+        class="gf-form-input service-dropdown"
+        ng-model="ctrl.annotation.subscription"
+        ng-options="f.value as f.text for f in ctrl.subscriptions"
+        ng-change="ctrl.onSubscriptionChange()"
+      ></select>
     </div>
   </div>
   <div ng-show="ctrl.annotation.queryType === 'Azure Log Analytics'">
@@ -10,7 +25,11 @@
       <div class="gf-form">
         <label class="gf-form-label query-keyword width-9">Workspace</label>
         <div class="gf-form-select-wrapper gf-form-select-wrapper--caret-indent">
-          <select class="gf-form-input min-width-12" ng-model="ctrl.annotation.workspace" ng-options="f.value as f.text for f in ctrl.workspaces"></select>
+          <select
+            class="gf-form-input min-width-12"
+            ng-model="ctrl.annotation.workspace"
+            ng-options="f.value as f.text for f in ctrl.workspaces"
+          ></select>
         </div>
       </div>
       <div class="gf-form">
@@ -20,11 +39,16 @@
         <button class="btn btn-primary width-10" ng-click="ctrl.panelCtrl.refresh()">Run</button>
       </div>
       <div class="gf-form">
-        <label class="gf-form-label">(Run Query: Shift+Enter, Trigger Suggestion: Ctrl+Space)</label>
+        <label class="gf-form-label">(New Line: Shift+Enter, Run Query: Enter, Trigger Suggestion: Ctrl+Space)</label>
       </div>
     </div>
-    <kusto-monaco-editor content="ctrl.annotation.rawQuery" get-schema="ctrl.datasource.azureLogAnalyticsDatasource.getSchema(ctrl.annotation.workspace)"
-      default-time-field="TimeGenerated" plugin-base-url={{ctrl.datasource.meta.baseUrl}}></kusto-monaco-editor>
+    <kusto-editor
+      class="gf-form gf-form--grow"
+      query="ctrl.annotation.rawQuery"
+      variables="ctrl.templateVariables"
+      change="ctrl.onLogAnalyticsQueryChange"
+      getSchema="ctrl.getAzureLogAnalyticsSchema"
+    />
   </div>
 
   <div class="gf-form-inline" ng-show="ctrl.annotation.queryType !== 'Azure Log Analytics'">
@@ -37,14 +61,17 @@
     <div class="gf-form">
       <label class="gf-form-label query-keyword" ng-click="ctrl.showHelp = !ctrl.showHelp">
         Show Help
-        <i class="fa fa-caret-down" ng-show="ctrl.showHelp"></i>
-        <i class="fa fa-caret-right" ng-hide="ctrl.showHelp"></i>
+        <icon name="'angle-down'" ng-show="ctrl.showHelp" style="margin-top: 3px;"></icon>
+        <icon name="'angle-right'" ng-hide="ctrl.showHelp" style="margin-top: 3px;"></icon>
       </label>
     </div>
   </div>
 
   <div class="gf-form" ng-show="ctrl.showHelp">
-    <pre class="gf-form-pre alert alert-info" ng-show="ctrl.annotation.queryType === 'Azure Log Analytics'"><h6>Annotation Query Format</h6>
+    <pre
+      class="gf-form-pre alert alert-info"
+      ng-show="ctrl.annotation.queryType === 'Azure Log Analytics'"
+    ><h6>Annotation Query Format</h6>
 An annotation is an event that is overlaid on top of graphs. The query can have up to three columns per row, the datetime column is mandatory. Annotation rendering is expensive so it is important to limit the number of rows returned.
 
 - column with the datetime type.
@@ -56,8 +83,8 @@ Macros:
     - $__timeFilter(datetimeColumn) -&gt;  datetimeColumn  &ge; datetime(2018-06-05T18:09:58.907Z) and datetimeColumn &le; datetime(2018-06-05T20:09:58.907Z)
 
     Or build your own conditionals using these built-in variables which just return the values:
-    - $__from -&gt;  datetime(2018-06-05T18:09:58.907Z)
-    - $__to -&gt; datetime(2018-06-05T20:09:58.907Z)
+    - $__timeFrom -&gt;  datetime(2018-06-05T18:09:58.907Z)
+    - $__timeTo -&gt; datetime(2018-06-05T20:09:58.907Z)
     - $__interval -&gt; 5m
 </pre>
   </div>

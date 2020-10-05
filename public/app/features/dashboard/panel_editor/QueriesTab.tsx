@@ -1,27 +1,33 @@
 // Libraries
 import React, { PureComponent } from 'react';
-import _ from 'lodash';
-
 // Components
-import { EditorTabBody, EditorToolbarView } from './EditorTabBody';
 import { DataSourcePicker } from 'app/core/components/Select/DataSourcePicker';
-import { QueryInspector } from './QueryInspector';
 import { QueryOptions } from './QueryOptions';
-import { PanelOptionsGroup } from '@grafana/ui';
-import { QueryEditorRow } from './QueryEditorRow';
-
+import { Button, CustomScrollbar, HorizontalGroup, Modal, stylesFactory, Field } from '@grafana/ui';
+import { getLocationSrv, getDataSourceSrv } from '@grafana/runtime';
+import { QueryEditorRows } from './QueryEditorRows';
 // Services
 import { getDatasourceSrv } from 'app/features/plugins/datasource_srv';
-import { getBackendSrv } from 'app/core/services/backend_srv';
+import { backendSrv } from 'app/core/services/backend_srv';
 import config from 'app/core/config';
-
 // Types
 import { PanelModel } from '../state/PanelModel';
 import { DashboardModel } from '../state/DashboardModel';
-import { DataQuery, DataSourceSelectItem, PanelData, LoadingState } from '@grafana/ui/src/types';
+import {
+  DataQuery,
+  DataSourceSelectItem,
+  DefaultTimeRange,
+  LoadingState,
+  PanelData,
+  DataSourceApi,
+} from '@grafana/data';
 import { PluginHelp } from 'app/core/components/PluginHelp/PluginHelp';
-import { PanelQueryRunnerFormat } from '../state/PanelQueryRunner';
+import { addQuery } from 'app/core/utils/query';
 import { Unsubscribable } from 'rxjs';
+import { DashboardQueryEditor, isSharedDashboardQuery } from 'app/plugins/datasource/dashboard';
+import { expressionDatasource, ExpressionDatasourceID } from 'app/features/expressions/ExpressionDatasource';
+import { css } from 'emotion';
+import { selectors } from '@grafana/e2e-selectors';
 
 interface Props {
   panel: PanelModel;
@@ -29,38 +35,54 @@ interface Props {
 }
 
 interface State {
-  currentDS: DataSourceSelectItem;
-  helpContent: JSX.Element;
+  dataSource?: DataSourceApi;
+  dataSourceItem: DataSourceSelectItem;
+  dataSourceError?: string;
+  helpContent: React.ReactNode;
   isLoadingHelp: boolean;
   isPickerOpen: boolean;
   isAddingMixed: boolean;
   scrollTop: number;
   data: PanelData;
+  isHelpOpen: boolean;
 }
 
 export class QueriesTab extends PureComponent<Props, State> {
   datasources: DataSourceSelectItem[] = getDatasourceSrv().getMetricSources();
-  backendSrv = getBackendSrv();
-  querySubscription: Unsubscribable;
+  backendSrv = backendSrv;
+  querySubscription: Unsubscribable | null;
 
   state: State = {
     isLoadingHelp: false,
-    currentDS: this.findCurrentDataSource(),
+    dataSourceItem: this.findCurrentDataSource(),
     helpContent: null,
     isPickerOpen: false,
     isAddingMixed: false,
+    isHelpOpen: false,
     scrollTop: 0,
     data: {
       state: LoadingState.NotStarted,
       series: [],
+      timeRange: DefaultTimeRange,
     },
   };
 
-  componentDidMount() {
+  async componentDidMount() {
     const { panel } = this.props;
     const queryRunner = panel.getQueryRunner();
 
-    this.querySubscription = queryRunner.subscribe(this.panelDataObserver, PanelQueryRunnerFormat.both);
+    this.querySubscription = queryRunner.getData({ withTransforms: false, withFieldConfig: false }).subscribe({
+      next: (data: PanelData) => this.onPanelDataUpdate(data),
+    });
+
+    try {
+      const ds = await getDataSourceSrv().get(panel.datasource);
+      this.setState({ dataSource: ds });
+    } catch (error) {
+      const ds = await getDataSourceSrv().get();
+      const dataSourceItem = this.findCurrentDataSource(ds.name);
+      this.setState({ dataSource: ds, dataSourceError: error?.message, dataSourceItem });
+    }
   }
 
   componentWillUnmount() {
@@ -70,120 +92,161 @@ export class QueriesTab extends PureComponent<Props, State> {
     }
   }
 
-  // Updates the response with information from the stream
-  panelDataObserver = {
-    next: (data: PanelData) => {
-      const { panel } = this.props;
-      if (data.state === LoadingState.Error) {
-        panel.events.emit('data-error', data.error);
-      } else if (data.state === LoadingState.Done) {
-        panel.events.emit('data-received', data.legacy);
-      }
-      this.setState({ data });
-    },
-  };
-
-  findCurrentDataSource(): DataSourceSelectItem {
-    const { panel } = this.props;
-    return this.datasources.find(datasource => datasource.value === panel.datasource) || this.datasources[0];
+  onPanelDataUpdate(data: PanelData) {
+    this.setState({ data });
   }
 
-  onChangeDataSource = datasource => {
+  findCurrentDataSource(dataSourceName: string | null = this.props.panel.datasource): DataSourceSelectItem {
+    return this.datasources.find(datasource => datasource.value === dataSourceName) || this.datasources[0];
+  }
+
+  onChangeDataSource = async (newDsItem: DataSourceSelectItem) => {
     const { panel } = this.props;
-    const { currentDS } = this.state;
+    const { dataSourceItem } = this.state;
 
     // switching to mixed
-    if (datasource.meta.mixed) {
+    if (newDsItem.meta.mixed) {
+      // Set the datasource on all targets
       panel.targets.forEach(target => {
-        target.datasource = panel.datasource;
-        if (!target.datasource) {
-          target.datasource = config.defaultDatasource;
+        if (target.datasource !== ExpressionDatasourceID) {
+          target.datasource = panel.datasource;
+          if (!target.datasource) {
+            target.datasource = config.defaultDatasource;
+          }
         }
       });
-    } else if (currentDS) {
+    } else if (dataSourceItem) {
       // if switching from mixed
-      if (currentDS.meta.mixed) {
+      if (dataSourceItem.meta.mixed) {
+        // Remove the explicit datasource
         for (const target of panel.targets) {
-          delete target.datasource;
+          if (target.datasource !== ExpressionDatasourceID) {
+            delete target.datasource;
+          }
         }
-      } else if (currentDS.meta.id !== datasource.meta.id) {
+      } else if (dataSourceItem.meta.id !== newDsItem.meta.id) {
         // we are changing data source type, clear queries
         panel.targets = [{ refId: 'A' }];
       }
     }
 
-    panel.datasource = datasource.value;
-    panel.refresh();
+    const dataSource = await getDataSourceSrv().get(newDsItem.value);
 
-    this.setState({
-      currentDS: datasource,
+    panel.datasource = newDsItem.value;
+
+    this.setState(
+      {
+        dataSourceItem: newDsItem,
+        dataSource: dataSource,
+        dataSourceError: undefined,
+      },
+      () => panel.refresh()
+    );
+  };
+
+  openQueryInspector = () => {
+    const { panel } = this.props;
+
+    getLocationSrv().update({
+      query: { inspect: panel.id, inspectTab: 'query' },
+      partial: true,
     });
   };
 
-  renderQueryInspector = () => {
-    const { panel } = this.props;
-    return <QueryInspector panel={panel} />;
-  };
-
   renderHelp = () => {
-    return <PluginHelp plugin={this.state.currentDS.meta} type="query_help" />;
+    return;
   };
 
-  onAddQuery = (query?: Partial<DataQuery>) => {
-    this.props.panel.addQuery(query);
-    this.setState({ scrollTop: this.state.scrollTop + 100000 });
+  /**
+   * Sets the queries for the panel
+   */
+  onUpdateQueries = (queries: DataQuery[]) => {
+    this.props.panel.updateQueries(queries);
+
+    // Need to force update to rerender query rows.
+    this.forceUpdate();
   };
 
   onAddQueryClick = () => {
-    if (this.state.currentDS.meta.mixed) {
+    if (this.state.dataSourceItem.meta.mixed) {
       this.setState({ isAddingMixed: true });
       return;
     }
 
-    this.onAddQuery();
+    this.onUpdateQueries(addQuery(this.props.panel.targets));
+    this.onScrollBottom();
   };
 
-  onRemoveQuery = (query: DataQuery) => {
+  onAddExpressionClick = () => {
+    this.onUpdateQueries(addQuery(this.props.panel.targets, expressionDatasource.newQuery()));
+    this.onScrollBottom();
+  };
+
+  onScrollBottom = () => {
+    this.setState({ scrollTop: 1000 });
+  };
+
+  renderTopSection(styles: QueriesTabStyls) {
     const { panel } = this.props;
+    const { dataSourceItem, data, dataSource, dataSourceError } = this.state;
 
-    const index = _.indexOf(panel.targets, query);
-    panel.targets.splice(index, 1);
-    panel.refresh();
-
-    this.forceUpdate();
-  };
-
-  onMoveQuery = (query: DataQuery, direction: number) => {
-    const { panel } = this.props;
-
-    const index = _.indexOf(panel.targets, query);
-    // @ts-ignore
-    _.move(panel.targets, index, index + direction);
-
-    this.forceUpdate();
-  };
-
-  renderToolbar = () => {
-    const { currentDS, isAddingMixed } = this.state;
+    if (!dataSource) {
+      return null;
+    }
 
     return (
-      <>
-        <DataSourcePicker datasources={this.datasources} onChange={this.onChangeDataSource} current={currentDS} />
-        <div className="flex-grow-1" />
-        {!isAddingMixed && (
-          <button className="btn navbar-button" onClick={this.onAddQueryClick}>
-            Add Query
-          </button>
-        )}
-        {isAddingMixed && this.renderMixedPicker()}
-      </>
+      <div>
+        <div className={styles.dataSourceRow}>
+          <div className={styles.dataSourceRowItem}>
+            <Field invalid={!!dataSourceError} error={dataSourceError}>
+              <DataSourcePicker
+                datasources={this.datasources}
+                onChange={this.onChangeDataSource}
+                current={dataSourceItem}
+              />
+            </Field>
+          </div>
+          <div className={styles.dataSourceRowItem}>
+            <Button
+              variant="secondary"
+              icon="question-circle"
+              title="Open data source help"
+              onClick={this.onOpenHelp}
+            />
+          </div>
+          <div className={styles.dataSourceRowItemOptions}>
+            <QueryOptions panel={panel} dataSource={dataSource} data={data} />
+          </div>
+          <div className={styles.dataSourceRowItem}>
+            <Button
+              variant="secondary"
+              onClick={this.openQueryInspector}
+              aria-label={selectors.components.QueryTab.queryInspectorButton}
+            >
+              Query inspector
+            </Button>
+          </div>
+        </div>
+      </div>
     );
+  }
+
+  onOpenHelp = () => {
+    this.setState({ isHelpOpen: true });
+  };
+
+  onCloseHelp = () => {
+    this.setState({ isHelpOpen: false });
   };
 
   renderMixedPicker = () => {
+    // We cannot filter on mixed flag as some mixed data sources like external plugin
+    // meta queries data source is mixed but also supports it's own queries
+    const filteredDsList = this.datasources.filter(ds => ds.meta.id !== 'mixed');
+
     return (
       <DataSourcePicker
-        datasources={this.datasources}
+        datasources={filteredDsList}
         onChange={this.onAddMixedQuery}
         current={null}
         autoFocus={true}
@@ -193,16 +256,17 @@ export class QueriesTab extends PureComponent<Props, State> {
     );
   };
 
-  onAddMixedQuery = datasource => {
-    this.onAddQuery({ datasource: datasource.name });
+  onAddMixedQuery = (datasource: any) => {
+    this.props.panel.targets = addQuery(this.props.panel.targets, { datasource: datasource.name });
     this.setState({ isAddingMixed: false, scrollTop: this.state.scrollTop + 10000 });
+    this.forceUpdate();
   };
 
   onMixedPickerBlur = () => {
     this.setState({ isAddingMixed: false });
   };
 
-  onQueryChange = (query: DataQuery, index) => {
+  onQueryChange = (query: DataQuery, index: number) => {
     this.props.panel.changeQuery(query, index);
     this.forceUpdate();
   };
@@ -212,52 +276,108 @@ export class QueriesTab extends PureComponent<Props, State> {
     this.setState({ scrollTop: target.scrollTop });
   };
 
-  render() {
+  renderQueries() {
     const { panel, dashboard } = this.props;
-    const { currentDS, scrollTop, data } = this.state;
+    const { dataSourceItem, data } = this.state;
 
-    const queryInspector: EditorToolbarView = {
-      title: 'Query Inspector',
-      render: this.renderQueryInspector,
-    };
-
-    const dsHelp: EditorToolbarView = {
-      heading: 'Help',
-      icon: 'fa fa-question',
-      render: this.renderHelp,
-    };
+    if (isSharedDashboardQuery(dataSourceItem.name)) {
+      return <DashboardQueryEditor panel={panel} panelData={data} onChange={query => this.onUpdateQueries([query])} />;
+    }
 
     return (
-      <EditorTabBody
-        heading="Query"
-        renderToolbar={this.renderToolbar}
-        toolbarItems={[queryInspector, dsHelp]}
-        setScrollTop={this.setScrollTop}
+      <div aria-label={selectors.components.QueryTab.content}>
+        <QueryEditorRows
+          queries={panel.targets}
+          datasource={dataSourceItem}
+          onChangeQueries={this.onUpdateQueries}
+          onScrollBottom={this.onScrollBottom}
+          panel={panel}
+          dashboard={dashboard}
+          data={data}
+        />
+      </div>
+    );
+  }
+
+  renderAddQueryRow() {
+    const { dataSourceItem, isAddingMixed } = this.state;
+    const showAddButton = !(isAddingMixed || isSharedDashboardQuery(dataSourceItem.name));
+
+    return (
+      <HorizontalGroup spacing="md" align="flex-start">
+        {showAddButton && (
+          <Button
+            icon="plus"
+            onClick={this.onAddQueryClick}
+            variant="secondary"
+            aria-label={selectors.components.QueryTab.addQuery}
+          >
+            Query
+          </Button>
+        )}
+        {isAddingMixed && this.renderMixedPicker()}
+        {config.featureToggles.expressions && (
+          <Button icon="plus" onClick={this.onAddExpressionClick} variant="secondary">
+            Expression
+          </Button>
+        )}
+      </HorizontalGroup>
+    );
+  }
+
+  render() {
+    const { scrollTop, isHelpOpen } = this.state;
+    const styles = getStyles();
+
+    return (
+      <CustomScrollbar
+        autoHeightMin="100%"
+        autoHide={true}
+        updateAfterMountMs={300}
         scrollTop={scrollTop}
+        setScrollTop={this.setScrollTop}
       >
-        <>
-          <div className="query-editor-rows">
-            {panel.targets.map((query, index) => (
-              <QueryEditorRow
-                dataSourceValue={query.datasource || panel.datasource}
-                key={query.refId}
-                panel={panel}
-                dashboard={dashboard}
-                data={data}
-                query={query}
-                onChange={query => this.onQueryChange(query, index)}
-                onRemoveQuery={this.onRemoveQuery}
-                onAddQuery={this.onAddQuery}
-                onMoveQuery={this.onMoveQuery}
-                inMixedMode={currentDS.meta.mixed}
-              />
-            ))}
-          </div>
-          <PanelOptionsGroup>
-            <QueryOptions panel={panel} datasource={currentDS} />
-          </PanelOptionsGroup>
-        </>
-      </EditorTabBody>
+        <div className={styles.innerWrapper}>
+          {this.renderTopSection(styles)}
+          <div className={styles.queriesWrapper}>{this.renderQueries()}</div>
+          {this.renderAddQueryRow()}
+
+          {isHelpOpen && (
+            <Modal title="Data source help" isOpen={true} onDismiss={this.onCloseHelp}>
+              <PluginHelp plugin={this.state.dataSourceItem.meta} type="query_help" />
+            </Modal>
+          )}
+        </div>
+      </CustomScrollbar>
     );
   }
 }
+
+const getStyles = stylesFactory(() => {
+  const { theme } = config;
+
+  return {
+    innerWrapper: css`
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: ${theme.spacing.md};
+    `,
+    dataSourceRow: css`
+      display: flex;
+      margin-bottom: ${theme.spacing.md};
+    `,
+    dataSourceRowItem: css`
+      margin-right: ${theme.spacing.inlineFormMargin};
+    `,
+    dataSourceRowItemOptions: css`
+      flex-grow: 1;
+      margin-right: ${theme.spacing.inlineFormMargin};
+    `,
+    queriesWrapper: css`
+      padding-bottom: 16px;
+    `,
+  };
+});
+
+type QueriesTabStyls = ReturnType<typeof getStyles>;

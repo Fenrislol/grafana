@@ -3,22 +3,22 @@ import React, { PureComponent } from 'react';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
 import find from 'lodash/find';
-
 // Types
-import { StoreState, UrlQueryMap } from 'app/types';
 import {
+  AppPlugin,
+  GrafanaPlugin,
   NavModel,
   NavModelItem,
-  PluginType,
-  GrafanaPlugin,
-  PluginInclude,
   PluginDependencies,
+  PluginInclude,
+  PluginIncludeType,
   PluginMeta,
   PluginMetaInfo,
-  Tooltip,
-  AppPlugin,
-  PluginIncludeType,
-} from '@grafana/ui';
+  PluginType,
+  UrlQueryMap,
+} from '@grafana/data';
+import { AppNotificationSeverity, CoreEvents, StoreState } from 'app/types';
+import { Alert, Tooltip } from '@grafana/ui';
 
 import Page from 'app/core/components/Page/Page';
 import { getPluginSettings } from './PluginSettingsCache';
@@ -28,6 +28,8 @@ import { PluginHelp } from 'app/core/components/PluginHelp/PluginHelp';
 import { AppConfigCtrlWrapper } from './wrappers/AppConfigWrapper';
 import { PluginDashboards } from './PluginDashboards';
 import { appEvents } from 'app/core/core';
+import { config } from 'app/core/config';
+import { ContextSrv } from '../../core/services/context_srv';
 
 export function getLoadingNav(): NavModel {
   const node = {
@@ -40,7 +42,7 @@ export function getLoadingNav(): NavModel {
   };
 }
 
-function loadPlugin(pluginId: string): Promise<GrafanaPlugin> {
+export function loadPlugin(pluginId: string): Promise<GrafanaPlugin> {
   return getPluginSettings(pluginId).then(info => {
     if (info.type === PluginType.app) {
       return importAppPlugin(info);
@@ -60,6 +62,9 @@ function loadPlugin(pluginId: string): Promise<GrafanaPlugin> {
         });
       });
     }
+    if (info.type === PluginType.renderer) {
+      return Promise.resolve({ meta: info } as GrafanaPlugin);
+    }
     return Promise.reject('Unknown Plugin type: ' + info.type);
   });
 }
@@ -68,18 +73,19 @@ interface Props {
   pluginId: string;
   query: UrlQueryMap;
   path: string; // the URL path
+  $contextSrv: ContextSrv;
 }
 
 interface State {
   loading: boolean;
   plugin?: GrafanaPlugin;
   nav: NavModel;
-  defaultTab: string; // The first configured one or readme
+  defaultPage: string; // The first configured one or readme
 }
 
-const TAB_ID_README = 'readme';
-const TAB_ID_DASHBOARDS = 'dashboards';
-const TAB_ID_CONFIG_CTRL = 'config';
+const PAGE_ID_README = 'readme';
+const PAGE_ID_DASHBOARDS = 'dashboards';
+const PAGE_ID_CONFIG_CTRL = 'config';
 
 class PluginPage extends PureComponent<Props, State> {
   constructor(props: Props) {
@@ -87,12 +93,14 @@ class PluginPage extends PureComponent<Props, State> {
     this.state = {
       loading: true,
       nav: getLoadingNav(),
-      defaultTab: TAB_ID_README,
+      defaultPage: PAGE_ID_README,
     };
   }
 
   async componentDidMount() {
-    const { pluginId, path, query } = this.props;
+    const { pluginId, path, query, $contextSrv } = this.props;
+    const { appSubUrl } = config;
+
     const plugin = await loadPlugin(pluginId);
     if (!plugin) {
       this.setState({
@@ -101,106 +109,28 @@ class PluginPage extends PureComponent<Props, State> {
       });
       return; // 404
     }
-    const { meta } = plugin;
 
-    let defaultTab: string;
-    const tabs: NavModelItem[] = [];
-    if (true) {
-      tabs.push({
-        text: 'Readme',
-        icon: 'fa fa-fw fa-file-text-o',
-        url: path + '?tab=' + TAB_ID_README,
-        id: TAB_ID_README,
-      });
-    }
-
-    // Only show Config/Pages for app
-    if (meta.type === PluginType.app) {
-      // Legacy App Config
-      if (plugin.angularConfigCtrl) {
-        tabs.push({
-          text: 'Config',
-          icon: 'gicon gicon-cog',
-          url: path + '?tab=' + TAB_ID_CONFIG_CTRL,
-          id: TAB_ID_CONFIG_CTRL,
-        });
-        defaultTab = TAB_ID_CONFIG_CTRL;
-      }
-
-      if (plugin.configTabs) {
-        for (const tab of plugin.configTabs) {
-          tabs.push({
-            text: tab.title,
-            icon: tab.icon,
-            url: path + '?tab=' + tab.id,
-            id: tab.id,
-          });
-          if (!defaultTab) {
-            defaultTab = tab.id;
-          }
-        }
-      }
-
-      // Check for the dashboard tabs
-      if (find(meta.includes, { type: 'dashboard' })) {
-        tabs.push({
-          text: 'Dashboards',
-          icon: 'gicon gicon-dashboard',
-          url: path + '?tab=' + TAB_ID_DASHBOARDS,
-          id: TAB_ID_DASHBOARDS,
-        });
-      }
-    }
-
-    if (!defaultTab) {
-      defaultTab = tabs[0].id; // the first tab
-    }
-
-    const node = {
-      text: meta.name,
-      img: meta.info.logos.large,
-      subTitle: meta.info.author.name,
-      breadcrumbs: [{ title: 'Plugins', url: '/plugins' }],
-      url: path,
-      children: this.setActiveTab(query.tab as string, tabs, defaultTab),
-    };
+    const { defaultPage, nav } = getPluginTabsNav(plugin, appSubUrl, path, query, $contextSrv.hasRole('Admin'));
 
     this.setState({
       loading: false,
       plugin,
-      defaultTab,
-      nav: {
-        node: node,
-        main: node,
-      },
+      defaultPage,
+      nav,
     });
-  }
-
-  setActiveTab(tabId: string, tabs: NavModelItem[], defaultTabId: string): NavModelItem[] {
-    let found = false;
-    const selected = tabId || defaultTabId;
-    const changed = tabs.map(tab => {
-      const active = !found && selected === tab.id;
-      if (active) {
-        found = true;
-      }
-      return { ...tab, active };
-    });
-    if (!found) {
-      changed[0].active = true;
-    }
-    return changed;
   }
 
   componentDidUpdate(prevProps: Props) {
-    const prevTab = prevProps.query.tab as string;
-    const tab = this.props.query.tab as string;
-    if (prevTab !== tab) {
-      const { nav, defaultTab } = this.state;
+    const prevPage = prevProps.query.page as string;
+    const page = this.props.query.page as string;
+
+    if (prevPage !== page) {
+      const { nav, defaultPage } = this.state;
       const node = {
         ...nav.node,
-        children: this.setActiveTab(tab, nav.node.children, defaultTab),
+        children: setActivePage(page, nav.node.children!, defaultPage),
       };
+
       this.setState({
         nav: {
           node: node,
@@ -215,27 +145,27 @@ class PluginPage extends PureComponent<Props, State> {
     const { plugin, nav } = this.state;
 
     if (!plugin) {
-      return <div>Plugin not found.</div>;
+      return <Alert severity={AppNotificationSeverity.Error} title="Plugin Not Found" />;
     }
 
-    const active = nav.main.children.find(tab => tab.active);
+    const active = nav.main.children!.find(tab => tab.active);
     if (active) {
       // Find the current config tab
-      if (plugin.configTabs) {
-        for (const tab of plugin.configTabs) {
+      if (plugin.configPages) {
+        for (const tab of plugin.configPages) {
           if (tab.id === active.id) {
-            return <tab.body meta={plugin.meta} query={query} />;
+            return <tab.body plugin={plugin} query={query} />;
           }
         }
       }
 
       // Apps have some special behavior
       if (plugin.meta.type === PluginType.app) {
-        if (active.id === TAB_ID_DASHBOARDS) {
+        if (active.id === PAGE_ID_DASHBOARDS) {
           return <PluginDashboards plugin={plugin.meta} />;
         }
 
-        if (active.id === TAB_ID_CONFIG_CTRL && plugin.angularConfigCtrl) {
+        if (active.id === PAGE_ID_CONFIG_CTRL && plugin.angularConfigCtrl) {
           return <AppConfigCtrlWrapper app={plugin as AppPlugin} />;
         }
       }
@@ -245,9 +175,9 @@ class PluginPage extends PureComponent<Props, State> {
   }
 
   showUpdateInfo = () => {
-    appEvents.emit('show-modal', {
+    appEvents.emit(CoreEvents.showModal, {
       src: 'public/app/features/plugins/partials/update_instructions.html',
-      model: this.state.plugin.meta,
+      model: this.state.plugin!.meta,
     });
   };
 
@@ -262,7 +192,7 @@ class PluginPage extends PureComponent<Props, State> {
         <span>{meta.info.version}</span>
         {meta.hasUpdate && (
           <div>
-            <Tooltip content={meta.latestVersion} theme="info" placement="top">
+            <Tooltip content={meta.latestVersion!} theme="info" placement="top">
               <a href="#" onClick={this.showUpdateInfo}>
                 Update Available!
               </a>
@@ -275,7 +205,7 @@ class PluginPage extends PureComponent<Props, State> {
 
   renderSidebarIncludeBody(item: PluginInclude) {
     if (item.type === PluginIncludeType.page) {
-      const pluginId = this.state.plugin.meta.id;
+      const pluginId = this.state.plugin!.meta.id;
       const page = item.name.toLowerCase().replace(' ', '-');
       return (
         <a href={`plugins/${pluginId}/page/${page}`}>
@@ -292,7 +222,7 @@ class PluginPage extends PureComponent<Props, State> {
     );
   }
 
-  renderSidebarIncludes(includes: PluginInclude[]) {
+  renderSidebarIncludes(includes?: PluginInclude[]) {
     if (!includes || !includes.length) {
       return null;
     }
@@ -313,7 +243,7 @@ class PluginPage extends PureComponent<Props, State> {
     );
   }
 
-  renderSidebarDependencies(dependencies: PluginDependencies) {
+  renderSidebarDependencies(dependencies?: PluginDependencies) {
     if (!dependencies) {
       return null;
     }
@@ -352,7 +282,7 @@ class PluginPage extends PureComponent<Props, State> {
           {info.links.map(link => {
             return (
               <li key={link.url}>
-                <a href={link.url} className="external-link" target="_blank">
+                <a href={link.url} className="external-link" target="_blank" rel="noopener">
                   {link.name}
                 </a>
               </li>
@@ -365,21 +295,36 @@ class PluginPage extends PureComponent<Props, State> {
 
   render() {
     const { loading, nav, plugin } = this.state;
+    const { $contextSrv } = this.props;
+    const isAdmin = $contextSrv.hasRole('Admin');
+
     return (
       <Page navModel={nav}>
         <Page.Contents isLoading={loading}>
-          {!loading && (
+          {plugin && (
             <div className="sidebar-container">
-              <div className="sidebar-content">{this.renderBody()}</div>
-              <aside className="page-sidebar">
-                {plugin && (
-                  <section className="page-sidebar-section">
-                    {this.renderVersionInfo(plugin.meta)}
-                    {this.renderSidebarIncludes(plugin.meta.includes)}
-                    {this.renderSidebarDependencies(plugin.meta.dependencies)}
-                    {this.renderSidebarLinks(plugin.meta.info)}
-                  </section>
+              <div className="sidebar-content">
+                {plugin.loadError && (
+                  <Alert
+                    severity={AppNotificationSeverity.Error}
+                    title="Error Loading Plugin"
+                    children={
+                      <>
+                        Check the server startup logs for more information. <br />
+                        If this plugin was loaded from git, make sure it was compiled.
+                      </>
+                    }
+                  />
                 )}
+                {this.renderBody()}
+              </div>
+              <aside className="page-sidebar">
+                <section className="page-sidebar-section">
+                  {this.renderVersionInfo(plugin.meta)}
+                  {isAdmin && this.renderSidebarIncludes(plugin.meta.includes)}
+                  {this.renderSidebarDependencies(plugin.meta.dependencies)}
+                  {this.renderSidebarLinks(plugin.meta.info)}
+                </section>
               </aside>
             </div>
           )}
@@ -387,6 +332,109 @@ class PluginPage extends PureComponent<Props, State> {
       </Page>
     );
   }
+}
+
+function getPluginTabsNav(
+  plugin: GrafanaPlugin,
+  appSubUrl: string,
+  path: string,
+  query: UrlQueryMap,
+  isAdmin: boolean
+): { defaultPage: string; nav: NavModel } {
+  const { meta } = plugin;
+  let defaultPage: string | undefined;
+  const pages: NavModelItem[] = [];
+
+  if (true) {
+    pages.push({
+      text: 'Readme',
+      icon: 'fa fa-fw fa-file-text-o',
+      url: `${appSubUrl}${path}?page=${PAGE_ID_README}`,
+      id: PAGE_ID_README,
+    });
+  }
+
+  // We allow non admins to see plugins but only their readme. Config is hidden even though the API needs to be
+  // public for plugins to work properly.
+  if (isAdmin) {
+    // Only show Config/Pages for app
+    if (meta.type === PluginType.app) {
+      // Legacy App Config
+      if (plugin.angularConfigCtrl) {
+        pages.push({
+          text: 'Config',
+          icon: 'gicon gicon-cog',
+          url: `${appSubUrl}${path}?page=${PAGE_ID_CONFIG_CTRL}`,
+          id: PAGE_ID_CONFIG_CTRL,
+        });
+        defaultPage = PAGE_ID_CONFIG_CTRL;
+      }
+
+      if (plugin.configPages) {
+        for (const page of plugin.configPages) {
+          pages.push({
+            text: page.title,
+            icon: page.icon,
+            url: `${appSubUrl}${path}?page=${page.id}`,
+            id: page.id,
+          });
+
+          if (!defaultPage) {
+            defaultPage = page.id;
+          }
+        }
+      }
+
+      // Check for the dashboard pages
+      if (find(meta.includes, { type: PluginIncludeType.dashboard })) {
+        pages.push({
+          text: 'Dashboards',
+          icon: 'gicon gicon-dashboard',
+          url: `${appSubUrl}${path}?page=${PAGE_ID_DASHBOARDS}`,
+          id: PAGE_ID_DASHBOARDS,
+        });
+      }
+    }
+  }
+
+  if (!defaultPage) {
+    defaultPage = pages[0].id; // the first tab
+  }
+
+  const node = {
+    text: meta.name,
+    img: meta.info.logos.large,
+    subTitle: meta.info.author.name,
+    breadcrumbs: [{ title: 'Plugins', url: 'plugins' }],
+    url: `${appSubUrl}${path}`,
+    children: setActivePage(query.page as string, pages, defaultPage!),
+  };
+
+  return {
+    defaultPage: defaultPage!,
+    nav: {
+      node: node,
+      main: node,
+    },
+  };
+}
+
+function setActivePage(pageId: string, pages: NavModelItem[], defaultPageId: string): NavModelItem[] {
+  let found = false;
+  const selected = pageId || defaultPageId;
+  const changed = pages.map(p => {
+    const active = !found && selected === p.id;
+    if (active) {
+      found = true;
+    }
+    return { ...p, active };
+  });
+
+  if (!found) {
+    changed[0].active = true;
+  }
+
+  return changed;
 }
 
 function getPluginIcon(type: string) {

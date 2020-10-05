@@ -1,13 +1,13 @@
 package migrator
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/VividCortex/mysqlerr"
 	"github.com/go-sql-driver/mysql"
-	"github.com/go-xorm/xorm"
+	"github.com/grafana/grafana/pkg/util/errutil"
+	"xorm.io/xorm"
 )
 
 type Mysql struct {
@@ -115,31 +115,49 @@ func (db *Mysql) ColumnCheckSql(tableName, columnName string) (string, []interfa
 }
 
 func (db *Mysql) CleanDB() error {
-	tables, _ := db.engine.DBMetas()
+	tables, err := db.engine.DBMetas()
+	if err != nil {
+		return err
+	}
 	sess := db.engine.NewSession()
 	defer sess.Close()
 
 	for _, table := range tables {
 		if _, err := sess.Exec("set foreign_key_checks = 0"); err != nil {
-			return fmt.Errorf("failed to disable foreign key checks")
+			return errutil.Wrap("failed to disable foreign key checks", err)
 		}
 		if _, err := sess.Exec("drop table " + table.Name + " ;"); err != nil {
-			return fmt.Errorf("failed to delete table: %v, err: %v", table.Name, err)
+			return errutil.Wrapf(err, "failed to delete table %q", table.Name)
 		}
 		if _, err := sess.Exec("set foreign_key_checks = 1"); err != nil {
-			return fmt.Errorf("failed to disable foreign key checks")
+			return errutil.Wrap("failed to disable foreign key checks", err)
 		}
 	}
 
 	return nil
 }
 
-func (db *Mysql) IsUniqueConstraintViolation(err error) bool {
+func (db *Mysql) isThisError(err error, errcode uint16) bool {
 	if driverErr, ok := err.(*mysql.MySQLError); ok {
-		if driverErr.Number == mysqlerr.ER_DUP_ENTRY {
+		if driverErr.Number == errcode {
 			return true
 		}
 	}
 
 	return false
+}
+
+func (db *Mysql) IsUniqueConstraintViolation(err error) bool {
+	return db.isThisError(err, mysqlerr.ER_DUP_ENTRY)
+}
+
+func (db *Mysql) ErrorMessage(err error) string {
+	if driverErr, ok := err.(*mysql.MySQLError); ok {
+		return driverErr.Message
+	}
+	return ""
+}
+
+func (db *Mysql) IsDeadlock(err error) bool {
+	return db.isThisError(err, mysqlerr.ER_LOCK_DEADLOCK)
 }

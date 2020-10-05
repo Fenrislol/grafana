@@ -7,6 +7,8 @@ import (
 	"crypto/sha256"
 	"errors"
 	"io"
+
+	"golang.org/x/crypto/pbkdf2"
 )
 
 const saltLength = 8
@@ -14,7 +16,10 @@ const saltLength = 8
 // Decrypt decrypts a payload with a given secret.
 func Decrypt(payload []byte, secret string) ([]byte, error) {
 	salt := payload[:saltLength]
-	key := encryptionKeyToBytes(secret, string(salt))
+	key, err := encryptionKeyToBytes(secret, string(salt))
+	if err != nil {
+		return nil, err
+	}
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -39,9 +44,15 @@ func Decrypt(payload []byte, secret string) ([]byte, error) {
 
 // Encrypt encrypts a payload with a given secret.
 func Encrypt(payload []byte, secret string) ([]byte, error) {
-	salt := GetRandomString(saltLength)
+	salt, err := GetRandomString(saltLength)
+	if err != nil {
+		return nil, err
+	}
 
-	key := encryptionKeyToBytes(secret, salt)
+	key, err := encryptionKeyToBytes(secret, salt)
+	if err != nil {
+		return nil, err
+	}
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -50,7 +61,7 @@ func Encrypt(payload []byte, secret string) ([]byte, error) {
 	// The IV needs to be unique, but not secure. Therefore it's common to
 	// include it at the beginning of the ciphertext.
 	ciphertext := make([]byte, saltLength+aes.BlockSize+len(payload))
-	copy(ciphertext[:saltLength], []byte(salt))
+	copy(ciphertext[:saltLength], salt)
 	iv := ciphertext[saltLength : saltLength+aes.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 		return nil, err
@@ -63,6 +74,6 @@ func Encrypt(payload []byte, secret string) ([]byte, error) {
 }
 
 // Key needs to be 32bytes
-func encryptionKeyToBytes(secret, salt string) []byte {
-	return PBKDF2([]byte(secret), []byte(salt), 10000, 32, sha256.New)
+func encryptionKeyToBytes(secret, salt string) ([]byte, error) {
+	return pbkdf2.Key([]byte(secret), []byte(salt), 10000, 32, sha256.New), nil
 }

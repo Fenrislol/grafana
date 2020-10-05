@@ -1,14 +1,15 @@
 import '../query_ctrl';
 import { uiSegmentSrv } from 'app/core/services/segment_srv';
 import { InfluxQueryCtrl } from '../query_ctrl';
+import InfluxDatasource from '../datasource';
 
 describe('InfluxDBQueryCtrl', () => {
   const ctx = {} as any;
 
   beforeEach(() => {
-    InfluxQueryCtrl.prototype.datasource = {
+    InfluxQueryCtrl.prototype.datasource = ({
       metricFindQuery: () => Promise.resolve([]),
-    };
+    } as unknown) as InfluxDatasource;
     InfluxQueryCtrl.prototype.target = { target: {} };
     InfluxQueryCtrl.prototype.panelCtrl = {
       panel: {
@@ -19,10 +20,10 @@ describe('InfluxDBQueryCtrl', () => {
 
     ctx.ctrl = new InfluxQueryCtrl(
       {},
-      {},
-      {},
-      {},
-      new uiSegmentSrv({ trustAsHtml: html => html }, { highlightVariablesAsHtml: () => {} })
+      {} as any,
+      {} as any,
+      //@ts-ignore
+      new uiSegmentSrv({ trustAsHtml: (html: any) => html }, { highlightVariablesAsHtml: () => {} })
     );
   });
 

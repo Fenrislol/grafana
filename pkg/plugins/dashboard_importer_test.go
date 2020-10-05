@@ -4,12 +4,11 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/maksimmernikov/grafana/pkg/components/simplejson"
-	m "github.com/maksimmernikov/grafana/pkg/models"
-	"github.com/maksimmernikov/grafana/pkg/services/dashboards"
-	"github.com/maksimmernikov/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/components/simplejson"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/services/dashboards"
+	"github.com/grafana/grafana/pkg/setting"
 	. "github.com/smartystreets/goconvey/convey"
-	"gopkg.in/ini.v1"
 )
 
 func TestDashboardImport(t *testing.T) {
@@ -22,7 +21,7 @@ func TestDashboardImport(t *testing.T) {
 			PluginId: "test-app",
 			Path:     "dashboards/connections.json",
 			OrgId:    1,
-			User:     &m.SignedInUser{UserId: 1, OrgRole: m.ROLE_ADMIN},
+			User:     &models.SignedInUser{UserId: 1, OrgRole: models.ROLE_ADMIN},
 			Inputs: []ImportDashboardInput{
 				{Name: "*", Type: "datasource", Value: "graphite"},
 			},
@@ -59,7 +58,7 @@ func TestDashboardImport(t *testing.T) {
 			}
 		],
 		"test": {
-			"prop": "${DS_NAME}"
+			"prop": "${DS_NAME}_${DS_NAME}"
 		}
 		}`))
 
@@ -74,27 +73,31 @@ func TestDashboardImport(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		Convey("should render template", func() {
-			So(res.GetPath("test", "prop").MustString(), ShouldEqual, "my-server")
+			So(res.GetPath("test", "prop").MustString(), ShouldEqual, "my-server_my-server")
 		})
 
 		Convey("should not include inputs in output", func() {
 			inputs := res.Get("__inputs")
 			So(inputs.Interface(), ShouldBeNil)
 		})
-
 	})
 }
 
 func pluginScenario(desc string, t *testing.T, fn func()) {
 	Convey("Given a plugin", t, func() {
-		setting.Raw = ini.Empty()
-		sec, _ := setting.Raw.NewSection("plugin.test-app")
-		sec.NewKey("path", "testdata/test-app")
-
-		pm := &PluginManager{}
+		pm := &PluginManager{
+			Cfg: &setting.Cfg{
+				FeatureToggles: map[string]bool{},
+				PluginSettings: setting.PluginSettings{
+					"test-app": map[string]string{
+						"path": "testdata/test-app",
+					},
+				},
+			},
+		}
 		err := pm.Init()
-
 		So(err, ShouldBeNil)
+
 		Convey(desc, fn)
 	})
 }

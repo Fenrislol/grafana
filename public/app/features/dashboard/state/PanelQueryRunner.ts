@@ -1,37 +1,50 @@
 // Libraries
-import cloneDeep from 'lodash/cloneDeep';
-import throttle from 'lodash/throttle';
-import { Subject, Unsubscribable, PartialObserver } from 'rxjs';
+import { cloneDeep } from 'lodash';
+import { ReplaySubject, Unsubscribable, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 // Services & Utils
+import { getTemplateSrv } from '@grafana/runtime';
 import { getDatasourceSrv } from 'app/features/plugins/datasource_srv';
-import kbn from 'app/core/utils/kbn';
-import templateSrv from 'app/features/templating/template_srv';
-import { PanelQueryState } from './PanelQueryState';
+import { runRequest, preProcessPanelData } from './runRequest';
+import { runSharedRequest, isSharedDashboardQuery } from '../../../plugins/datasource/dashboard';
 
 // Types
-import { PanelData, DataQuery, TimeRange, ScopedVars, DataQueryRequest, DataSourceApi } from '@grafana/ui';
+import {
+  PanelData,
+  DataQuery,
+  CoreApp,
+  DataQueryRequest,
+  DataSourceApi,
+  DataSourceJsonData,
+  TimeRange,
+  DataTransformerConfig,
+  transformDataFrame,
+  ScopedVars,
+  applyFieldOverrides,
+  DataConfigSource,
+  TimeZone,
+  LoadingState,
+  rangeUtil,
+} from '@grafana/data';
 
-export interface QueryRunnerOptions<TQuery extends DataQuery = DataQuery> {
-  datasource: string | DataSourceApi<TQuery>;
+export interface QueryRunnerOptions<
+  TQuery extends DataQuery = DataQuery,
+  TOptions extends DataSourceJsonData = DataSourceJsonData
+> {
+  datasource: string | DataSourceApi<TQuery, TOptions> | null;
   queries: TQuery[];
   panelId: number;
   dashboardId?: number;
-  timezone?: string;
+  timezone: TimeZone;
   timeRange: TimeRange;
   timeInfo?: string; // String description of time range for display
-  widthPixels: number;
-  maxDataPoints: number | undefined | null;
+  maxDataPoints: number;
   minInterval: string | undefined | null;
   scopedVars?: ScopedVars;
   cacheTimeout?: string;
   delayStateNotification?: number; // default 100ms.
-}
-
-export enum PanelQueryRunnerFormat {
-  series = 'series',
-  legacy = 'legacy',
-  both = 'both',
+  transformations?: DataTransformerConfig[];
 }
 
 let counter = 100;
@@ -39,48 +52,68 @@ function getNextRequestId() {
   return 'Q' + counter++;
 }
 
+export interface GetDataOptions {
+  withTransforms: boolean;
+  withFieldConfig: boolean;
+}
+
 export class PanelQueryRunner {
-  private subject?: Subject<PanelData>;
+  private subject: ReplaySubject<PanelData>;
+  private subscription?: Unsubscribable;
+  private lastResult?: PanelData;
+  private dataConfigSource: DataConfigSource;
 
-  private state = new PanelQueryState();
-
-  constructor() {
-    this.state.onStreamingDataUpdated = this.onStreamingDataUpdated;
+  constructor(dataConfigSource: DataConfigSource) {
+    this.subject = new ReplaySubject(1);
+    this.dataConfigSource = dataConfigSource;
   }
 
   /**
-   * Listen for updates to the PanelData.  If a query has already run for this panel,
-   * the results will be immediatly passed to the observer
+   * Returns an observable that subscribes to the shared multi-cast subject (that reply last result).
    */
-  subscribe(observer: PartialObserver<PanelData>, format = PanelQueryRunnerFormat.series): Unsubscribable {
-    if (!this.subject) {
-      this.subject = new Subject(); // Delay creating a subject until someone is listening
-    }
+  getData(options: GetDataOptions): Observable<PanelData> {
+    const { withFieldConfig, withTransforms } = options;
 
-    if (format === PanelQueryRunnerFormat.legacy) {
-      this.state.sendLegacy = true;
-    } else if (format === PanelQueryRunnerFormat.both) {
-      this.state.sendSeries = true;
-      this.state.sendLegacy = true;
-    } else {
-      this.state.sendSeries = true;
-    }
+    return this.subject.pipe(
+      map((data: PanelData) => {
+        let processedData = data;
 
-    // Send the last result
-    if (this.state.isStarted()) {
-      observer.next(this.state.getDataAfterCheckingFormats());
-    }
+        // Apply transformation
+        if (withTransforms) {
+          const transformations = this.dataConfigSource.getTransformations();
 
-    return this.subject.subscribe(observer);
+          if (transformations && transformations.length > 0) {
+            processedData = {
+              ...processedData,
+              series: transformDataFrame(transformations, data.series),
+            };
+          }
+        }
+
+        if (withFieldConfig) {
+          // Apply field defaults & overrides
+          const fieldConfig = this.dataConfigSource.getFieldOverrideOptions();
+          const timeZone = data.request?.timezone ?? 'browser';
+
+          if (fieldConfig) {
+            processedData = {
+              ...processedData,
+              series: applyFieldOverrides({
+                timeZone: timeZone,
+                autoMinMax: true,
+                data: processedData.series,
+                ...fieldConfig,
+              }),
+            };
+          }
+        }
+
+        return processedData;
+      })
+    );
   }
 
-  async run(options: QueryRunnerOptions): Promise<PanelData> {
-    if (!this.subject) {
-      this.subject = new Subject();
-    }
-
-    const { state } = this;
-
+  async run(options: QueryRunnerOptions) {
     const {
       queries,
       timezone,
@@ -90,17 +123,18 @@ export class PanelQueryRunner {
       timeRange,
       timeInfo,
       cacheTimeout,
-      widthPixels,
       maxDataPoints,
       scopedVars,
       minInterval,
-      delayStateNotification,
     } = options;
 
-    // filter out hidden queries & deep clone them
-    const clonedAndFilteredQueries = cloneDeep(queries.filter(q => !q.hide));
+    if (isSharedDashboardQuery(datasource)) {
+      this.pipeToSubject(runSharedRequest(options));
+      return;
+    }
 
     const request: DataQueryRequest = {
+      app: CoreApp.Dashboard,
       requestId: getNextRequestId(),
       timezone,
       panelId,
@@ -109,8 +143,8 @@ export class PanelQueryRunner {
       timeInfo,
       interval: '',
       intervalMs: 0,
-      targets: clonedAndFilteredQueries,
-      maxDataPoints: maxDataPoints || widthPixels,
+      targets: cloneDeep(queries),
+      maxDataPoints: maxDataPoints,
       scopedVars: scopedVars || {},
       cacheTimeout,
       startTime: Date.now(),
@@ -118,8 +152,6 @@ export class PanelQueryRunner {
 
     // Add deprecated property
     (request as any).rangeRaw = timeRange.raw;
-
-    let loadingStateTimeoutId = 0;
 
     try {
       const ds = await getDataSource(datasource, request.scopedVars);
@@ -132,8 +164,8 @@ export class PanelQueryRunner {
         return query;
       });
 
-      const lowerIntervalLimit = minInterval ? templateSrv.replace(minInterval, request.scopedVars) : ds.interval;
-      const norm = kbn.calculateInterval(timeRange, widthPixels, lowerIntervalLimit);
+      const lowerIntervalLimit = minInterval ? getTemplateSrv().replace(minInterval, request.scopedVars) : ds.interval;
+      const norm = rangeUtil.calculateInterval(timeRange, maxDataPoints, lowerIntervalLimit);
 
       // make shallow copy of scoped vars,
       // and add built in variables interval and interval_ms
@@ -145,53 +177,47 @@ export class PanelQueryRunner {
       request.interval = norm.interval;
       request.intervalMs = norm.intervalMs;
 
-      // Check if we can reuse the already issued query
-      const active = state.getActiveRunner();
-      if (active) {
-        if (state.isSameQuery(ds, request)) {
-          // Maybe cancel if it has run too long?
-          console.log('Trying to execute query while last one has yet to complete, returning same promise');
-          return active;
-        } else {
-          state.cancel('Query Changed while running');
-        }
-      }
-
-      // Send a loading status event on slower queries
-      loadingStateTimeoutId = window.setTimeout(() => {
-        if (state.getActiveRunner()) {
-          this.subject.next(this.state.validateStreamsAndGetPanelData());
-        }
-      }, delayStateNotification || 500);
-
-      const data = await state.execute(ds, request);
-
-      // Clear the delayed loading state timeout
-      clearTimeout(loadingStateTimeoutId);
-
-      // Broadcast results
-      this.subject.next(data);
-      return data;
+      this.pipeToSubject(runRequest(ds, request));
     } catch (err) {
-      clearTimeout(loadingStateTimeoutId);
-
-      const data = state.setError(err);
-      this.subject.next(data);
-      return data;
+      console.error('PanelQueryRunner Error', err);
     }
   }
 
-  /**
-   * Called after every streaming event.  This should be throttled so we
-   * avoid accidentally overwhelming the browser
-   */
-  onStreamingDataUpdated = throttle(
-    () => {
-      this.subject.next(this.state.validateStreamsAndGetPanelData());
-    },
-    50,
-    { trailing: true, leading: true }
-  );
+  private pipeToSubject(observable: Observable<PanelData>) {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
+
+    this.subscription = observable.subscribe({
+      next: (data: PanelData) => {
+        this.lastResult = preProcessPanelData(data, this.lastResult);
+        // Store preprocessed query results for applying overrides later on in the pipeline
+        this.subject.next(this.lastResult);
+      },
+    });
+  }
+
+  cancelQuery() {
+    if (!this.subscription) {
+      return;
+    }
+
+    this.subscription.unsubscribe();
+
+    // If we have an old result with loading state, send it with done state
+    if (this.lastResult && this.lastResult.state === LoadingState.Loading) {
+      this.subject.next({
+        ...this.lastResult,
+        state: LoadingState.Done,
+      });
+    }
+  }
+
+  resendLastResult = () => {
+    if (this.lastResult) {
+      this.subject.next(this.lastResult);
+    }
+  };
 
   /**
    * Called when the panel is closed
@@ -202,8 +228,22 @@ export class PanelQueryRunner {
       this.subject.complete();
     }
 
-    // Will cancel and disconnect any open requets
-    this.state.cancel('destroy');
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
+  }
+
+  useLastResultFrom(runner: PanelQueryRunner) {
+    this.lastResult = runner.getLastResult();
+
+    if (this.lastResult) {
+      // The subject is a replay subject so anyone subscribing will get this last result
+      this.subject.next(this.lastResult);
+    }
+  }
+
+  getLastResult(): PanelData | undefined {
+    return this.lastResult;
   }
 }
 

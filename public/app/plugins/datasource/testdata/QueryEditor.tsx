@@ -3,14 +3,15 @@ import React, { PureComponent } from 'react';
 import _ from 'lodash';
 
 // Services & Utils
-import { getBackendSrv, BackendSrv } from 'app/core/services/backend_srv';
+import { getBackendSrv } from '@grafana/runtime';
 
 // Components
-import { FormLabel, Select, SelectOptionItem } from '@grafana/ui';
+import { InlineFormLabel, LegacyForms } from '@grafana/ui';
+const { Select } = LegacyForms;
+import { QueryEditorProps, SelectableValue } from '@grafana/data';
 
 // Types
-import { QueryEditorProps } from '@grafana/ui/src/types';
-import { TestDataDatasource } from './datasource';
+import { TestDataDataSource } from './datasource';
 import { TestDataQuery, Scenario } from './types';
 
 interface State {
@@ -18,10 +19,10 @@ interface State {
   current: Scenario | null;
 }
 
-type Props = QueryEditorProps<TestDataDatasource, TestDataQuery>;
+type Props = QueryEditorProps<TestDataDataSource, TestDataQuery>;
 
 export class QueryEditor extends PureComponent<Props> {
-  backendSrv: BackendSrv = getBackendSrv();
+  backendSrv = getBackendSrv();
 
   state: State = {
     scenarioList: [],
@@ -33,17 +34,17 @@ export class QueryEditor extends PureComponent<Props> {
 
     query.scenarioId = query.scenarioId || 'random_walk';
 
-    // const scenarioList = await this.backendSrv.get('/api/tsdb/testdata/scenarios');
+    // const scenarioList = await backendSrv.get('/api/tsdb/testdata/scenarios');
     const scenarioList = await datasource.getScenarios();
     const current: any = _.find(scenarioList, { id: query.scenarioId });
 
     this.setState({ scenarioList: scenarioList, current: current });
   }
 
-  onScenarioChange = (item: SelectOptionItem<string>) => {
+  onScenarioChange = (item: SelectableValue<string>) => {
     this.props.onChange({
       ...this.props.query,
-      scenarioId: item.value,
+      scenarioId: item.value!,
     });
   };
 
@@ -55,9 +56,9 @@ export class QueryEditor extends PureComponent<Props> {
     return (
       <div className="gf-form-inline">
         <div className="gf-form">
-          <FormLabel className="query-keyword" width={7}>
+          <InlineFormLabel className="query-keyword" width={7}>
             Scenario
-          </FormLabel>
+          </InlineFormLabel>
           <Select options={options} value={current} onChange={this.onScenarioChange} />
         </div>
       </div>

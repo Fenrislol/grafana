@@ -6,22 +6,24 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maksimmernikov/grafana/pkg/tsdb"
+	"github.com/grafana/grafana/pkg/components/gtime"
+	"github.com/grafana/grafana/pkg/tsdb"
+	"github.com/grafana/grafana/pkg/tsdb/sqleng"
 )
 
 const rsIdentifier = `([_a-zA-Z0-9]+)`
 const sExpr = `\$` + rsIdentifier + `\(([^\)]*)\)`
 
 type postgresMacroEngine struct {
-	*tsdb.SqlMacroEngineBase
+	*sqleng.SqlMacroEngineBase
 	timeRange   *tsdb.TimeRange
 	query       *tsdb.Query
 	timescaledb bool
 }
 
-func newPostgresMacroEngine(timescaledb bool) tsdb.SqlMacroEngine {
+func newPostgresMacroEngine(timescaledb bool) sqleng.SqlMacroEngine {
 	return &postgresMacroEngine{
-		SqlMacroEngineBase: tsdb.NewSqlMacroEngineBase(),
+		SqlMacroEngineBase: sqleng.NewSqlMacroEngineBase(),
 		timescaledb:        timescaledb,
 	}
 }
@@ -33,7 +35,6 @@ func (m *postgresMacroEngine) Interpolate(query *tsdb.Query, timeRange *tsdb.Tim
 	var macroError error
 
 	sql = m.ReplaceAllStringSubmatchFunc(rExp, sql, func(groups []string) string {
-
 		// detect if $__timeGroup is supposed to add AS time for pre 5.3 compatibility
 		// if there is a ',' directly after the macro call $__timeGroup is probably used
 		// in the old way. Inside window function ORDER BY $__timeGroup will be followed
@@ -69,6 +70,7 @@ func (m *postgresMacroEngine) Interpolate(query *tsdb.Query, timeRange *tsdb.Tim
 	return sql, nil
 }
 
+//nolint: gocyclo
 func (m *postgresMacroEngine) evaluateMacro(name string, args []string) (string, error) {
 	switch name {
 	case "__time":
@@ -95,12 +97,12 @@ func (m *postgresMacroEngine) evaluateMacro(name string, args []string) (string,
 		if len(args) < 2 {
 			return "", fmt.Errorf("macro %v needs time column and interval and optional fill value", name)
 		}
-		interval, err := time.ParseDuration(strings.Trim(args[1], `'`))
+		interval, err := gtime.ParseInterval(strings.Trim(args[1], `'`))
 		if err != nil {
 			return "", fmt.Errorf("error parsing interval %v", args[1])
 		}
 		if len(args) == 3 {
-			err := tsdb.SetupFillmode(m.query, interval, args[2])
+			err := sqleng.SetupFillmode(m.query, interval, args[2])
 			if err != nil {
 				return "", err
 			}
@@ -139,12 +141,12 @@ func (m *postgresMacroEngine) evaluateMacro(name string, args []string) (string,
 		if len(args) < 2 {
 			return "", fmt.Errorf("macro %v needs time column and interval and optional fill value", name)
 		}
-		interval, err := time.ParseDuration(strings.Trim(args[1], `'`))
+		interval, err := gtime.ParseInterval(strings.Trim(args[1], `'`))
 		if err != nil {
 			return "", fmt.Errorf("error parsing interval %v", args[1])
 		}
 		if len(args) == 3 {
-			err := tsdb.SetupFillmode(m.query, interval, args[2])
+			err := sqleng.SetupFillmode(m.query, interval, args[2])
 			if err != nil {
 				return "", err
 			}

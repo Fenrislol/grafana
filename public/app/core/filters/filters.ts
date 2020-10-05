@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import angular from 'angular';
-import moment from 'moment';
 import coreModule from '../core_module';
-import { TemplateSrv } from 'app/features/templating/template_srv';
+import { getTemplateSrv, TemplateSrv } from 'app/features/templating/template_srv';
+import { dateTime } from '@grafana/data';
 
 coreModule.filter('stringSort', () => {
   return (input: any) => {
@@ -33,14 +33,13 @@ coreModule.filter('moment', () => {
   return (date: string, mode: string) => {
     switch (mode) {
       case 'ago':
-        return moment(date).fromNow();
+        return dateTime(date).fromNow();
     }
-    return moment(date).fromNow();
+    return dateTime(date).fromNow();
   };
 });
 
-/** @ngInject */
-function interpolateTemplateVars(templateSrv: TemplateSrv) {
+function interpolateTemplateVars(templateSrv: TemplateSrv = getTemplateSrv()) {
   const filterFunc: any = (text: string, scope: any) => {
     let scopedVars;
     if (scope.ctrl) {

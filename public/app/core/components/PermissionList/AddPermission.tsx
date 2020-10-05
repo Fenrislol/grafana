@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { UserPicker } from 'app/core/components/Select/UserPicker';
 import { TeamPicker, Team } from 'app/core/components/Select/TeamPicker';
-import { Select, SelectOptionItem } from '@grafana/ui';
+import { LegacyForms, Icon } from '@grafana/ui';
+import { SelectableValue } from '@grafana/data';
 import { User } from 'app/types';
 import {
   dashboardPermissionLevels,
@@ -11,6 +12,7 @@ import {
   NewDashboardAclItem,
   OrgRole,
 } from 'app/types/acl';
+const { Select } = LegacyForms;
 
 export interface Props {
   onAddPermission: (item: NewDashboardAclItem) => void;
@@ -22,7 +24,7 @@ class AddPermissions extends Component<Props, NewDashboardAclItem> {
     showPermissionLevels: true,
   };
 
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
     this.state = this.getCleanState();
   }
@@ -36,7 +38,7 @@ class AddPermissions extends Component<Props, NewDashboardAclItem> {
     };
   }
 
-  onTypeChanged = evt => {
+  onTypeChanged = (evt: any) => {
     const type = evt.target.value as AclTarget;
 
     switch (type) {
@@ -61,11 +63,11 @@ class AddPermissions extends Component<Props, NewDashboardAclItem> {
     this.setState({ teamId: team && !Array.isArray(team) ? team.id : 0 });
   };
 
-  onPermissionChanged = (permission: SelectOptionItem<PermissionLevel>) => {
-    this.setState({ permission: permission.value });
+  onPermissionChanged = (permission: SelectableValue<PermissionLevel>) => {
+    this.setState({ permission: permission.value! });
   };
 
-  onSubmit = async evt => {
+  onSubmit = async (evt: React.SyntheticEvent) => {
     evt.preventDefault();
     await this.props.onAddPermission(this.state);
     this.setState(this.getCleanState());
@@ -89,7 +91,7 @@ class AddPermissions extends Component<Props, NewDashboardAclItem> {
     return (
       <div className="gf-form-inline cta-form">
         <button className="cta-form__close btn btn-transparent" onClick={onCancel}>
-          <i className="fa fa-close" />
+          <Icon name="times" />
         </button>
         <form name="addPermission" onSubmit={this.onSubmit}>
           <h5>Add Permission For</h5>

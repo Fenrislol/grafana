@@ -1,15 +1,22 @@
 @import '~react-grid-layout/css/styles.css';
 @import '~react-resizable/css/styles.css';
 
+.react-resizable-handle {
+  // this needs to use visibility and not display none in order not to cause resize flickering
+  visibility: hidden;
+}
+
+.react-grid-item {
+  &:hover {
+    .react-resizable-handle {
+      visibility: visible;
+    }
+  }
+}
+
 .panel-in-fullscreen {
   .react-grid-layout {
-    height: 100% !important;
-  }
-
-  .dashboard-container--has-submenu {
-    .react-grid-layout {
-      height: calc(100% - 50px) !important;
-    }
+    height: 90% !important;
   }
 
   .react-grid-item {

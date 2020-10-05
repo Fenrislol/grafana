@@ -1,3 +1,5 @@
+// +build integration
+
 package mysql
 
 import (
@@ -8,13 +10,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-xorm/xorm"
-	"github.com/maksimmernikov/grafana/pkg/components/securejsondata"
-	"github.com/maksimmernikov/grafana/pkg/components/simplejson"
-	"github.com/maksimmernikov/grafana/pkg/models"
-	"github.com/maksimmernikov/grafana/pkg/services/sqlstore"
-	"github.com/maksimmernikov/grafana/pkg/services/sqlstore/sqlutil"
-	"github.com/maksimmernikov/grafana/pkg/tsdb"
+	"github.com/grafana/grafana/pkg/components/securejsondata"
+	"github.com/grafana/grafana/pkg/components/simplejson"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/services/sqlstore"
+	"github.com/grafana/grafana/pkg/services/sqlstore/sqlutil"
+	"github.com/grafana/grafana/pkg/tsdb"
+	"github.com/grafana/grafana/pkg/tsdb/sqleng"
+	"xorm.io/xorm"
+
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -24,7 +28,7 @@ import (
 // Use the docker/blocks/mysql_tests/docker-compose.yaml to spin up a
 // preconfigured MySQL server suitable for running these tests.
 // There is also a datasource and dashboard provisioned by devenv scripts that you can
-// use to verify that the generated data are vizualized as expected, see
+// use to verify that the generated data are visualized as expected, see
 // devenv/README.md for setup instructions.
 func TestMySQL(t *testing.T) {
 	// change to true to run the MySQL tests
@@ -38,13 +42,13 @@ func TestMySQL(t *testing.T) {
 	Convey("MySQL", t, func() {
 		x := InitMySQLTestDB(t)
 
-		origXormEngine := tsdb.NewXormEngine
-		tsdb.NewXormEngine = func(d, c string) (*xorm.Engine, error) {
+		origXormEngine := sqleng.NewXormEngine
+		sqleng.NewXormEngine = func(d, c string) (*xorm.Engine, error) {
 			return x, nil
 		}
 
-		origInterpolate := tsdb.Interpolate
-		tsdb.Interpolate = func(query *tsdb.Query, timeRange *tsdb.TimeRange, sql string) (string, error) {
+		origInterpolate := sqleng.Interpolate
+		sqleng.Interpolate = func(query *tsdb.Query, timeRange *tsdb.TimeRange, sql string) (string, error) {
 			return sql, nil
 		}
 
@@ -59,14 +63,15 @@ func TestMySQL(t *testing.T) {
 
 		Reset(func() {
 			sess.Close()
-			tsdb.NewXormEngine = origXormEngine
-			tsdb.Interpolate = origInterpolate
+			sqleng.NewXormEngine = origXormEngine
+			sqleng.Interpolate = origInterpolate
 		})
 
 		Convey("Given a table with different native data types", func() {
 			if exists, err := sess.IsTableExist("mysql_types"); err != nil || exists {
 				So(err, ShouldBeNil)
-				sess.DropTable("mysql_types")
+				err = sess.DropTable("mysql_types")
+				So(err, ShouldBeNil)
 			}
 
 			sql := "CREATE TABLE `mysql_types` ("
@@ -179,7 +184,8 @@ func TestMySQL(t *testing.T) {
 
 			if exist, err := sess.IsTableExist(metric{}); err != nil || exist {
 				So(err, ShouldBeNil)
-				sess.DropTable(metric{})
+				err = sess.DropTable(metric{})
+				So(err, ShouldBeNil)
 			}
 			err := sess.CreateTable(metric{})
 			So(err, ShouldBeNil)
@@ -299,15 +305,14 @@ func TestMySQL(t *testing.T) {
 
 				// check for NULL values inserted by fill
 				So(points[6][0].Valid, ShouldBeFalse)
-
 			})
 
 			Convey("When doing a metric query using timeGroup and $__interval", func() {
-				mockInterpolate := tsdb.Interpolate
-				tsdb.Interpolate = origInterpolate
+				mockInterpolate := sqleng.Interpolate
+				sqleng.Interpolate = origInterpolate
 
 				Reset(func() {
-					tsdb.Interpolate = mockInterpolate
+					sqleng.Interpolate = mockInterpolate
 				})
 
 				Convey("Should replace $__interval", func() {
@@ -332,7 +337,7 @@ func TestMySQL(t *testing.T) {
 					So(err, ShouldBeNil)
 					queryResult := resp.Results["A"]
 					So(queryResult.Error, ShouldBeNil)
-					So(queryResult.Meta.Get("sql").MustString(), ShouldEqual, "SELECT UNIX_TIMESTAMP(time) DIV 60 * 60 AS time, avg(value) as value FROM metric GROUP BY 1 ORDER BY 1")
+					So(queryResult.Meta.Get(sqleng.MetaKeyExecutedQueryString).MustString(), ShouldEqual, "SELECT UNIX_TIMESTAMP(time) DIV 60 * 60 AS time, avg(value) as value FROM metric GROUP BY 1 ORDER BY 1")
 				})
 			})
 
@@ -389,7 +394,6 @@ func TestMySQL(t *testing.T) {
 				So(points[3][0].Float64, ShouldEqual, 15.0)
 				So(points[6][0].Float64, ShouldEqual, 20.0)
 			})
-
 		})
 
 		Convey("Given a table with metrics having multiple values and measurements", func() {
@@ -411,7 +415,8 @@ func TestMySQL(t *testing.T) {
 
 			if exist, err := sess.IsTableExist(metric_values{}); err != nil || exist {
 				So(err, ShouldBeNil)
-				sess.DropTable(metric_values{})
+				err = sess.DropTable(metric_values{})
+				So(err, ShouldBeNil)
 			}
 			err := sess.CreateTable(metric_values{})
 			So(err, ShouldBeNil)
@@ -754,7 +759,7 @@ func TestMySQL(t *testing.T) {
 		})
 
 		Convey("When doing a query with timeFrom,timeTo,unixEpochFrom,unixEpochTo macros", func() {
-			tsdb.Interpolate = origInterpolate
+			sqleng.Interpolate = origInterpolate
 			query := &tsdb.TsdbQuery{
 				TimeRange: tsdb.NewFakeTimeRange("5m", "now", fromStart),
 				Queries: []*tsdb.Query{
@@ -773,8 +778,7 @@ func TestMySQL(t *testing.T) {
 			So(err, ShouldBeNil)
 			queryResult := resp.Results["A"]
 			So(queryResult.Error, ShouldBeNil)
-			So(queryResult.Meta.Get("sql").MustString(), ShouldEqual, "SELECT time FROM metric_values WHERE time > FROM_UNIXTIME(1521118500) OR time < FROM_UNIXTIME(1521118800) OR 1 < 1521118500 OR 1521118800 > 1 ORDER BY 1")
-
+			So(queryResult.Meta.Get(sqleng.MetaKeyExecutedQueryString).MustString(), ShouldEqual, "SELECT time FROM metric_values WHERE time > FROM_UNIXTIME(1521118500) OR time < FROM_UNIXTIME(1521118800) OR 1 < 1521118500 OR 1521118800 > 1 ORDER BY 1")
 		})
 
 		Convey("Given a table with event data", func() {
@@ -786,7 +790,8 @@ func TestMySQL(t *testing.T) {
 
 			if exist, err := sess.IsTableExist(event{}); err != nil || exist {
 				So(err, ShouldBeNil)
-				sess.DropTable(event{})
+				err = sess.DropTable(event{})
+				So(err, ShouldBeNil)
 			}
 			err := sess.CreateTable(event{})
 			So(err, ShouldBeNil)
@@ -1037,7 +1042,9 @@ func TestMySQL(t *testing.T) {
 }
 
 func InitMySQLTestDB(t *testing.T) *xorm.Engine {
-	x, err := xorm.NewEngine(sqlutil.TestDB_Mysql.DriverName, strings.Replace(sqlutil.TestDB_Mysql.ConnStr, "/grafana_tests", "/grafana_ds_tests", 1))
+	testDB := sqlutil.MySQLTestDB()
+	x, err := xorm.NewEngine(testDB.DriverName, strings.Replace(testDB.ConnStr, "/grafana_tests",
+		"/grafana_ds_tests", 1))
 	if err != nil {
 		t.Fatalf("Failed to init mysql db %v", err)
 	}

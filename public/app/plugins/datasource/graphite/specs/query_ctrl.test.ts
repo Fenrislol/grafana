@@ -3,6 +3,12 @@ import gfunc from '../gfunc';
 import { GraphiteQueryCtrl } from '../query_ctrl';
 import { TemplateSrvStub } from 'test/specs/helpers';
 
+jest.mock('app/core/utils/promiseToDigest', () => ({
+  promiseToDigest: (scope: any) => {
+    return (p: Promise<any>) => p;
+  },
+}));
+
 describe('GraphiteQueryCtrl', () => {
   const ctx = {
     datasource: {
@@ -29,8 +35,10 @@ describe('GraphiteQueryCtrl', () => {
 
     ctx.ctrl = new GraphiteQueryCtrl(
       {},
-      {},
+      {} as any,
+      //@ts-ignore
       new uiSegmentSrv({ trustAsHtml: html => html }, { highlightVariablesAsHtml: () => {} }),
+      //@ts-ignore
       new TemplateSrvStub(),
       {}
     );
@@ -41,7 +49,52 @@ describe('GraphiteQueryCtrl', () => {
       expect(ctx.datasource.metricFindQuery.mock.calls[0][0]).toBe('test.prod.*');
     });
 
+    it('should not delete last segment if no metrics are found', () => {
+      expect(ctx.ctrl.segments[2].value).not.toBe('select metric');
+      expect(ctx.ctrl.segments[2].value).toBe('*');
+    });
+
+    it('should parse expression and build function model', () => {
+      expect(ctx.ctrl.queryModel.functions.length).toBe(2);
+    });
+  });
+
+  describe('when toggling edit mode to raw and back again', () => {
+    beforeEach(() => {
+      ctx.ctrl.toggleEditorMode();
+      ctx.ctrl.toggleEditorMode();
+    });
+
+    it('should validate metric key exists', () => {
+      const lastCallIndex = ctx.datasource.metricFindQuery.mock.calls.length - 1;
+      expect(ctx.datasource.metricFindQuery.mock.calls[lastCallIndex][0]).toBe('test.prod.*');
+    });
+
     it('should delete last segment if no metrics are found', () => {
+      expect(ctx.ctrl.segments[0].value).toBe('test');
+      expect(ctx.ctrl.segments[1].value).toBe('prod');
+      expect(ctx.ctrl.segments[2].value).toBe('select metric');
+    });
+
+    it('should parse expression and build function model', () => {
+      expect(ctx.ctrl.queryModel.functions.length).toBe(2);
+    });
+  });
+
+  describe('when middle segment value of test.prod.* is changed', () => {
+    beforeEach(() => {
+      const segment = { type: 'segment', value: 'test', expandable: true };
+      ctx.ctrl.segmentValueChanged(segment, 1);
+    });
+
+    it('should validate metric key exists', () => {
+      const lastCallIndex = ctx.datasource.metricFindQuery.mock.calls.length - 1;
+      expect(ctx.datasource.metricFindQuery.mock.calls[lastCallIndex][0]).toBe('test.test.*');
+    });
+
+    it('should delete last segment if no metrics are found', () => {
+      expect(ctx.ctrl.segments[0].value).toBe('test');
+      expect(ctx.ctrl.segments[1].value).toBe('test');
       expect(ctx.ctrl.segments[2].value).toBe('select metric');
     });
 
@@ -121,7 +174,7 @@ describe('GraphiteQueryCtrl', () => {
       ctx.ctrl.target.target = 'test.count';
       ctx.ctrl.datasource.metricFindQuery = () => Promise.resolve([]);
       ctx.ctrl.parseTarget();
-      ctx.ctrl.getAltSegments(1).then(results => {
+      ctx.ctrl.getAltSegments(1).then((results: any) => {
         ctx.altSegments = results;
       });
     });

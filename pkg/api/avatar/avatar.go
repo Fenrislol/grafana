@@ -9,51 +9,27 @@ package avatar
 import (
 	"bufio"
 	"bytes"
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path/filepath"
+	"regexp"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
-	"github.com/maksimmernikov/grafana/pkg/log"
-	"github.com/maksimmernikov/grafana/pkg/setting"
-	"gopkg.in/macaron.v1"
+	"github.com/grafana/grafana/pkg/infra/log"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/setting"
 
 	gocache "github.com/patrickmn/go-cache"
 )
 
-var gravatarSource string
-
-func UpdateGravatarSource() {
-	srcCfg := "//secure.gravatar.com/avatar/"
-
-	gravatarSource = srcCfg
-	if strings.HasPrefix(gravatarSource, "//") {
-		gravatarSource = "http:" + gravatarSource
-	} else if !strings.HasPrefix(gravatarSource, "http://") &&
-		!strings.HasPrefix(gravatarSource, "https://") {
-		gravatarSource = "http://" + gravatarSource
-	}
-}
-
-// hash email to md5 string
-// keep this func in order to make this package independent
-func HashEmail(email string) string {
-	// https://en.gravatar.com/site/implement/hash/
-	email = strings.TrimSpace(email)
-	email = strings.ToLower(email)
-
-	h := md5.New()
-	h.Write([]byte(email))
-	return hex.EncodeToString(h.Sum(nil))
-}
+const (
+	gravatarSource = "https://secure.gravatar.com/avatar/"
+)
 
 // Avatar represents the avatar object.
 type Avatar struct {
@@ -97,29 +73,38 @@ type CacheServer struct {
 	cache    *gocache.Cache
 }
 
-func (this *CacheServer) Handler(ctx *macaron.Context) {
-	urlPath := ctx.Req.URL.Path
-	hash := urlPath[strings.LastIndex(urlPath, "/")+1:]
+var validMD5 = regexp.MustCompile("^[a-fA-F0-9]{32}$")
+
+func (this *CacheServer) Handler(ctx *models.ReqContext) {
+	hash := ctx.Params("hash")
+
+	if len(hash) != 32 || !validMD5.MatchString(hash) {
+		ctx.JsonApiErr(404, "Avatar not found", nil)
+		return
+	}
 
 	var avatar *Avatar
-
-	if obj, exist := this.cache.Get(hash); exist {
+	obj, exists := this.cache.Get(hash)
+	if exists {
 		avatar = obj.(*Avatar)
 	} else {
 		avatar = New(hash)
 	}
 
 	if avatar.Expired() {
+		// The cache item is either expired or newly created, update it from the server
 		if err := avatar.Update(); err != nil {
-			log.Trace("avatar update error: %v", err)
+			log.Tracef("avatar update error: %v", err)
 			avatar = this.notFound
 		}
 	}
 
 	if avatar.notFound {
 		avatar = this.notFound
-	} else {
-		this.cache.Add(hash, avatar, gocache.DefaultExpiration)
+	} else if !exists {
+		if err := this.cache.Add(hash, avatar, gocache.DefaultExpiration); err != nil {
+			log.Tracef("Error adding avatar to cache: %s", err)
+		}
 	}
 
 	ctx.Resp.Header().Add("Content-Type", "image/jpeg")
@@ -131,14 +116,12 @@ func (this *CacheServer) Handler(ctx *macaron.Context) {
 	ctx.Resp.Header().Add("Cache-Control", "private, max-age=3600")
 
 	if err := avatar.Encode(ctx.Resp); err != nil {
-		log.Warn("avatar encode error: %v", err)
+		log.Warnf("avatar encode error: %v", err)
 		ctx.WriteHeader(500)
 	}
 }
 
 func NewCacheServer() *CacheServer {
-	UpdateGravatarSource()
-
 	return &CacheServer{
 		notFound: newNotFound(),
 		cache:    gocache.New(time.Hour, time.Hour*2),
@@ -152,7 +135,7 @@ func newNotFound() *Avatar {
 	path := filepath.Join(setting.StaticRootPath, "img", "user_profile.png")
 
 	if data, err := ioutil.ReadFile(path); err != nil {
-		log.Error(3, "Failed to read user_profile.png, %v", path)
+		log.Errorf(3, "Failed to read user_profile.png, %v", path)
 	} else {
 		avatar.data = bytes.NewBuffer(data)
 	}
@@ -225,7 +208,7 @@ var client = &http.Client{
 func (this *thunderTask) fetch() error {
 	this.Avatar.timestamp = time.Now()
 
-	log.Debug("avatar.fetch(fetch new avatar): %s", this.Url)
+	log.Debugf("avatar.fetch(fetch new avatar): %s", this.Url)
 	req, _ := http.NewRequest("GET", this.Url, nil)
 	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/jpeg,image/png,*/*;q=0.8")
 	req.Header.Set("Accept-Encoding", "deflate,sdch")
@@ -233,7 +216,6 @@ func (this *thunderTask) fetch() error {
 	req.Header.Set("Cache-Control", "no-cache")
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.154 Safari/537.36")
 	resp, err := client.Do(req)
-
 	if err != nil {
 		this.Avatar.notFound = true
 		return fmt.Errorf("gravatar unreachable, %v", err)

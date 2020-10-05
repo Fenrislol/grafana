@@ -3,21 +3,20 @@ package notifiers
 import (
 	"testing"
 
-	"github.com/maksimmernikov/grafana/pkg/components/simplejson"
-	m "github.com/maksimmernikov/grafana/pkg/models"
-	"github.com/maksimmernikov/grafana/pkg/services/alerting"
+	"github.com/grafana/grafana/pkg/components/simplejson"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/services/alerting"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestThreemaNotifier(t *testing.T) {
 	Convey("Threema notifier tests", t, func() {
-
 		Convey("Parsing alert notification from settings", func() {
 			Convey("empty settings should return error", func() {
 				json := `{ }`
 
 				settingsJSON, _ := simplejson.NewJson([]byte(json))
-				model := &m.AlertNotification{
+				model := &models.AlertNotification{
 					Name:     "threema_testing",
 					Type:     "threema",
 					Settings: settingsJSON,
@@ -36,7 +35,7 @@ func TestThreemaNotifier(t *testing.T) {
 				}`
 
 				settingsJSON, _ := simplejson.NewJson([]byte(json))
-				model := &m.AlertNotification{
+				model := &models.AlertNotification{
 					Name:     "threema_testing",
 					Type:     "threema",
 					Settings: settingsJSON,
@@ -63,7 +62,7 @@ func TestThreemaNotifier(t *testing.T) {
 				}`
 
 				settingsJSON, _ := simplejson.NewJson([]byte(json))
-				model := &m.AlertNotification{
+				model := &models.AlertNotification{
 					Name:     "threema_testing",
 					Type:     "threema",
 					Settings: settingsJSON,
@@ -83,7 +82,7 @@ func TestThreemaNotifier(t *testing.T) {
 				}`
 
 				settingsJSON, _ := simplejson.NewJson([]byte(json))
-				model := &m.AlertNotification{
+				model := &models.AlertNotification{
 					Name:     "threema_testing",
 					Type:     "threema",
 					Settings: settingsJSON,
@@ -103,7 +102,7 @@ func TestThreemaNotifier(t *testing.T) {
 				}`
 
 				settingsJSON, _ := simplejson.NewJson([]byte(json))
-				model := &m.AlertNotification{
+				model := &models.AlertNotification{
 					Name:     "threema_testing",
 					Type:     "threema",
 					Settings: settingsJSON,
@@ -113,7 +112,6 @@ func TestThreemaNotifier(t *testing.T) {
 				So(not, ShouldBeNil)
 				So(err.(alerting.ValidationError).Reason, ShouldEqual, "Invalid Threema Recipient ID: Must be 8 characters long")
 			})
-
 		})
 	})
 }

@@ -44,14 +44,8 @@
 
 // Placeholder text
 // -------------------------
-@mixin placeholder($color: $placeholderText) {
-  &:-moz-placeholder {
-    color: $color;
-  }
-  &:-ms-input-placeholder {
-    color: $color;
-  }
-  &::-webkit-input-placeholder {
+@mixin placeholder($color: $input-color-placeholder) {
+  &::placeholder {
     color: $color;
   }
 }
@@ -335,7 +329,7 @@
 }
 
 @mixin left-brand-border-gradient() {
-  border-image: linear-gradient(rgba(255, 213, 0, 1) 0%, rgba(255, 68, 0, 1) 99%, rgba(255, 68, 0, 1) 100%);
+  border-image: $brand-gradient-vertical;
   border-image-slice: 1;
   border-style: solid;
   border-top: 0;
@@ -345,7 +339,7 @@
 }
 
 @mixin brand-bottom-border() {
-  border-image: $brand-gradient;
+  border-image: $brand-gradient-horizontal;
   border-image-slice: 1;
   border-style: solid;
   border-top: 0;
@@ -360,10 +354,17 @@
   padding: 7px;
   background: $list-item-bg;
   box-shadow: $list-item-shadow;
-  color: $list-item-link-color;
+  border-radius: $border-radius;
 
   &:hover {
     background: $list-item-hover-bg;
-    color: $list-item-link-color;
+  }
+}
+
+@function lightOrDark($lightColor, $darkColor) {
+  @if (lightness($text-color) < 50) {
+    @return $lightColor;
+  } @else {
+    @return $darkColor;
   }
 }

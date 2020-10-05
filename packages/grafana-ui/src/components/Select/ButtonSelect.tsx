@@ -1,88 +1,87 @@
-import React, { PureComponent } from 'react';
-import Select, { SelectOptionItem } from './Select';
-import { PopperContent } from '../Tooltip/PopperController';
+import React from 'react';
+import { css } from 'emotion';
+import { GrafanaTheme } from '@grafana/data';
 
-interface ButtonComponentProps {
-  label: string | undefined;
-  className: string | undefined;
-  iconClass?: string;
+import { Button, ButtonVariant, ButtonProps } from '../Button';
+import { ComponentSize } from '../../types/size';
+import { SelectCommonProps, CustomControlProps } from './types';
+import { SelectBase } from './SelectBase';
+import { stylesFactory, useTheme } from '../../themes';
+import { Icon } from '../Icon/Icon';
+import { IconName } from '../../types';
+
+interface ButtonSelectProps<T> extends Omit<SelectCommonProps<T>, 'renderControl' | 'size' | 'prefix'> {
+  icon?: IconName;
+  variant?: ButtonVariant;
+  size?: ComponentSize;
 }
 
-const ButtonComponent = (buttonProps: ButtonComponentProps) => (props: any) => {
-  const { label, className, iconClass } = buttonProps;
-
-  return (
-    <button
-      ref={props.innerRef}
-      className={`btn navbar-button navbar-button--tight ${className}`}
-      onClick={props.selectProps.menuIsOpen ? props.selectProps.onMenuClose : props.selectProps.onMenuOpen}
-      onBlur={props.selectProps.onMenuClose}
-    >
-      <div className="select-button">
-        {iconClass && <i className={`select-button-icon ${iconClass}`} />}
-        <span className="select-button-value">{label ? label : ''}</span>
-        <i className="fa fa-caret-down fa-fw" />
-      </div>
-    </button>
-  );
-};
-
-export interface Props<T> {
-  className: string | undefined;
-  options: Array<SelectOptionItem<T>>;
-  value: SelectOptionItem<T>;
-  label?: string;
-  iconClass?: string;
-  components?: any;
-  maxMenuHeight?: number;
-  onChange: (item: SelectOptionItem<T>) => void;
-  tooltipContent?: PopperContent<any>;
-  isMenuOpen?: boolean;
-  onOpenMenu?: () => void;
-  onCloseMenu?: () => void;
+interface SelectButtonProps extends Omit<ButtonProps, 'icon'> {
+  icon?: IconName;
+  isOpen?: boolean;
 }
 
-export class ButtonSelect<T> extends PureComponent<Props<T>> {
-  onChange = (item: SelectOptionItem<T>) => {
-    const { onChange } = this.props;
-    onChange(item);
-  };
-
-  render() {
-    const {
-      className,
-      options,
-      value,
-      label,
-      iconClass,
-      components,
-      maxMenuHeight,
-      tooltipContent,
-      isMenuOpen,
-      onOpenMenu,
-      onCloseMenu,
-    } = this.props;
-    const combinedComponents = {
-      ...components,
-      Control: ButtonComponent({ label, className, iconClass }),
-    };
+const SelectButton = React.forwardRef<HTMLButtonElement, SelectButtonProps>(
+  ({ icon, children, isOpen, ...buttonProps }, ref) => {
+    const getStyles = stylesFactory((theme: GrafanaTheme) => ({
+      wrapper: css`
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 200px;
+        text-overflow: ellipsis;
+      `,
+      iconWrap: css`
+        padding: 0 15px 0 0;
+      `,
+      caretWrap: css`
+        padding-left: ${theme.spacing.sm};
+        margin-left: ${theme.spacing.sm};
+        margin-right: -${theme.spacing.sm};
+        height: 100%;
+      `,
+    }));
+    const styles = getStyles(useTheme());
     return (
-      <Select
-        autoFocus
-        backspaceRemovesValue={false}
-        isClearable={false}
-        isSearchable={false}
-        options={options}
-        onChange={this.onChange}
-        defaultValue={value}
-        maxMenuHeight={maxMenuHeight}
-        components={combinedComponents}
-        className="gf-form-select-box-button-select"
-        tooltipContent={tooltipContent}
-        isOpen={isMenuOpen}
-        onOpenMenu={onOpenMenu}
-        onCloseMenu={onCloseMenu}
-      />
+      <Button {...buttonProps} ref={ref} icon={icon}>
+        <span className={styles.wrapper}>
+          <span>{children}</span>
+          <span className={styles.caretWrap}>
+            <Icon name={isOpen ? 'angle-up' : 'angle-down'} />
+          </span>
+        </span>
+      </Button>
     );
   }
+);
+
+export function ButtonSelect<T>({
+  placeholder,
+  icon,
+  variant = 'primary',
+  size = 'md',
+  className,
+  disabled,
+  ...selectProps
+}: ButtonSelectProps<T>) {
+  const buttonProps = {
+    icon,
+    variant,
+    size,
+    className,
+    disabled,
+  };
+
+  return (
+    <SelectBase
+      {...selectProps}
+      renderControl={React.forwardRef<any, CustomControlProps<T>>(({ onBlur, onClick, value, isOpen }, ref) => {
+        return (
+          <SelectButton {...buttonProps} ref={ref} onBlur={onBlur} onClick={onClick} isOpen={isOpen}>
+            {value ? value.label : placeholder}
+          </SelectButton>
+        );
+      })}
+    />
+  );
 }

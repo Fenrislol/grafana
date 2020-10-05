@@ -4,16 +4,17 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"strings"
 	"time"
 
-	"github.com/maksimmernikov/grafana/pkg/infra/serverlock"
+	"github.com/grafana/grafana/pkg/infra/serverlock"
 
-	"github.com/maksimmernikov/grafana/pkg/log"
-	"github.com/maksimmernikov/grafana/pkg/models"
-	"github.com/maksimmernikov/grafana/pkg/registry"
-	"github.com/maksimmernikov/grafana/pkg/services/sqlstore"
-	"github.com/maksimmernikov/grafana/pkg/setting"
-	"github.com/maksimmernikov/grafana/pkg/util"
+	"github.com/grafana/grafana/pkg/infra/log"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/registry"
+	"github.com/grafana/grafana/pkg/services/sqlstore"
+	"github.com/grafana/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/util"
 )
 
 func init() {
@@ -37,7 +38,6 @@ func (s *UserAuthTokenService) Init() error {
 }
 
 func (s *UserAuthTokenService) ActiveTokenCount(ctx context.Context) (int64, error) {
-
 	var count int64
 	var err error
 	err = s.SQLStore.WithDbSession(ctx, func(dbSession *sqlstore.DBSession) error {
@@ -53,8 +53,12 @@ func (s *UserAuthTokenService) ActiveTokenCount(ctx context.Context) (int64, err
 	return count, err
 }
 
-func (s *UserAuthTokenService) CreateToken(ctx context.Context, userId int64, clientIP, userAgent string) (*models.UserToken, error) {
-	clientIP = util.ParseIPAddress(clientIP)
+func (s *UserAuthTokenService) CreateToken(ctx context.Context, userId int64, clientAddr, userAgent string) (*models.UserToken, error) {
+	clientIP, err := util.ParseIPAddress(clientAddr)
+	if err != nil {
+		s.log.Debug("Failed to parse client IP address", "clientAddr", clientAddr, "err", err)
+		clientIP = ""
+	}
 	token, err := util.RandomHex(16)
 	if err != nil {
 		return nil, err
@@ -98,7 +102,7 @@ func (s *UserAuthTokenService) CreateToken(ctx context.Context, userId int64, cl
 
 func (s *UserAuthTokenService) LookupToken(ctx context.Context, unhashedToken string) (*models.UserToken, error) {
 	hashedToken := hashToken(unhashedToken)
-	if setting.Env == setting.DEV {
+	if setting.Env == setting.Dev {
 		s.log.Debug("looking up token", "unhashed", unhashedToken, "hashed", hashedToken)
 	}
 
@@ -114,9 +118,7 @@ func (s *UserAuthTokenService) LookupToken(ctx context.Context, unhashedToken st
 			Get(&model)
 
 		return err
-
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -190,12 +192,16 @@ func (s *UserAuthTokenService) LookupToken(ctx context.Context, unhashedToken st
 	return &userToken, err
 }
 
-func (s *UserAuthTokenService) TryRotateToken(ctx context.Context, token *models.UserToken, clientIP, userAgent string) (bool, error) {
+func (s *UserAuthTokenService) TryRotateToken(ctx context.Context, token *models.UserToken,
+	clientAddr, userAgent string) (bool, error) {
 	if token == nil {
 		return false, nil
 	}
 
-	model := userAuthTokenFromUserToken(token)
+	model, err := userAuthTokenFromUserToken(token)
+	if err != nil {
+		return false, err
+	}
 
 	now := getTime()
 
@@ -213,7 +219,12 @@ func (s *UserAuthTokenService) TryRotateToken(ctx context.Context, token *models
 
 	s.log.Debug("token needs rotation", "tokenId", model.Id, "authTokenSeen", model.AuthTokenSeen, "rotatedAt", rotatedAt)
 
-	clientIP = util.ParseIPAddress(clientIP)
+	clientIP, err := util.ParseIPAddress(clientAddr)
+	if err != nil {
+		s.log.Debug("Failed to parse client IP address", "clientAddr", clientAddr, "err", err)
+		clientIP = ""
+	}
+
 	newToken, err := util.RandomHex(16)
 	if err != nil {
 		return false, err
@@ -251,7 +262,9 @@ func (s *UserAuthTokenService) TryRotateToken(ctx context.Context, token *models
 	s.log.Debug("auth token rotated", "affected", affected, "auth_token_id", model.Id, "userId", model.UserId)
 	if affected > 0 {
 		model.UnhashedToken = newToken
-		model.toUserToken(token)
+		if err := model.toUserToken(token); err != nil {
+			return false, err
+		}
 		return true, nil
 	}
 
@@ -263,10 +276,12 @@ func (s *UserAuthTokenService) RevokeToken(ctx context.Context, token *models.Us
 		return models.ErrUserTokenNotFound
 	}
 
-	model := userAuthTokenFromUserToken(token)
+	model, err := userAuthTokenFromUserToken(token)
+	if err != nil {
+		return err
+	}
 
 	var rowsAffected int64
-	var err error
 	err = s.SQLStore.WithDbSession(ctx, func(dbSession *sqlstore.DBSession) error {
 		rowsAffected, err = dbSession.Delete(model)
 		return err
@@ -305,8 +320,37 @@ func (s *UserAuthTokenService) RevokeAllUserTokens(ctx context.Context, userId i
 	})
 }
 
-func (s *UserAuthTokenService) GetUserToken(ctx context.Context, userId, userTokenId int64) (*models.UserToken, error) {
+func (s *UserAuthTokenService) BatchRevokeAllUserTokens(ctx context.Context, userIds []int64) error {
+	return s.SQLStore.WithTransactionalDbSession(ctx, func(dbSession *sqlstore.DBSession) error {
+		if len(userIds) == 0 {
+			return nil
+		}
 
+		user_id_params := strings.Repeat(",?", len(userIds)-1)
+		sql := "DELETE from user_auth_token WHERE user_id IN (?" + user_id_params + ")"
+
+		params := []interface{}{sql}
+		for _, v := range userIds {
+			params = append(params, v)
+		}
+
+		res, err := dbSession.Exec(params...)
+		if err != nil {
+			return err
+		}
+
+		affected, err := res.RowsAffected()
+		if err != nil {
+			return err
+		}
+
+		s.log.Debug("all user tokens for given users revoked", "usersCount", len(userIds), "count", affected)
+
+		return err
+	})
+}
+
+func (s *UserAuthTokenService) GetUserToken(ctx context.Context, userId, userTokenId int64) (*models.UserToken, error) {
 	var result models.UserToken
 	err := s.SQLStore.WithDbSession(ctx, func(dbSession *sqlstore.DBSession) error {
 		var token userAuthToken
@@ -319,15 +363,13 @@ func (s *UserAuthTokenService) GetUserToken(ctx context.Context, userId, userTok
 			return models.ErrUserTokenNotFound
 		}
 
-		token.toUserToken(&result)
-		return nil
+		return token.toUserToken(&result)
 	})
 
 	return &result, err
 }
 
 func (s *UserAuthTokenService) GetUserTokens(ctx context.Context, userId int64) ([]*models.UserToken, error) {
-
 	result := []*models.UserToken{}
 	err := s.SQLStore.WithDbSession(ctx, func(dbSession *sqlstore.DBSession) error {
 		var tokens []*userAuthToken
@@ -336,14 +378,15 @@ func (s *UserAuthTokenService) GetUserTokens(ctx context.Context, userId int64) 
 			s.createdAfterParam(),
 			s.rotatedAfterParam()).
 			Find(&tokens)
-
 		if err != nil {
 			return err
 		}
 
 		for _, token := range tokens {
 			var userToken models.UserToken
-			token.toUserToken(&userToken)
+			if err := token.toUserToken(&userToken); err != nil {
+				return err
+			}
 			result = append(result, &userToken)
 		}
 
@@ -354,13 +397,11 @@ func (s *UserAuthTokenService) GetUserTokens(ctx context.Context, userId int64) 
 }
 
 func (s *UserAuthTokenService) createdAfterParam() int64 {
-	tokenMaxLifetime := time.Duration(s.Cfg.LoginMaxLifetimeDays) * 24 * time.Hour
-	return getTime().Add(-tokenMaxLifetime).Unix()
+	return getTime().Add(-s.Cfg.LoginMaxLifetime).Unix()
 }
 
 func (s *UserAuthTokenService) rotatedAfterParam() int64 {
-	tokenMaxInactiveLifetime := time.Duration(s.Cfg.LoginMaxInactiveLifetimeDays) * 24 * time.Hour
-	return getTime().Add(-tokenMaxInactiveLifetime).Unix()
+	return getTime().Add(-s.Cfg.LoginMaxInactiveLifetime).Unix()
 }
 
 func hashToken(token string) string {

@@ -4,13 +4,15 @@ import (
 	"context"
 	"time"
 
-	"github.com/maksimmernikov/grafana/pkg/bus"
-	"github.com/maksimmernikov/grafana/pkg/login/social"
-	"github.com/maksimmernikov/grafana/pkg/services/sqlstore"
+	"github.com/grafana/grafana/pkg/bus"
+	"github.com/grafana/grafana/pkg/login/social"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/services/alerting"
+	"github.com/grafana/grafana/pkg/services/sqlstore"
 
-	"github.com/maksimmernikov/grafana/pkg/log"
-	"github.com/maksimmernikov/grafana/pkg/registry"
-	"github.com/maksimmernikov/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/infra/log"
+	"github.com/grafana/grafana/pkg/registry"
+	"github.com/grafana/grafana/pkg/setting"
 )
 
 var metricsLogger log.Logger = log.New("metrics")
@@ -20,15 +22,19 @@ func init() {
 }
 
 type UsageStatsService struct {
-	Cfg      *setting.Cfg       `inject:""`
-	Bus      bus.Bus            `inject:""`
-	SQLStore *sqlstore.SqlStore `inject:""`
+	Cfg                *setting.Cfg               `inject:""`
+	Bus                bus.Bus                    `inject:""`
+	SQLStore           *sqlstore.SqlStore         `inject:""`
+	AlertingUsageStats alerting.UsageStatsQuerier `inject:""`
+	License            models.Licensing           `inject:""`
+
+	log log.Logger
 
 	oauthProviders map[string]bool
 }
 
 func (uss *UsageStatsService) Init() error {
-
+	uss.log = log.New("infra.usagestats")
 	uss.oauthProviders = social.GetOAuthProviders(uss.Cfg)
 	return nil
 }
@@ -44,7 +50,7 @@ func (uss *UsageStatsService) Run(ctx context.Context) error {
 	for {
 		select {
 		case <-onceEveryDayTick.C:
-			uss.sendUsageStats(uss.oauthProviders)
+			uss.sendUsageStats()
 		case <-everyMinuteTicker.C:
 			uss.updateTotalStats()
 		case <-ctx.Done():

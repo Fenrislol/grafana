@@ -3,10 +3,10 @@ package metrics
 import (
 	"context"
 
-	"github.com/maksimmernikov/grafana/pkg/infra/metrics/graphitebridge"
-	"github.com/maksimmernikov/grafana/pkg/log"
-	"github.com/maksimmernikov/grafana/pkg/registry"
-	"github.com/maksimmernikov/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/infra/log"
+	"github.com/grafana/grafana/pkg/infra/metrics/graphitebridge"
+	"github.com/grafana/grafana/pkg/registry"
+	"github.com/grafana/grafana/pkg/setting"
 )
 
 var metricsLogger log.Logger = log.New("metrics")
@@ -46,7 +46,7 @@ func (im *InternalMetricsService) Run(ctx context.Context) error {
 		}
 	}
 
-	M_Instance_Start.Inc()
+	MInstanceStart.Inc()
 
 	<-ctx.Done()
 	return ctx.Err()

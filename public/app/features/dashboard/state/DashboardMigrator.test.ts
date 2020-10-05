@@ -3,15 +3,16 @@ import { DashboardModel } from '../state/DashboardModel';
 import { PanelModel } from '../state/PanelModel';
 import { GRID_CELL_HEIGHT, GRID_CELL_VMARGIN } from 'app/core/constants';
 import { expect } from 'test/lib/common';
+import { DataLinkBuiltInVars } from '@grafana/data';
 
 jest.mock('app/core/services/context_srv', () => ({}));
 
 describe('DashboardModel', () => {
   describe('when creating dashboard with old schema', () => {
-    let model;
-    let graph;
-    let singlestat;
-    let table;
+    let model: any;
+    let graph: any;
+    let singlestat: any;
+    let table: any;
 
     beforeEach(() => {
       model = new DashboardModel({
@@ -110,6 +111,10 @@ describe('DashboardModel', () => {
       expect(table.styles[1].thresholds[1]).toBe('300');
     });
 
+    it('table type should be deprecated', () => {
+      expect(table.type).toBe('table-old');
+    });
+
     it('graph grid to yaxes options', () => {
       expect(graph.yaxes[0].min).toBe(1);
       expect(graph.yaxes[0].max).toBe(10);
@@ -127,7 +132,7 @@ describe('DashboardModel', () => {
     });
 
     it('dashboard schema version should be set to latest', () => {
-      expect(model.schemaVersion).toBe(18);
+      expect(model.schemaVersion).toBe(26);
     });
 
     it('graph thresholds should be migrated', () => {
@@ -138,10 +143,31 @@ describe('DashboardModel', () => {
       expect(graph.thresholds[1].value).toBe(400);
       expect(graph.thresholds[1].fillColor).toBe('red');
     });
+
+    it('graph thresholds should be migrated onto specified thresholds', () => {
+      model = new DashboardModel({
+        panels: [
+          {
+            type: 'graph',
+            y_formats: ['kbyte', 'ms'],
+            grid: {
+              threshold1: 200,
+              threshold2: 400,
+            },
+            thresholds: [{ value: 100 }],
+          },
+        ],
+      });
+      graph = model.panels[0];
+      expect(graph.thresholds.length).toBe(3);
+      expect(graph.thresholds[0].value).toBe(100);
+      expect(graph.thresholds[1].value).toBe(200);
+      expect(graph.thresholds[2].value).toBe(400);
+    });
   });
 
   describe('when migrating to the grid layout', () => {
-    let model;
+    let model: any;
 
     beforeEach(() => {
       model = {
@@ -153,7 +179,10 @@ describe('DashboardModel', () => {
       model.rows = [createRow({ collapse: false, height: 8 }, [[6], [6]])];
       const dashboard = new DashboardModel(model);
       const panelGridPos = getGridPositions(dashboard);
-      const expectedGrid = [{ x: 0, y: 0, w: 12, h: 8 }, { x: 12, y: 0, w: 12, h: 8 }];
+      const expectedGrid = [
+        { x: 0, y: 0, w: 12, h: 8 },
+        { x: 12, y: 0, w: 12, h: 8 },
+      ];
 
       expect(panelGridPos).toEqual(expectedGrid);
     });
@@ -382,17 +411,405 @@ describe('DashboardModel', () => {
       expect(dashboard.panels[0].maxPerRow).toBe(3);
     });
   });
+
+  describe('when migrating panel links', () => {
+    let model: any;
+
+    beforeEach(() => {
+      model = new DashboardModel({
+        panels: [
+          {
+            links: [
+              {
+                url: 'http://mylink.com',
+                keepTime: true,
+                title: 'test',
+              },
+              {
+                url: 'http://mylink.com?existingParam',
+                params: 'customParam',
+                title: 'test',
+              },
+              {
+                url: 'http://mylink.com?existingParam',
+                includeVars: true,
+                title: 'test',
+              },
+              {
+                dashboard: 'my other dashboard',
+                title: 'test',
+              },
+              {
+                dashUri: '',
+                title: 'test',
+              },
+              {
+                type: 'dashboard',
+                keepTime: true,
+              },
+            ],
+          },
+        ],
+      });
+    });
+
+    it('should add keepTime as variable', () => {
+      expect(model.panels[0].links[0].url).toBe(`http://mylink.com?$${DataLinkBuiltInVars.keepTime}`);
+    });
+
+    it('should add params to url', () => {
+      expect(model.panels[0].links[1].url).toBe('http://mylink.com?existingParam&customParam');
+    });
+
+    it('should add includeVars to url', () => {
+      expect(model.panels[0].links[2].url).toBe(`http://mylink.com?existingParam&$${DataLinkBuiltInVars.includeVars}`);
+    });
+
+    it('should slugify dashboard name', () => {
+      expect(model.panels[0].links[3].url).toBe(`dashboard/db/my-other-dashboard`);
+    });
+  });
+
+  describe('when migrating variables', () => {
+    let model: any;
+    beforeEach(() => {
+      model = new DashboardModel({
+        panels: [
+          {
+            //graph panel
+            options: {
+              dataLinks: [
+                {
+                  url: 'http://mylink.com?series=${__series_name}',
+                },
+                {
+                  url: 'http://mylink.com?series=${__value_time}',
+                },
+              ],
+            },
+          },
+          {
+            //  panel with field options
+            options: {
+              fieldOptions: {
+                defaults: {
+                  links: [
+                    {
+                      url: 'http://mylink.com?series=${__series_name}',
+                    },
+                    {
+                      url: 'http://mylink.com?series=${__value_time}',
+                    },
+                  ],
+                  title: '$__cell_0 * $__field_name * $__series_name',
+                },
+              },
+            },
+          },
+        ],
+      });
+    });
+
+    describe('data links', () => {
+      it('should replace __series_name variable with __series.name', () => {
+        expect(model.panels[0].options.dataLinks[0].url).toBe('http://mylink.com?series=${__series.name}');
+        expect(model.panels[1].options.fieldOptions.defaults.links[0].url).toBe(
+          'http://mylink.com?series=${__series.name}'
+        );
+      });
+
+      it('should replace __value_time variable with __value.time', () => {
+        expect(model.panels[0].options.dataLinks[1].url).toBe('http://mylink.com?series=${__value.time}');
+        expect(model.panels[1].options.fieldOptions.defaults.links[1].url).toBe(
+          'http://mylink.com?series=${__value.time}'
+        );
+      });
+    });
+
+    describe('field display', () => {
+      it('should replace __series_name and __field_name variables with new syntax', () => {
+        expect(model.panels[1].options.fieldOptions.defaults.title).toBe(
+          '$__cell_0 * ${__field.name} * ${__series.name}'
+        );
+      });
+    });
+  });
+
+  describe('when migrating labels from DataFrame to Field', () => {
+    let model: any;
+    beforeEach(() => {
+      model = new DashboardModel({
+        panels: [
+          {
+            //graph panel
+            options: {
+              dataLinks: [
+                {
+                  url: 'http://mylink.com?series=${__series.labels}&${__series.labels.a}',
+                },
+              ],
+            },
+          },
+          {
+            //  panel with field options
+            options: {
+              fieldOptions: {
+                defaults: {
+                  links: [
+                    {
+                      url: 'http://mylink.com?series=${__series.labels}&${__series.labels.x}',
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        ],
+      });
+    });
+
+    describe('data links', () => {
+      it('should replace __series.label variable with __field.label', () => {
+        expect(model.panels[0].options.dataLinks[0].url).toBe(
+          'http://mylink.com?series=${__field.labels}&${__field.labels.a}'
+        );
+        expect(model.panels[1].options.fieldOptions.defaults.links[0].url).toBe(
+          'http://mylink.com?series=${__field.labels}&${__field.labels.x}'
+        );
+      });
+    });
+  });
+
+  describe('when migrating variables with multi support', () => {
+    let model: DashboardModel;
+
+    beforeEach(() => {
+      model = new DashboardModel({
+        templating: {
+          list: [
+            {
+              multi: false,
+              current: {
+                value: ['value'],
+                text: ['text'],
+              },
+            },
+            {
+              multi: true,
+              current: {
+                value: ['value'],
+                text: ['text'],
+              },
+            },
+          ],
+        },
+      });
+    });
+
+    it('should have two variables after migration', () => {
+      expect(model.templating.list.length).toBe(2);
+    });
+
+    it('should be migrated if being out of sync', () => {
+      expect(model.templating.list[0].multi).toBe(false);
+      expect(model.templating.list[0].current).toEqual({
+        text: 'text',
+        value: 'value',
+      });
+    });
+
+    it('should not be migrated if being in sync', () => {
+      expect(model.templating.list[1].multi).toBe(true);
+      expect(model.templating.list[1].current).toEqual({
+        text: ['text'],
+        value: ['value'],
+      });
+    });
+  });
+
+  describe('when migrating variables with old tags format', () => {
+    let model: DashboardModel;
+
+    beforeEach(() => {
+      model = new DashboardModel({
+        templating: {
+          list: [
+            {
+              type: 'query',
+              tags: ['Africa', 'America', 'Asia', 'Europe'],
+            },
+            {
+              type: 'query',
+              current: {
+                tags: [
+                  {
+                    selected: true,
+                    text: 'America',
+                    values: ['server-us-east', 'server-us-central', 'server-us-west'],
+                    valuesText: 'server-us-east + server-us-central + server-us-west',
+                  },
+                  {
+                    selected: true,
+                    text: 'Europe',
+                    values: ['server-eu-east', 'server-eu-west'],
+                    valuesText: 'server-eu-east + server-eu-west',
+                  },
+                ],
+                text: 'server-us-east + server-us-central + server-us-west + server-eu-east + server-eu-west',
+                value: ['server-us-east', 'server-us-central', 'server-us-west', 'server-eu-east', 'server-eu-west'],
+              },
+              tags: ['Africa', 'America', 'Asia', 'Europe'],
+            },
+            {
+              type: 'query',
+              tags: [
+                { text: 'Africa', selected: false },
+                { text: 'America', selected: true },
+                { text: 'Asia', selected: false },
+                { text: 'Europe', selected: false },
+              ],
+            },
+          ],
+        },
+      });
+    });
+
+    it('should have three variables after migration', () => {
+      expect(model.templating.list.length).toBe(3);
+    });
+
+    it('should be migrated with defaults if being out of sync', () => {
+      expect(model.templating.list[0].tags).toEqual([
+        { text: 'Africa', selected: false },
+        { text: 'America', selected: false },
+        { text: 'Asia', selected: false },
+        { text: 'Europe', selected: false },
+      ]);
+    });
+
+    it('should be migrated with current values if being out of sync', () => {
+      expect(model.templating.list[1].tags).toEqual([
+        { text: 'Africa', selected: false },
+        {
+          selected: true,
+          text: 'America',
+          values: ['server-us-east', 'server-us-central', 'server-us-west'],
+          valuesText: 'server-us-east + server-us-central + server-us-west',
+        },
+        { text: 'Asia', selected: false },
+        {
+          selected: true,
+          text: 'Europe',
+          values: ['server-eu-east', 'server-eu-west'],
+          valuesText: 'server-eu-east + server-eu-west',
+        },
+      ]);
+    });
+
+    it('should not be migrated if being in sync', () => {
+      expect(model.templating.list[2].tags).toEqual([
+        { text: 'Africa', selected: false },
+        { text: 'America', selected: true },
+        { text: 'Asia', selected: false },
+        { text: 'Europe', selected: false },
+      ]);
+    });
+  });
+
+  describe('when migrating to new Text Panel', () => {
+    let model: DashboardModel;
+
+    beforeEach(() => {
+      model = new DashboardModel({
+        panels: [
+          {
+            id: 2,
+            type: 'text',
+            title: 'Angular Text Panel',
+            content:
+              '# Angular Text Panel\n# $constant\n\nFor markdown syntax help: [commonmark.org/help](https://commonmark.org/help/)\n\n## $text\n\n',
+            mode: 'markdown',
+          },
+          {
+            id: 3,
+            type: 'text2',
+            title: 'React Text Panel from scratch',
+            options: {
+              mode: 'markdown',
+              content:
+                '# React Text Panel from scratch\n# $constant\n\nFor markdown syntax help: [commonmark.org/help](https://commonmark.org/help/)\n\n## $text',
+            },
+          },
+          {
+            id: 4,
+            type: 'text2',
+            title: 'React Text Panel from Angular Panel',
+            options: {
+              mode: 'markdown',
+              content:
+                '# React Text Panel from Angular Panel\n# $constant\n\nFor markdown syntax help: [commonmark.org/help](https://commonmark.org/help/)\n\n## $text',
+              angular: {
+                content:
+                  '# React Text Panel from Angular Panel\n# $constant\n\nFor markdown syntax help: [commonmark.org/help](https://commonmark.org/help/)\n\n## $text\n',
+                mode: 'markdown',
+                options: {},
+              },
+            },
+          },
+        ],
+      });
+    });
+
+    it('should have 3 panels after migration', () => {
+      expect(model.panels.length).toBe(3);
+    });
+
+    it('should not migrate panel with old Text Panel id', () => {
+      const oldAngularPanel: any = model.panels[0];
+      expect(oldAngularPanel.id).toEqual(2);
+      expect(oldAngularPanel.type).toEqual('text');
+      expect(oldAngularPanel.title).toEqual('Angular Text Panel');
+      expect(oldAngularPanel.content).toEqual(
+        '# Angular Text Panel\n# $constant\n\nFor markdown syntax help: [commonmark.org/help](https://commonmark.org/help/)\n\n## $text\n\n'
+      );
+      expect(oldAngularPanel.mode).toEqual('markdown');
+    });
+
+    it('should migrate panels with new Text Panel id', () => {
+      const reactPanel: any = model.panels[1];
+      expect(reactPanel.id).toEqual(3);
+      expect(reactPanel.type).toEqual('text');
+      expect(reactPanel.title).toEqual('React Text Panel from scratch');
+      expect(reactPanel.options.content).toEqual(
+        '# React Text Panel from scratch\n# $constant\n\nFor markdown syntax help: [commonmark.org/help](https://commonmark.org/help/)\n\n## $text'
+      );
+      expect(reactPanel.options.mode).toEqual('markdown');
+    });
+
+    it('should clean up old angular options for panels with new Text Panel id', () => {
+      const reactPanel: any = model.panels[2];
+      expect(reactPanel.id).toEqual(4);
+      expect(reactPanel.type).toEqual('text');
+      expect(reactPanel.title).toEqual('React Text Panel from Angular Panel');
+      expect(reactPanel.options.content).toEqual(
+        '# React Text Panel from Angular Panel\n# $constant\n\nFor markdown syntax help: [commonmark.org/help](https://commonmark.org/help/)\n\n## $text'
+      );
+      expect(reactPanel.options.mode).toEqual('markdown');
+      expect(reactPanel.options.angular).toBeUndefined();
+    });
+  });
 });
 
-function createRow(options, panelDescriptions: any[]) {
+function createRow(options: any, panelDescriptions: any[]) {
   const PANEL_HEIGHT_STEP = GRID_CELL_HEIGHT + GRID_CELL_VMARGIN;
   const { collapse, showTitle, title, repeat, repeatIteration } = options;
   let { height } = options;
   height = height * PANEL_HEIGHT_STEP;
-  const panels = [];
+  const panels: any[] = [];
   _.each(panelDescriptions, panelDesc => {
     const panel = { span: panelDesc[0] };
     if (panelDesc.length > 1) {
+      //@ts-ignore
       panel['height'] = panelDesc[1] * PANEL_HEIGHT_STEP;
     }
     panels.push(panel);

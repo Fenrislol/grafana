@@ -1,15 +1,15 @@
 import React from 'react';
 import PageHeader from './PageHeader';
-import { shallow } from 'enzyme';
+import { shallow, ShallowWrapper } from 'enzyme';
 
 describe('PageHeader', () => {
-  let wrapper;
+  let wrapper: ShallowWrapper<PageHeader>;
 
   describe('when the nav tree has a node with a title', () => {
     beforeAll(() => {
       const nav = {
         main: {
-          icon: 'fa fa-folder-open',
+          icon: 'folder-open',
           id: 'node',
           subTitle: 'node subtitle',
           url: '',
@@ -30,7 +30,7 @@ describe('PageHeader', () => {
     beforeAll(() => {
       const nav = {
         main: {
-          icon: 'fa fa-folder-open',
+          icon: 'folder-open',
           id: 'child',
           subTitle: 'child subtitle',
           url: '',

@@ -1,11 +1,11 @@
 +++
-title = "What's New in Grafana v2.0"
-description = "Feature & improvement highlights for Grafana v2.0"
-keywords = ["grafana", "new", "documentation", "2.0"]
+title = "What's new in Grafana v2.0"
+description = "Feature and improvement highlights for Grafana v2.0"
+keywords = ["grafana", "new", "documentation", "2.0", "release notes"]
 type = "docs"
 +++
 
-# What's New in Grafana v2.0
+# What's new in Grafana v2.0
 
 Grafana 2.0 represents months of work by the Grafana team and the community. We are pleased to be able to
 release the Grafana 2.0 beta. This is a guide that describes some of changes and new features that can
@@ -19,7 +19,7 @@ Grafana now ships with its own required backend server. Also completely open-sou
 
 In addition to new features, the backend server makes it much easier to set up and enjoy Grafana. Grafana 2.0 now ships as cross platform binaries with no dependencies. Authentication is built in, and Grafana is now capable of proxying connections to Data Sources.  There are no longer any CORS (Cross Origin Resource Sharing) issues requiring messy workarounds. Elasticsearch is no longer required just to store dashboards.
 
-## User & Organization permissions
+## User and Organization permissions
 
 All Dashboards and Data Sources are linked to an Organization (not to a User). Users are linked to
 Organizations via a role. That role can be:
@@ -28,7 +28,7 @@ Organizations via a role. That role can be:
 - `Editor`: Can view, update and create dashboards.
 - `Admin`: Everything an Editor can plus edit and add data sources and organization users.
 
-> **Note** A `Viewer` can still view all metrics exposed through a data source, not only
+> **Note:** A `Viewer` can still view all metrics exposed through a data source, not only
 > the metrics used in already existing dashboards. That is because there are not
 > per series permissions in Graphite, InfluxDB or OpenTSDB.
 
@@ -48,7 +48,7 @@ screen for that specific time period in your Dashboard is saved in the JSON of t
 Sharing a Snapshot is similar to sharing a link to a screenshot of your dashboard, only way better (they'll look great at any screen resolution, you can hover over series,
 even zoom in). Also they are fast to load as they aren't actually connected to any live Data Sources in any way.
 
-They're a great way to communicate about a particular incident with specific people who aren't Users of your Grafana instance. You can also use them to show off your dashboards over the Internet.
+They're a great way to communicate about a particular incident with specific people who aren't users of your Grafana instance. You can also use them to show off your dashboards over the Internet.
 
 ![](/img/docs/v2/dashboard_snapshot_dialog.png)
 
@@ -58,7 +58,7 @@ You can publish snapshots locally or to [snapshot.raintank.io](http://snapshot.r
 
 Either way, anyone with the link (and access to your Grafana instance for local snapshots) can view it.
 
-## Panel time overrides & timeshift
+## Panel time overrides and timeshift
 
 In Grafana v2.x you can now override the relative time range for individual panels, causing them to be different than what is selected in the Dashboard time picker in the upper right. You can also add a time shift to individual panels. This allows you to show metrics from different time periods or days at the same time.
 
@@ -70,7 +70,7 @@ You control these overrides in panel editor mode and the new tab `Time Range`.
 
 When you zoom or change the Dashboard time to a custom absolute time range, all panel overrides will be disabled. The panel relative time override is only active when the dashboard time is also relative. The panel timeshift override however is always active, even when the dashboard time is absolute.
 
-The `Hide time override info` option allows you to hide the the override info text that is by default shown in the
+The `Hide time override info` option allows you to hide the override info text that is by default shown in the
 upper right of a panel when overridden time range options.
 
 Currently you can only override the dashboard time with relative time ranges, not absolute time ranges.
@@ -94,13 +94,13 @@ The top header has gotten a major streamlining in Grafana V2.0.
 <img class="no-shadow" src="/img/docs/v2/v2_top_nav_annotated.png">
 
 1. `Side menubar toggle` Toggle the side menubar on or off. This allows you to focus on the data presented on the Dashboard. The side menubar provides access to features unrelated to a Dashboard such as Users, Organizations, and Data Sources.
-2. `Dashboard dropdown` The main dropdown shows you which Dashboard you are currently viewing, and allows you to easily switch to a new Dashboard. From here you can also create a new Dashboard, Import existing Dashboards, and manage the Playlist.
-3. `Star Dashboard`: Star (or un-star) the current Dashboard. Starred Dashboards will show up on your own Home Dashboard by default, and are a convenient way to mark Dashboards that you're interested in.
-4. `Share Dashboard`: Share the current dashboard by creating a link or create a static Snapshot of it. Make sure the Dashboard is saved before sharing.
-5. `Save dashboard`: Save the current Dashboard with the current name.
-6. `Settings`: Manage Dashboard settings and features such as Templating, Annotations and the name.
+1. `Dashboard dropdown` The main dropdown shows you which Dashboard you are currently viewing, and allows you to easily switch to a new Dashboard. From here you can also create a new Dashboard, Import existing Dashboards, and manage the Playlist.
+1. `Star Dashboard`: Star (or un-star) the current Dashboard. Starred Dashboards will show up on your own Home Dashboard by default, and are a convenient way to mark Dashboards that you're interested in.
+1. `Share Dashboard`: Share the current dashboard by creating a link or create a static Snapshot of it. Make sure the Dashboard is saved before sharing.
+1. `Save dashboard`: Save the current Dashboard with the current name.
+1. `Settings`: Manage Dashboard settings and features such as Templating, Annotations and the name.
 
-> **Note** In Grafana v2.0 when you change the title of a dashboard and then save it it will no
+> **Note:** In Grafana v2.0 when you change the title of a dashboard and then save it, it will no
 > longer create a new Dashboard. It will just change the name for the current Dashboard.
 > To change name and create a new Dashboard use the `Save As...` menu option
 
@@ -114,7 +114,7 @@ The side menubar will become more useful as we build out additional functionalit
 
 You can easily collapse or re-open the side menubar at any time by clicking the Grafana icon in the top left. We never want to get in the way of the data.
 
-## New search view & starring dashboards
+## New search view and starring dashboards
 
 ![](/img/docs/v2/dashboard_search.jpg)
 
@@ -135,7 +135,7 @@ The dashlist is a new panel in Grafana v2.0. It allows you to show your personal
 
 dashlist is used on the new Grafana Home screen. It is included as a reference Panel and is useful to provide basic linking between Dashboards.
 
-## Data Source proxy & admin views
+## Data Source proxy and admin views
 
 Data sources in Grafana v2.0 are no longer defined in a config file. Instead, they are added through the UI or the HTTP API.
 
@@ -145,7 +145,7 @@ In addition, connections to Data Sources can be better controlled and secured, a
 
 ## Dashboard "now delay"
 
-A commonly reported problem has been graphs dipping to zero at the the end, because metric data for the last interval has yet to be written to the Data Source. These graphs then "self correct" once the data comes in, but can look deceiving or alarming at times.
+A commonly reported problem has been graphs dipping to zero at the end, because metric data for the last interval has yet to be written to the Data Source. These graphs then "self correct" once the data comes in, but can look deceiving or alarming at times.
 
 You can avoid this problem by adding a `now delay` in `Dashboard Settings` > `Time Picker` tab. This new feature will cause Grafana to ignore the most recent data up to the set delay.
 ![](/img/docs/v2/timepicker_now_delay.jpg)
@@ -170,8 +170,6 @@ Here you can update your user details, UI Theme, and change your password.
 
 Grafana now supports server-side PNG rendering. From the Panel share dialog you now have access to a link that will render a particular Panel to a PNG image.
 
-> **Note** This requires that your Data Source is accessible from your Grafana instance.
+> **Note:** This requires that your Data Source is accessible from your Grafana instance.
 
 ![](/img/docs/v2/share_dialog_image_highlight.jpg)
-
-

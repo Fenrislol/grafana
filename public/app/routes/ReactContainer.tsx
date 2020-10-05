@@ -8,17 +8,38 @@ import coreModule from 'app/core/core_module';
 import { store } from 'app/store/store';
 import { ContextSrv } from 'app/core/services/context_srv';
 import { provideTheme } from 'app/core/utils/ConfigProvider';
+import { ErrorBoundaryAlert, ModalRoot, ModalsProvider } from '@grafana/ui';
+import { GrafanaRootScope } from './GrafanaCtrl';
 
-function WrapInProvider(store: any, Component: any, props: any) {
+export function WrapInProvider(store: any, Component: any, props: any) {
   return (
     <Provider store={store}>
-      <Component {...props} />
+      <ErrorBoundaryAlert style="page">
+        <Component {...props} />
+      </ErrorBoundaryAlert>
     </Provider>
   );
 }
 
+export const provideModalsContext = (component: any) => {
+  return (props: any) => (
+    <ModalsProvider>
+      <>
+        {React.createElement(component, { ...props })}
+        <ModalRoot />
+      </>
+    </ModalsProvider>
+  );
+};
+
 /** @ngInject */
-export function reactContainer($route: any, $location: any, $injector: any, $rootScope: any, contextSrv: ContextSrv) {
+export function reactContainer(
+  $route: any,
+  $location: any,
+  $injector: any,
+  $rootScope: GrafanaRootScope,
+  contextSrv: ContextSrv
+) {
   return {
     restrict: 'E',
     template: '',
@@ -41,12 +62,13 @@ export function reactContainer($route: any, $location: any, $injector: any, $roo
         $injector: $injector,
         $rootScope: $rootScope,
         $scope: scope,
-        routeInfo: $route.current.$$route.routeInfo,
+        $contextSrv: contextSrv,
+        routeInfo: $route.current.$$route?.routeInfo,
       };
 
       document.body.classList.add('is-react');
 
-      ReactDOM.render(WrapInProvider(store, provideTheme(component), props), elem[0]);
+      ReactDOM.render(WrapInProvider(store, provideTheme(provideModalsContext(component)), props), elem[0]);
 
       scope.$on('$destroy', () => {
         document.body.classList.remove('is-react');

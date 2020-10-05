@@ -1,10 +1,11 @@
 import angular from 'angular';
 import coreModule from 'app/core/core_module';
 import _ from 'lodash';
+import { TemplateSrv } from '@grafana/runtime';
 
 export class CloudWatchQueryParameterCtrl {
   /** @ngInject */
-  constructor($scope, templateSrv, uiSegmentSrv, datasourceSrv, $q) {
+  constructor($scope: any, templateSrv: TemplateSrv, uiSegmentSrv: any) {
     $scope.init = () => {
       const target = $scope.target;
       target.namespace = target.namespace || '';
@@ -15,8 +16,6 @@ export class CloudWatchQueryParameterCtrl {
       target.region = target.region || 'default';
       target.id = target.id || '';
       target.expression = target.expression || '';
-      target.returnData = target.returnData || false;
-      target.highResolution = target.highResolution || false;
 
       $scope.regionSegment = uiSegmentSrv.getSegmentForValue($scope.target.region, 'select region');
       $scope.namespaceSegment = uiSegmentSrv.getSegmentForValue($scope.target.namespace, 'select namespace');
@@ -30,7 +29,7 @@ export class CloudWatchQueryParameterCtrl {
           memo.push(uiSegmentSrv.newKeyValue(value));
           return memo;
         },
-        []
+        [] as any
       );
 
       $scope.statSegments = _.map($scope.target.statistics, stat => {
@@ -58,7 +57,7 @@ export class CloudWatchQueryParameterCtrl {
     };
 
     $scope.getStatSegments = () => {
-      return $q.when(
+      return Promise.resolve(
         _.flatten([
           angular.copy($scope.removeStatSegment),
           _.map($scope.datasource.standardStatistics, s => {
@@ -69,7 +68,7 @@ export class CloudWatchQueryParameterCtrl {
       );
     };
 
-    $scope.statSegmentChanged = (segment, index) => {
+    $scope.statSegmentChanged = (segment: any, index: number) => {
       if (segment.value === $scope.removeStatSegment.value) {
         $scope.statSegments.splice(index, 1);
       } else {
@@ -84,14 +83,14 @@ export class CloudWatchQueryParameterCtrl {
           }
           return memo;
         },
-        []
+        [] as any
       );
 
       $scope.ensurePlusButton($scope.statSegments);
       $scope.onChange();
     };
 
-    $scope.ensurePlusButton = segments => {
+    $scope.ensurePlusButton = (segments: any) => {
       const count = segments.length;
       const lastSegment = segments[Math.max(count - 1, 0)];
 
@@ -100,13 +99,13 @@ export class CloudWatchQueryParameterCtrl {
       }
     };
 
-    $scope.getDimSegments = (segment, $index) => {
+    $scope.getDimSegments = (segment: any, $index: number) => {
       if (segment.type === 'operator') {
-        return $q.when([]);
+        return Promise.resolve([]);
       }
 
       const target = $scope.target;
-      let query = $q.when([]);
+      let query = Promise.resolve([] as any[]);
 
       if (segment.type === 'key' || segment.type === 'plus-button') {
         query = $scope.datasource.getDimensionKeys($scope.target.namespace, $scope.target.region);
@@ -130,7 +129,7 @@ export class CloudWatchQueryParameterCtrl {
       });
     };
 
-    $scope.dimSegmentChanged = (segment, index) => {
+    $scope.dimSegmentChanged = (segment: any, index: number) => {
       $scope.dimSegments[index] = segment;
 
       if (segment.value === $scope.removeDimSegment.value) {
@@ -148,7 +147,7 @@ export class CloudWatchQueryParameterCtrl {
     };
 
     $scope.syncDimSegmentsWithModel = () => {
-      const dims = {};
+      const dims: any = {};
       const length = $scope.dimSegments.length;
 
       for (let i = 0; i < length - 2; i += 3) {
@@ -165,7 +164,7 @@ export class CloudWatchQueryParameterCtrl {
     $scope.getRegions = () => {
       return $scope.datasource
         .metricFindQuery('regions()')
-        .then(results => {
+        .then((results: any) => {
           results.unshift({ text: 'default' });
           return results;
         })
@@ -197,8 +196,8 @@ export class CloudWatchQueryParameterCtrl {
       $scope.onChange();
     };
 
-    $scope.transformToSegments = addTemplateVars => {
-      return results => {
+    $scope.transformToSegments = (addTemplateVars: any) => {
+      return (results: any) => {
         const segments = _.map(results, segment => {
           return uiSegmentSrv.newSegment({
             value: segment.text,
@@ -207,7 +206,7 @@ export class CloudWatchQueryParameterCtrl {
         });
 
         if (addTemplateVars) {
-          _.each(templateSrv.variables, variable => {
+          _.each(templateSrv.getVariables(), variable => {
             segments.unshift(
               uiSegmentSrv.newSegment({
                 type: 'template',

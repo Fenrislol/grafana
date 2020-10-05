@@ -3,8 +3,8 @@ package migrator
 import (
 	"fmt"
 
-	"github.com/go-xorm/xorm"
-	sqlite3 "github.com/mattn/go-sqlite3"
+	"github.com/mattn/go-sqlite3"
+	"xorm.io/xorm"
 )
 
 type Sqlite3 struct {
@@ -76,7 +76,7 @@ func (db *Sqlite3) IndexCheckSql(tableName, indexName string) (string, []interfa
 
 func (db *Sqlite3) DropIndexSql(tableName string, index *Index) string {
 	quote := db.Quote
-	//var unique string
+	// var unique string
 	idxName := index.XName(tableName)
 	return fmt.Sprintf("DROP INDEX %v", quote(idxName))
 }
@@ -85,12 +85,27 @@ func (db *Sqlite3) CleanDB() error {
 	return nil
 }
 
-func (db *Sqlite3) IsUniqueConstraintViolation(err error) bool {
+func (db *Sqlite3) isThisError(err error, errcode int) bool {
 	if driverErr, ok := err.(sqlite3.Error); ok {
-		if driverErr.ExtendedCode == sqlite3.ErrConstraintUnique {
+		if int(driverErr.ExtendedCode) == errcode {
 			return true
 		}
 	}
 
 	return false
+}
+
+func (db *Sqlite3) ErrorMessage(err error) string {
+	if driverErr, ok := err.(sqlite3.Error); ok {
+		return driverErr.Error()
+	}
+	return ""
+}
+
+func (db *Sqlite3) IsUniqueConstraintViolation(err error) bool {
+	return db.isThisError(err, int(sqlite3.ErrConstraintUnique))
+}
+
+func (db *Sqlite3) IsDeadlock(err error) bool {
+	return false // No deadlock
 }

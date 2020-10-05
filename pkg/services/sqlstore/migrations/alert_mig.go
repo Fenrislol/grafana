@@ -5,7 +5,6 @@ import (
 )
 
 func addAlertMigrations(mg *Migrator) {
-
 	alertV1 := Table{
 		Name: "alert",
 		Columns: []*Column{
@@ -44,6 +43,20 @@ func addAlertMigrations(mg *Migrator) {
 	mg.AddMigration("add index alert org_id & id ", NewAddIndexMigration(alertV1, alertV1.Indices[0]))
 	mg.AddMigration("add index alert state", NewAddIndexMigration(alertV1, alertV1.Indices[1]))
 	mg.AddMigration("add index alert dashboard_id", NewAddIndexMigration(alertV1, alertV1.Indices[2]))
+
+	alertRuleTagTable := Table{
+		Name: "alert_rule_tag",
+		Columns: []*Column{
+			{Name: "alert_id", Type: DB_BigInt, Nullable: false},
+			{Name: "tag_id", Type: DB_BigInt, Nullable: false},
+		},
+		Indices: []*Index{
+			{Cols: []string{"alert_id", "tag_id"}, Type: UniqueIndex},
+		},
+	}
+
+	mg.AddMigration("Create alert_rule_tag table v1", NewAddTableMigration(alertRuleTagTable))
+	mg.AddMigration("Add unique index alert_rule_tag.alert_id_tag_id", NewAddIndexMigration(alertRuleTagTable, alertRuleTagTable.Indices[0]))
 
 	alert_notification := Table{
 		Name: "alert_notification",
@@ -154,4 +167,12 @@ func addAlertMigrations(mg *Migrator) {
 	mg.AddMigration("Remove unique index org_id_name", NewDropIndexMigration(alert_notification, &Index{
 		Cols: []string{"org_id", "name"}, Type: UniqueIndex,
 	}))
+
+	mg.AddMigration("Add column secure_settings in alert_notification", NewAddColumnMigration(alert_notification, &Column{
+		Name: "secure_settings", Type: DB_Text, Nullable: true,
+	}))
+
+	// change column type of alert.settings
+	mg.AddMigration("alter alert.settings to mediumtext", NewRawSqlMigration("").
+		Mysql("ALTER TABLE alert MODIFY settings MEDIUMTEXT;"))
 }

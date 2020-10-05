@@ -428,6 +428,14 @@
             {
               "text": "Bitcoin (฿)",
               "value": "currencyBTC"
+            },
+            {
+              "text": "Milli Bitcoin (mBTC)",
+              "value": "currencymBTC"
+            },
+            {
+              "text": "Micro Bitcoin (μBTC)",
+              "value": "currencyμBTC"
             }
           ],
           "text": "currency"
@@ -876,8 +884,8 @@
               "value": "celsius"
             },
             {
-              "text": "Farenheit (°F)",
-              "value": "farenheit"
+              "text": "Fahrenheit (°F)",
+              "value": "fahrenheit"
             },
             {
               "text": "Kelvin (K)",
@@ -1975,8 +1983,8 @@
               "value": "celsius"
             },
             {
-              "text": "Farenheit (°F)",
-              "value": "farenheit"
+              "text": "Fahrenheit (°F)",
+              "value": "fahrenheit"
             },
             {
               "text": "Kelvin (K)",
@@ -3054,8 +3062,8 @@
               "value": "celsius"
             },
             {
-              "text": "Farenheit (°F)",
-              "value": "farenheit"
+              "text": "Fahrenheit (°F)",
+              "value": "fahrenheit"
             },
             {
               "text": "Kelvin (K)",

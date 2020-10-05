@@ -4,10 +4,11 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/go-xorm/xorm"
-	"github.com/maksimmernikov/grafana/pkg/log"
+	"github.com/grafana/grafana/pkg/infra/log"
+	"github.com/grafana/grafana/pkg/util/errutil"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
+	"xorm.io/xorm"
 )
 
 type Migrator struct {
@@ -50,9 +51,8 @@ func (mg *Migrator) GetMigrationLog() (map[string]MigrationLog, error) {
 
 	exists, err := mg.x.IsTableExist(new(MigrationLog))
 	if err != nil {
-		return nil, err
+		return nil, errutil.Wrap("failed to check table existence", err)
 	}
-
 	if !exists {
 		return logMap, nil
 	}
@@ -72,7 +72,7 @@ func (mg *Migrator) GetMigrationLog() (map[string]MigrationLog, error) {
 }
 
 func (mg *Migrator) Start() error {
-	mg.Logger.Info("Starting DB migration")
+	mg.Logger.Info("Starting DB migrations")
 
 	logMap, err := mg.GetMigrationLog()
 	if err != nil {
@@ -80,6 +80,7 @@ func (mg *Migrator) Start() error {
 	}
 
 	for _, m := range mg.migrations {
+		m := m
 		_, exists := logMap[m.Id()]
 		if exists {
 			mg.Logger.Debug("Skipping migration: Already executed", "id", m.Id())
@@ -99,16 +100,17 @@ func (mg *Migrator) Start() error {
 			if err != nil {
 				mg.Logger.Error("Exec failed", "error", err, "sql", sql)
 				record.Error = err.Error()
-				sess.Insert(&record)
+				if _, err := sess.Insert(&record); err != nil {
+					return err
+				}
 				return err
 			}
 			record.Success = true
-			sess.Insert(&record)
-			return nil
-		})
-
-		if err != nil {
+			_, err = sess.Insert(&record)
 			return err
+		})
+		if err != nil {
+			return errutil.Wrap("migration failed", err)
 		}
 	}
 
@@ -158,21 +160,22 @@ func (mg *Migrator) exec(m Migration, sess *xorm.Session) error {
 type dbTransactionFunc func(sess *xorm.Session) error
 
 func (mg *Migrator) inTransaction(callback dbTransactionFunc) error {
-	var err error
-
 	sess := mg.x.NewSession()
 	defer sess.Close()
 
-	if err = sess.Begin(); err != nil {
+	if err := sess.Begin(); err != nil {
 		return err
 	}
 
-	err = callback(sess)
+	if err := callback(sess); err != nil {
+		if rollErr := sess.Rollback(); err != rollErr {
+			return errutil.Wrapf(err, "Failed to roll back transaction due to error: %s", rollErr)
+		}
 
-	if err != nil {
-		sess.Rollback()
 		return err
-	} else if err = sess.Commit(); err != nil {
+	}
+
+	if err := sess.Commit(); err != nil {
 		return err
 	}
 

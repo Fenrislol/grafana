@@ -1,25 +1,34 @@
 import _ from 'lodash';
 import $ from 'jquery';
-import moment from 'moment';
 import * as d3 from 'd3';
 import { appEvents, contextSrv } from 'app/core/core';
 import * as ticksUtils from 'app/core/utils/ticks';
 import { HeatmapTooltip } from './heatmap_tooltip';
 import { mergeZeroBuckets } from './heatmap_data_converter';
 import { getColorScale, getOpacityScale } from './color_scale';
-import { GrafanaThemeType, getColorFromHexRgbOrName, getValueFormat } from '@grafana/ui';
+import {
+  toUtc,
+  PanelEvents,
+  GrafanaThemeType,
+  getColorFromHexRgbOrName,
+  getValueFormat,
+  formattedValueToString,
+  dateTimeFormat,
+} from '@grafana/data';
+import { graphTimeFormat } from '@grafana/ui';
+import { CoreEvents } from 'app/types';
 
 const MIN_CARD_SIZE = 1,
   CARD_PADDING = 1,
   CARD_ROUND = 0,
   DATA_RANGE_WIDING_FACTOR = 1.2,
   DEFAULT_X_TICK_SIZE_PX = 100,
-  DEFAULT_Y_TICK_SIZE_PX = 50,
+  DEFAULT_Y_TICK_SIZE_PX = 22.5,
   X_AXIS_TICK_PADDING = 10,
   Y_AXIS_TICK_PADDING = 5,
   MIN_SELECTION_WIDTH = 2;
 
-export default function rendering(scope, elem, attrs, ctrl) {
+export default function rendering(scope: any, elem: any, attrs: any, ctrl: any) {
   return new HeatmapRenderer(scope, elem, attrs, ctrl);
 }
 export class HeatmapRenderer {
@@ -51,7 +60,7 @@ export class HeatmapRenderer {
   padding: any;
   margin: any;
   dataRangeWidingFactor: number;
-  constructor(private scope, private elem, attrs, private ctrl) {
+  constructor(private scope: any, private elem: any, attrs: any, private ctrl: any) {
     // $heatmap is JQuery object, but heatmap is D3
     this.$heatmap = this.elem.find('.heatmap-panel');
     this.tooltip = new HeatmapTooltip(this.$heatmap, this.scope);
@@ -66,7 +75,7 @@ export class HeatmapRenderer {
     this.margin = { left: 25, right: 15, top: 10, bottom: 20 };
     this.dataRangeWidingFactor = DATA_RANGE_WIDING_FACTOR;
 
-    this.ctrl.events.on('render', this.onRender.bind(this));
+    this.ctrl.events.on(PanelEvents.render, this.onRender.bind(this));
 
     this.ctrl.tickValueFormatter = this.tickValueFormatter.bind(this);
 
@@ -75,9 +84,9 @@ export class HeatmapRenderer {
     /////////////////////////////
 
     // Shared crosshair and tooltip
-    appEvents.on('graph-hover', this.onGraphHover.bind(this), this.scope);
+    appEvents.on(CoreEvents.graphHover, this.onGraphHover.bind(this), this.scope);
 
-    appEvents.on('graph-hover-clear', this.onGraphHoverClear.bind(this), this.scope);
+    appEvents.on(CoreEvents.graphHoverClear, this.onGraphHoverClear.bind(this), this.scope);
 
     // Register selection listeners
     this.$heatmap.on('mousedown', this.onMouseDown.bind(this));
@@ -89,7 +98,7 @@ export class HeatmapRenderer {
     this.clearCrosshair();
   }
 
-  onGraphHover(event) {
+  onGraphHover(event: { pos: any }) {
     this.drawSharedCrosshair(event.pos);
   }
 
@@ -116,7 +125,7 @@ export class HeatmapRenderer {
     }
   }
 
-  getYAxisWidth(elem) {
+  getYAxisWidth(elem: any) {
     const axisText = elem.selectAll('.axis-y text').nodes();
     const maxTextWidth = _.max(
       _.map(axisText, text => {
@@ -128,7 +137,7 @@ export class HeatmapRenderer {
     return maxTextWidth;
   }
 
-  getXAxisHeight(elem) {
+  getXAxisHeight(elem: any) {
     const axisLine = elem.select('.axis-x line');
     if (!axisLine.empty()) {
       const axisLinePosition = parseFloat(elem.select('.axis-x line').attr('y2'));
@@ -147,19 +156,18 @@ export class HeatmapRenderer {
       .range([0, this.chartWidth]);
 
     const ticks = this.chartWidth / DEFAULT_X_TICK_SIZE_PX;
-    const grafanaTimeFormatter = ticksUtils.grafanaTimeFormat(ticks, this.timeRange.from, this.timeRange.to);
-    let timeFormat;
-    const dashboardTimeZone = this.ctrl.dashboard.getTimezone();
-    if (dashboardTimeZone === 'utc') {
-      timeFormat = d3.utcFormat(grafanaTimeFormatter);
-    } else {
-      timeFormat = d3.timeFormat(grafanaTimeFormatter);
-    }
+    const format = graphTimeFormat(ticks, this.timeRange.from.valueOf(), this.timeRange.to.valueOf());
+    const timeZone = this.ctrl.dashboard.getTimezone();
+    const formatter = (date: Date) =>
+      dateTimeFormat(date.valueOf(), {
+        format: format,
+        timeZone: timeZone,
+      });
 
     const xAxis = d3
       .axisBottom(this.xScale)
       .ticks(ticks)
-      .tickFormat(timeFormat)
+      .tickFormat(formatter)
       .tickPadding(X_AXIS_TICK_PADDING)
       .tickSize(this.chartHeight);
 
@@ -244,7 +252,7 @@ export class HeatmapRenderer {
   }
 
   // Wide Y values range and anjust to bucket size
-  wideYAxisRange(min, max, tickInterval) {
+  wideYAxisRange(min: number, max: number, tickInterval: number) {
     const yWiding = (max * (this.dataRangeWidingFactor - 1) - min * (this.dataRangeWidingFactor - 1)) / 2;
     let yMin, yMax;
 
@@ -337,6 +345,7 @@ export class HeatmapRenderer {
 
   addYAxisFromBuckets() {
     const tsBuckets = this.data.tsBuckets;
+    let ticks = Math.ceil(this.chartHeight / DEFAULT_Y_TICK_SIZE_PX);
 
     this.scope.yScale = this.yScale = d3
       .scaleLinear()
@@ -349,7 +358,7 @@ export class HeatmapRenderer {
     this.ctrl.decimals = decimals;
 
     const tickValueFormatter = this.tickValueFormatter.bind(this);
-    function tickFormatter(valIndex) {
+    function tickFormatter(valIndex: string) {
       let valueFormatted = tsBuckets[valIndex];
       if (!_.isNaN(_.toNumber(valueFormatted)) && valueFormatted !== '') {
         // Try to format numeric tick labels
@@ -363,11 +372,15 @@ export class HeatmapRenderer {
 
     const yAxis = d3
       .axisLeft(this.yScale)
-      .tickValues(tickValues)
       .tickFormat(tickFormatter)
       .tickSizeInner(0 - this.width)
       .tickSizeOuter(0)
       .tickPadding(Y_AXIS_TICK_PADDING);
+    if (tickValues && tickValues.length <= ticks) {
+      yAxis.tickValues(tickValues);
+    } else {
+      yAxis.ticks(ticks);
+    }
 
     this.heatmap
       .append('g')
@@ -393,7 +406,7 @@ export class HeatmapRenderer {
   }
 
   // Adjust data range to log base
-  adjustLogRange(min, max, logBase) {
+  adjustLogRange(min: number, max: number, logBase: number) {
     let yMin = this.data.heatmapStats.minLog;
     if (this.data.heatmapStats.minLog > 1 || !this.data.heatmapStats.minLog) {
       yMin = 1;
@@ -407,15 +420,15 @@ export class HeatmapRenderer {
     return { yMin, yMax };
   }
 
-  adjustLogMax(max, base) {
+  adjustLogMax(max: number, base: number) {
     return Math.pow(base, Math.ceil(ticksUtils.logp(max, base)));
   }
 
-  adjustLogMin(min, base) {
+  adjustLogMin(min: number, base: number) {
     return Math.pow(base, Math.floor(ticksUtils.logp(min, base)));
   }
 
-  logScaleTickValues(domain, base) {
+  logScaleTickValues(domain: any[], base: number) {
     const domainMin = domain[0];
     const domainMax = domain[1];
     const tickValues = [];
@@ -437,15 +450,18 @@ export class HeatmapRenderer {
     return tickValues;
   }
 
-  tickValueFormatter(decimals, scaledDecimals = null) {
+  tickValueFormatter(decimals: number, scaledDecimals: any = null) {
     const format = this.panel.yAxis.format;
-    return value => {
+    return (value: any) => {
       try {
-        return format !== 'none' ? getValueFormat(format)(value, decimals, scaledDecimals) : value;
+        if (format !== 'none') {
+          const v = getValueFormat(format)(value, decimals, scaledDecimals);
+          return formattedValueToString(v);
+        }
       } catch (err) {
         console.error(err.message || err);
-        return value;
       }
+      return value;
     };
   }
 
@@ -520,7 +536,7 @@ export class HeatmapRenderer {
       const logBase = this.panel.yAxis.logBase;
       const domain = this.yScale.domain();
       const tickValues = this.logScaleTickValues(domain, logBase);
-      this.data.buckets = mergeZeroBuckets(this.data.buckets, _.min(tickValues));
+      this.data.buckets = mergeZeroBuckets(this.data.buckets, _.min(tickValues)!);
     }
 
     const cardsData = this.data.cards;
@@ -555,20 +571,20 @@ export class HeatmapRenderer {
 
     const $cards = this.$heatmap.find('.heatmap-card');
     $cards
-      .on('mouseenter', event => {
+      .on('mouseenter', (event: any) => {
         this.tooltip.mouseOverBucket = true;
         this.highlightCard(event);
       })
-      .on('mouseleave', event => {
+      .on('mouseleave', (event: any) => {
         this.tooltip.mouseOverBucket = false;
         this.resetCardHighLight(event);
       });
   }
 
-  highlightCard(event) {
+  highlightCard(event: any) {
     const color = d3.select(event.target).style('fill');
-    const highlightColor = d3.color(color).darker(2);
-    const strokeColor = d3.color(color).brighter(4);
+    const highlightColor = d3.color(color)!.darker(2);
+    const strokeColor = d3.color(color)!.brighter(4);
     const currentCard = d3.select(event.target);
     this.tooltip.originalFillColor = color;
     currentCard
@@ -577,7 +593,7 @@ export class HeatmapRenderer {
       .style('stroke-width', 1);
   }
 
-  resetCardHighLight(event) {
+  resetCardHighLight(event: any) {
     d3.select(event.target)
       .style('fill', this.tooltip.originalFillColor)
       .style('stroke', this.tooltip.originalFillColor)
@@ -599,7 +615,7 @@ export class HeatmapRenderer {
     this.cardHeight = yGridSize ? yGridSize - this.cardPadding * 2 : 0;
   }
 
-  getCardX(d) {
+  getCardX(d: { x: any }) {
     let x;
     if (this.xScale(d.x) < 0) {
       // Cut card left to prevent overlay
@@ -611,7 +627,7 @@ export class HeatmapRenderer {
     return x;
   }
 
-  getCardWidth(d) {
+  getCardWidth(d: { x: any }) {
     let w = this.cardWidth;
     if (this.xScale(d.x) < 0) {
       // Cut card left to prevent overlay
@@ -626,7 +642,7 @@ export class HeatmapRenderer {
     return w;
   }
 
-  getCardY(d) {
+  getCardY(d: { y: number }) {
     let y = this.yScale(d.y) + this.chartTop - this.cardHeight - this.cardPadding;
     if (this.panel.yAxis.logBase !== 1 && d.y === 0) {
       y = this.chartBottom - this.cardHeight - this.cardPadding;
@@ -639,7 +655,7 @@ export class HeatmapRenderer {
     return y;
   }
 
-  getCardHeight(d) {
+  getCardHeight(d: { y: number }) {
     const y = this.yScale(d.y) + this.chartTop - this.cardHeight - this.cardPadding;
     let h = this.cardHeight;
 
@@ -664,7 +680,7 @@ export class HeatmapRenderer {
     return h;
   }
 
-  getCardColor(d) {
+  getCardColor(d: { count: any }) {
     if (this.panel.color.mode === 'opacity') {
       return getColorFromHexRgbOrName(
         this.panel.color.cardColor,
@@ -675,7 +691,7 @@ export class HeatmapRenderer {
     }
   }
 
-  getCardOpacity(d) {
+  getCardOpacity(d: { count: any }) {
     if (this.panel.color.mode === 'opacity') {
       return this.opacityScale(d.count);
     } else {
@@ -683,14 +699,14 @@ export class HeatmapRenderer {
     }
   }
 
-  getEventOffset(event) {
+  getEventOffset(event: any) {
     const elemOffset = this.$heatmap.offset();
     const x = Math.floor(event.clientX - elemOffset.left);
     const y = Math.floor(event.clientY - elemOffset.top);
     return { x, y };
   }
 
-  onMouseDown(event) {
+  onMouseDown(event: any) {
     const offset = this.getEventOffset(event);
     this.selection.active = true;
     this.selection.x1 = offset.x;
@@ -713,8 +729,8 @@ export class HeatmapRenderer {
       const timeTo = this.xScale.invert(Math.max(this.selection.x1, this.selection.x2) - this.yAxisWidth);
 
       this.ctrl.timeSrv.setTime({
-        from: moment.utc(timeFrom),
-        to: moment.utc(timeTo),
+        from: toUtc(timeFrom),
+        to: toUtc(timeTo),
       });
     }
 
@@ -722,11 +738,11 @@ export class HeatmapRenderer {
   }
 
   onMouseLeave() {
-    appEvents.emit('graph-hover-clear');
+    appEvents.emit(CoreEvents.graphHoverClear);
     this.clearCrosshair();
   }
 
-  onMouseMove(event) {
+  onMouseMove(event: any) {
     if (!this.heatmap) {
       return;
     }
@@ -747,10 +763,10 @@ export class HeatmapRenderer {
     }
   }
 
-  getEventPos(event, offset) {
+  getEventPos(event: { pageX: any; pageY: any }, offset: { x: any; y: any }) {
     const x = this.xScale.invert(offset.x - this.yAxisWidth).valueOf();
     const y = this.yScale.invert(offset.y - this.chartTop);
-    const pos = {
+    const pos: any = {
       pageX: event.pageX,
       pageY: event.pageY,
       x: x,
@@ -764,20 +780,20 @@ export class HeatmapRenderer {
     return pos;
   }
 
-  emitGraphHoverEvent(pos) {
+  emitGraphHoverEvent(pos: { panelRelY: number; offset: { y: number } }) {
     // Set minimum offset to prevent showing legend from another panel
     pos.panelRelY = Math.max(pos.offset.y / this.height, 0.001);
     // broadcast to other graph panels that we are hovering
-    appEvents.emit('graph-hover', { pos: pos, panel: this.panel });
+    appEvents.emit(CoreEvents.graphHover, { pos: pos, panel: this.panel });
   }
 
-  limitSelection(x2) {
+  limitSelection(x2: number) {
     x2 = Math.max(x2, this.yAxisWidth);
     x2 = Math.min(x2, this.chartWidth + this.yAxisWidth);
     return x2;
   }
 
-  drawSelection(posX1, posX2) {
+  drawSelection(posX1: number, posX2: number) {
     if (this.heatmap) {
       this.heatmap.selectAll('.heatmap-selection').remove();
       const selectionX = Math.min(posX1, posX2);
@@ -804,7 +820,7 @@ export class HeatmapRenderer {
     }
   }
 
-  drawCrosshair(position) {
+  drawCrosshair(position: number) {
     if (this.heatmap) {
       this.heatmap.selectAll('.heatmap-crosshair').remove();
 
@@ -825,7 +841,7 @@ export class HeatmapRenderer {
     }
   }
 
-  drawSharedCrosshair(pos) {
+  drawSharedCrosshair(pos: { x: any }) {
     if (this.heatmap && this.ctrl.dashboard.graphTooltip !== 0) {
       const posX = this.xScale(pos.x) + this.yAxisWidth;
       this.drawCrosshair(posX);

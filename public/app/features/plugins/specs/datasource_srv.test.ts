@@ -1,11 +1,11 @@
 import config from 'app/core/config';
 import 'app/features/plugins/datasource_srv';
 import { DatasourceSrv } from 'app/features/plugins/datasource_srv';
-import { PluginMeta, DataSourcePluginMeta } from '@grafana/ui/src/types';
+import { DataSourcePluginMeta, PluginMeta } from '@grafana/data';
 
 // Datasource variable $datasource with current value 'BBB'
-const templateSrv = {
-  variables: [
+const templateSrv: any = {
+  getVariables: () => [
     {
       type: 'datasource',
       name: 'datasource',
@@ -17,13 +17,14 @@ const templateSrv = {
 };
 
 describe('datasource_srv', () => {
-  const _datasourceSrv = new DatasourceSrv({}, {}, {}, templateSrv);
+  const _datasourceSrv = new DatasourceSrv({} as any, {} as any, templateSrv);
 
   describe('when loading external datasources', () => {
     beforeEach(() => {
       config.datasources = {
         buildInDs: {
           id: 1,
+          uid: '1',
           type: 'b',
           name: 'buildIn',
           meta: { builtIn: true } as DataSourcePluginMeta,
@@ -31,6 +32,7 @@ describe('datasource_srv', () => {
         },
         nonBuildIn: {
           id: 2,
+          uid: '2',
           type: 'e',
           name: 'external1',
           meta: { builtIn: false } as DataSourcePluginMeta,
@@ -38,6 +40,7 @@ describe('datasource_srv', () => {
         },
         nonExplore: {
           id: 3,
+          uid: '3',
           type: 'e2',
           name: 'external2',
           meta: {} as PluginMeta,
@@ -55,7 +58,7 @@ describe('datasource_srv', () => {
   });
 
   describe('when loading metric sources', () => {
-    let metricSources;
+    let metricSources: any;
     const unsortedDatasources = {
       mmm: {
         type: 'test-db',

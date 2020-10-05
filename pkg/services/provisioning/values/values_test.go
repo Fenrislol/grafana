@@ -1,16 +1,27 @@
 package values
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
-	"gopkg.in/yaml.v2"
+	"errors"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/grafana/grafana/pkg/setting"
+	"gopkg.in/ini.v1"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	. "github.com/smartystreets/goconvey/convey"
+	"gopkg.in/yaml.v2"
 )
 
 func TestValues(t *testing.T) {
 	Convey("Values", t, func() {
 		os.Setenv("INT", "1")
 		os.Setenv("STRING", "test")
+		os.Setenv("EMPTYSTRING", "")
 		os.Setenv("BOOL", "true")
 
 		Convey("IntValue", func() {
@@ -61,6 +72,24 @@ func TestValues(t *testing.T) {
 				So(d.Val.Value(), ShouldEqual, "")
 				So(d.Val.Raw, ShouldEqual, "")
 			})
+
+			Convey("empty var should have empty value", func() {
+				unmarshalingTest(`val: $EMPTYSTRING`, d)
+				So(d.Val.Value(), ShouldEqual, "")
+				So(d.Val.Raw, ShouldEqual, "$EMPTYSTRING")
+			})
+
+			Convey("$$ should be a literal $", func() {
+				unmarshalingTest(`val: $$`, d)
+				So(d.Val.Value(), ShouldEqual, "$")
+				So(d.Val.Raw, ShouldEqual, "$$")
+			})
+
+			Convey("$$ should be a literal $ and not expanded within a string", func() {
+				unmarshalingTest(`val: mY,Passwo$$rd`, d)
+				So(d.Val.Value(), ShouldEqual, "mY,Passwo$rd")
+				So(d.Val.Raw, ShouldEqual, "mY,Passwo$$rd")
+			})
 		})
 
 		Convey("BoolValue", func() {
@@ -95,7 +124,6 @@ func TestValues(t *testing.T) {
 		})
 
 		Convey("JSONValue", func() {
-
 			type Data struct {
 				Val JSONValue `yaml:"val"`
 			}
@@ -111,6 +139,8 @@ func TestValues(t *testing.T) {
                      - two
                      - three:
                          inside: $STRING
+                     - six:
+                         empty:
                    four:
                      nested:
                        onemore: $INT
@@ -121,19 +151,26 @@ func TestValues(t *testing.T) {
                `
 				unmarshalingTest(doc, d)
 
-				type anyMap = map[interface{}]interface{}
-				So(d.Val.Value(), ShouldResemble, map[string]interface{}{
+				type stringMap = map[string]interface{}
+				So(d.Val.Value(), ShouldResemble, stringMap{
 					"one": 1,
 					"two": "test",
 					"three": []interface{}{
-						1, "two", anyMap{
-							"three": anyMap{
+						1,
+						"two",
+						stringMap{
+							"three": stringMap{
 								"inside": "test",
 							},
 						},
+						stringMap{
+							"six": stringMap{
+								"empty": interface{}(nil),
+							},
+						},
 					},
-					"four": anyMap{
-						"nested": anyMap{
+					"four": stringMap{
+						"nested": stringMap{
 							"onemore": "1",
 						},
 					},
@@ -142,18 +179,25 @@ func TestValues(t *testing.T) {
 					"anchored":  "1",
 				})
 
-				So(d.Val.Raw, ShouldResemble, map[string]interface{}{
+				So(d.Val.Raw, ShouldResemble, stringMap{
 					"one": 1,
 					"two": "$STRING",
 					"three": []interface{}{
-						1, "two", anyMap{
-							"three": anyMap{
+						1,
+						"two",
+						stringMap{
+							"three": stringMap{
 								"inside": "$STRING",
 							},
 						},
+						stringMap{
+							"six": stringMap{
+								"empty": interface{}(nil),
+							},
+						},
 					},
-					"four": anyMap{
-						"nested": anyMap{
+					"four": stringMap{
+						"nested": stringMap{
 							"onemore": "$INT",
 						},
 					},
@@ -192,13 +236,13 @@ func TestValues(t *testing.T) {
 					"three": "$STRING",
 					"four":  "true",
 				})
-
 			})
 		})
 
 		Reset(func() {
 			os.Unsetenv("INT")
 			os.Unsetenv("STRING")
+			os.Unsetenv("EMPTYSTRING")
 			os.Unsetenv("BOOL")
 		})
 	})
@@ -207,4 +251,54 @@ func TestValues(t *testing.T) {
 func unmarshalingTest(document string, out interface{}) {
 	err := yaml.Unmarshal([]byte(document), out)
 	So(err, ShouldBeNil)
+}
+
+func TestValues_readFile(t *testing.T) {
+	type Data struct {
+		Val StringValue `yaml:"val"`
+	}
+
+	f, err := ioutil.TempFile(os.TempDir(), "file expansion *")
+	require.NoError(t, err)
+	file := f.Name()
+
+	defer func() {
+		require.NoError(t, os.Remove(file))
+	}()
+
+	const expected = "hello, world"
+	_, err = f.WriteString(expected)
+	require.NoError(t, err)
+	require.NoError(t, f.Close())
+
+	data := &Data{}
+	err = yaml.Unmarshal([]byte(fmt.Sprintf("val: $__file{%s}", file)), data)
+	require.NoError(t, err)
+	assert.Equal(t, expected, data.Val.Value())
+}
+
+func TestValues_expanderError(t *testing.T) {
+	type Data struct {
+		Top JSONValue `yaml:"top"`
+	}
+
+	setting.AddExpander("fail", 0, failExpander{})
+
+	data := &Data{}
+	err := yaml.Unmarshal([]byte("top:\n  val: $__fail{val}"), data)
+	require.Error(t, err)
+	require.Truef(t, errors.Is(err, errExpand), "expected error to wrap: %v\ngot: %v", errExpand, err)
+	assert.Empty(t, data)
+}
+
+var errExpand = errors.New("test error: bad expander")
+
+type failExpander struct{}
+
+func (f failExpander) SetupExpander(file *ini.File) error {
+	return nil
+}
+
+func (f failExpander) Expand(s string) (string, error) {
+	return "", errExpand
 }

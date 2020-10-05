@@ -7,7 +7,7 @@ type = "docs"
 name = "GitHub"
 identifier = "github_oauth2"
 parent = "authentication"
-weight = 4
+weight = 800
 +++
 
 # GitHub OAuth2 Authentication
@@ -16,7 +16,7 @@ To enable the GitHub OAuth2 you must register your application with GitHub. GitH
 
 ## Configure GitHub OAuth application
 
-You need to create a GitHub OAuth application (you find this under the GitHub
+You need to create a GitHub OAuth application (you  will find this under the GitHub
 settings page). When you create the application you will need to specify
 a callback URL. Specify this as callback:
 
@@ -25,7 +25,7 @@ http://<my_grafana_server_name_or_ip>:<grafana_server_port>/login/github
 ```
 
 This callback URL must match the full HTTP address that you use in your
-browser to access Grafana, but with the prefix path of `/login/github`.
+browser to access Grafana, but with the suffix path of `/login/github`.
 When the GitHub OAuth application is created you will get a Client ID and a
 Client Secret. Specify these in the Grafana configuration file. For
 example:
@@ -99,3 +99,18 @@ allow_sign_up = true
 allowed_organizations = github google
 ```
 
+### Team Sync (Enterprise only)
+
+>  Only available in Grafana Enterprise v6.3+
+
+With Team Sync you can map your GitHub org teams to teams in Grafana so that your users will automatically be added to
+the correct teams. 
+
+Your GitHub teams can be referenced in two ways:
+
+- `https://github.com/orgs/<org>/teams/<slug>`
+- `@<org>/<slug>`
+
+Example: `@grafana/developers`
+
+[Learn more about Team Sync]({{< relref "team-sync.md" >}})

@@ -1,14 +1,14 @@
 {
   "type": "panel",
-  "name": "Alert List",
+  "name": "Alert list",
   "id": "alertlist",
 
-  "dataFormats": [],
+  "skipDataQuery": true,
 
   "info": {
     "description": "Shows list of alerts and their current status",
     "author": {
-      "name": "Grafana Project",
+      "name": "Grafana Labs",
       "url": "https://grafana.com"
     },
     "logos": {

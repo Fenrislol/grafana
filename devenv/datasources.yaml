@@ -4,7 +4,7 @@ datasources:
   - name: gdev-graphite
     type: graphite
     access: proxy
-    url: http://localhost:8080
+    url: http://localhost:8180
     jsonData:
       graphiteVersion: "1.1"
 
@@ -13,9 +13,14 @@ datasources:
     access: proxy
     url: http://localhost:9090
 
+  - name: gdev-slow-prometheus
+    type: prometheus
+    access: proxy
+    url: http://localhost:3011
+
   - name: gdev-testdata
-    type: testdata
     isDefault: true
+    type: testdata
 
   - name: gdev-influxdb
     type: influxdb
@@ -25,6 +30,17 @@ datasources:
     url: http://localhost:8086
     jsonData:
       timeInterval: "15s"
+    secureJsonData:
+      password: grafana
+
+  - name: gdev-influxdb-telegraf
+    type: influxdb
+    access: proxy
+    database: telegraf
+    user: grafana
+    url: http://localhost:8086
+    jsonData:
+      timeInterval: "10s"
     secureJsonData:
       password: grafana
 
@@ -136,6 +152,20 @@ datasources:
       interval: Daily
       timeField: "@timestamp"
       esVersion: 70
+      timeInterval: "10s"
+      logMessageField: message
+      logLevelField: fields.level
+
+  - name: gdev-elasticsearch-v7-metricbeat
+    type: elasticsearch
+    access: proxy
+    database: "[metricbeat-]YYYY.MM.DD"
+    url: http://localhost:12200
+    jsonData:
+      interval: Daily
+      timeField: "@timestamp"
+      esVersion: 70
+      timeInterval: "10s"
 
   - name: gdev-mysql
     type: mysql
@@ -195,11 +225,48 @@ datasources:
     jsonData:
       authType: credentials
       defaultRegion: eu-west-2
+      customMetricsNamespaces: "CWAgent"
+
+  # Keep to test old /api/prom API
+  - name: gdev-loki-0.3
+    type: loki
+    access: proxy
+    url: http://localhost:3103
+    editable: false
+
+  # First version with new v1 API (remove once v1 is out)
+  - name: gdev-loki-0.4
+    type: loki
+    access: proxy
+    url: http://localhost:3104
+    editable: false
 
   - name: gdev-loki
     type: loki
     access: proxy
     url: http://localhost:3100
     editable: false
+    jsonData:
+      derivedFields:
+        - name: "traceID"
+          matcherRegex: "traceID=(\\w+)"
+          url: "$${__value.raw}"
+          datasourceUid: gdev-jaeger
+        - name: "traceID"
+          matcherRegex: "traceID=(\\w+)"
+          url: "$${__value.raw}"
+          datasourceUid: gdev-zipkin
 
+  - name: gdev-jaeger
+    type: jaeger
+    uid: gdev-jaeger
+    access: proxy
+    url: http://localhost:16686
+    editable: false
 
+  - name: gdev-zipkin
+    type: zipkin
+    uid: gdev-zipkin
+    access: proxy
+    url: http://localhost:9411
+    editable: false

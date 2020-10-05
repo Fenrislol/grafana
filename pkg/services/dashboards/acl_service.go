@@ -1,9 +1,10 @@
 package dashboards
 
 import (
-	"github.com/maksimmernikov/grafana/pkg/bus"
-	"github.com/maksimmernikov/grafana/pkg/models"
 	"time"
+
+	"github.com/grafana/grafana/pkg/bus"
+	"github.com/grafana/grafana/pkg/models"
 )
 
 func MakeUserAdmin(bus bus.Bus, orgId int64, userId int64, dashboardId int64, setViewAndEditPermissions bool) error {

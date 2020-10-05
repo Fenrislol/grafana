@@ -6,6 +6,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
+const (
+	AuthModuleLDAP = "ldap"
+)
+
 type UserAuth struct {
 	Id                int64
 	UserId            int64
@@ -29,6 +33,7 @@ type ExternalUserInfo struct {
 	Groups         []string
 	OrgRoles       map[int64]RoleType
 	IsGrafanaAdmin *bool // This is a pointer to know if we should sync this or not (nil = ignore sync)
+	IsDisabled     bool
 }
 
 // ---------------------
@@ -60,6 +65,15 @@ type DeleteAuthInfoCommand struct {
 	UserAuth *UserAuth
 }
 
+type SendLoginLogCommand struct {
+	ReqContext   *ReqContext
+	LogAction    string
+	User         *User
+	ExternalUser *ExternalUserInfo
+	HTTPStatus   int
+	Error        error
+}
+
 // ----------------------
 // QUERIES
 
@@ -69,6 +83,7 @@ type LoginUserQuery struct {
 	Password   string
 	User       *User
 	IpAddress  string
+	AuthModule string
 }
 
 type GetUserByAuthInfoQuery struct {
@@ -81,12 +96,29 @@ type GetUserByAuthInfoQuery struct {
 	Result *User
 }
 
+type GetExternalUserInfoByLoginQuery struct {
+	LoginOrEmail string
+
+	Result *ExternalUserInfo
+}
+
 type GetAuthInfoQuery struct {
 	UserId     int64
 	AuthModule string
 	AuthId     string
 
 	Result *UserAuth
+}
+
+type TeamOrgGroupDTO struct {
+	TeamName string `json:"teamName"`
+	OrgName  string `json:"orgName"`
+	GroupDN  string `json:"groupDN"`
+}
+
+type GetTeamsForLDAPGroupCommand struct {
+	Groups []string
+	Result []TeamOrgGroupDTO
 }
 
 type SyncTeamsCommand struct {

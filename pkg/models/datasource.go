@@ -22,16 +22,21 @@ const (
 	DS_MSSQL         = "mssql"
 	DS_ACCESS_DIRECT = "direct"
 	DS_ACCESS_PROXY  = "proxy"
-	DS_STACKDRIVER   = "stackdriver"
-	DS_AZURE_MONITOR = "grafana-azure-monitor-datasource"
+	// Stackdriver was renamed Google Cloud monitoring 2020-05 but we keep
+	// "stackdriver" to avoid breaking changes in reporting.
+	DS_CLOUD_MONITORING = "stackdriver"
+	DS_AZURE_MONITOR    = "grafana-azure-monitor-datasource"
+	DS_LOKI             = "loki"
 )
 
 var (
-	ErrDataSourceNotFound           = errors.New("Data source not found")
-	ErrDataSourceNameExists         = errors.New("Data source with same name already exists")
-	ErrDataSourceUpdatingOldVersion = errors.New("Trying to update old version of datasource")
-	ErrDatasourceIsReadOnly         = errors.New("Data source is readonly. Can only be updated from configuration")
-	ErrDataSourceAccessDenied       = errors.New("Data source access denied")
+	ErrDataSourceNotFound                = errors.New("Data source not found")
+	ErrDataSourceNameExists              = errors.New("Data source with the same name already exists")
+	ErrDataSourceUidExists               = errors.New("Data source with the same uid already exists")
+	ErrDataSourceUpdatingOldVersion      = errors.New("Trying to update old version of datasource")
+	ErrDatasourceIsReadOnly              = errors.New("Data source is readonly. Can only be updated from configuration")
+	ErrDataSourceAccessDenied            = errors.New("Data source access denied")
+	ErrDataSourceFailedGenerateUniqueUid = errors.New("Failed to generate unique datasource id")
 )
 
 type DsAccess string
@@ -56,6 +61,7 @@ type DataSource struct {
 	JsonData          *simplejson.Json
 	SecureJsonData    securejsondata.SecureJsonData
 	ReadOnly          bool
+	Uid               string
 
 	Created time.Time
 	Updated time.Time
@@ -75,44 +81,48 @@ func (ds *DataSource) DecryptedPassword() string {
 
 // decryptedValue returns decrypted value from secureJsonData
 func (ds *DataSource) decryptedValue(field string, fallback string) string {
-	if value, ok := ds.SecureJsonData.DecryptedValue(field); ok {
+	if value, ok := ds.DecryptedValue(field); ok {
 		return value
 	}
 	return fallback
 }
 
 var knownDatasourcePlugins = map[string]bool{
-	DS_ES:                                 true,
-	DS_GRAPHITE:                           true,
-	DS_INFLUXDB:                           true,
-	DS_INFLUXDB_08:                        true,
-	DS_KAIROSDB:                           true,
-	DS_CLOUDWATCH:                         true,
-	DS_PROMETHEUS:                         true,
-	DS_OPENTSDB:                           true,
-	DS_POSTGRES:                           true,
-	DS_MYSQL:                              true,
-	DS_MSSQL:                              true,
-	DS_STACKDRIVER:                        true,
-	DS_AZURE_MONITOR:                      true,
-	"opennms":                             true,
-	"abhisant-druid-datasource":           true,
-	"dalmatinerdb-datasource":             true,
-	"gnocci":                              true,
-	"zabbix":                              true,
-	"newrelic-app":                        true,
-	"grafana-datadog-datasource":          true,
-	"grafana-simple-json":                 true,
-	"grafana-splunk-datasource":           true,
-	"udoprog-heroic-datasource":           true,
-	"grafana-openfalcon-datasource":       true,
-	"opennms-datasource":                  true,
-	"rackerlabs-blueflood-datasource":     true,
-	"crate-datasource":                    true,
-	"ayoungprogrammer-finance-datasource": true,
-	"monasca-datasource":                  true,
-	"vertamedia-clickhouse-datasource":    true,
-	"alexanderzobnin-zabbix-datasource":   true,
+	DS_ES:                                    true,
+	DS_GRAPHITE:                              true,
+	DS_INFLUXDB:                              true,
+	DS_INFLUXDB_08:                           true,
+	DS_KAIROSDB:                              true,
+	DS_CLOUDWATCH:                            true,
+	DS_PROMETHEUS:                            true,
+	DS_OPENTSDB:                              true,
+	DS_POSTGRES:                              true,
+	DS_MYSQL:                                 true,
+	DS_MSSQL:                                 true,
+	DS_CLOUD_MONITORING:                      true,
+	DS_AZURE_MONITOR:                         true,
+	DS_LOKI:                                  true,
+	"opennms":                                true,
+	"abhisant-druid-datasource":              true,
+	"dalmatinerdb-datasource":                true,
+	"gnocci":                                 true,
+	"zabbix":                                 true,
+	"newrelic-app":                           true,
+	"grafana-datadog-datasource":             true,
+	"grafana-simple-json":                    true,
+	"grafana-splunk-datasource":              true,
+	"udoprog-heroic-datasource":              true,
+	"grafana-openfalcon-datasource":          true,
+	"opennms-datasource":                     true,
+	"rackerlabs-blueflood-datasource":        true,
+	"crate-datasource":                       true,
+	"ayoungprogrammer-finance-datasource":    true,
+	"monasca-datasource":                     true,
+	"vertamedia-clickhouse-datasource":       true,
+	"alexanderzobnin-zabbix-datasource":      true,
+	"grafana-influxdb-flux-datasource":       true,
+	"doitintl-bigquery-datasource":           true,
+	"grafana-azure-data-explorer-datasource": true,
 }
 
 func IsKnownDataSourcePlugin(dsType string) bool {
@@ -139,9 +149,10 @@ type AddDataSourceCommand struct {
 	IsDefault         bool              `json:"isDefault"`
 	JsonData          *simplejson.Json  `json:"jsonData"`
 	SecureJsonData    map[string]string `json:"secureJsonData"`
-	ReadOnly          bool              `json:"readOnly"`
+	Uid               string            `json:"uid"`
 
-	OrgId int64 `json:"-"`
+	OrgId    int64 `json:"-"`
+	ReadOnly bool  `json:"-"`
 
 	Result *DataSource
 }
@@ -163,10 +174,11 @@ type UpdateDataSourceCommand struct {
 	JsonData          *simplejson.Json  `json:"jsonData"`
 	SecureJsonData    map[string]string `json:"secureJsonData"`
 	Version           int               `json:"version"`
-	ReadOnly          bool              `json:"readOnly"`
+	Uid               string            `json:"uid"`
 
-	OrgId int64 `json:"-"`
-	Id    int64 `json:"-"`
+	OrgId    int64 `json:"-"`
+	Id       int64 `json:"-"`
+	ReadOnly bool  `json:"-"`
 
 	Result *DataSource
 }

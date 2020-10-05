@@ -33,7 +33,10 @@ const evalFunctions = [
   { text: 'HAS NO VALUE', value: 'no_value' },
 ];
 
-const evalOperators = [{ text: 'OR', value: 'or' }, { text: 'AND', value: 'and' }];
+const evalOperators = [
+  { text: 'OR', value: 'or' },
+  { text: 'AND', value: 'and' },
+];
 
 const reducerTypes = [
   { text: 'avg()', value: 'avg' },
@@ -44,7 +47,9 @@ const reducerTypes = [
   { text: 'last()', value: 'last' },
   { text: 'median()', value: 'median' },
   { text: 'diff()', value: 'diff' },
+  { text: 'diff_abs()', value: 'diff_abs' },
   { text: 'percent_diff()', value: 'percent_diff' },
+  { text: 'percent_diff_abs()', value: 'percent_diff_abs' },
   { text: 'count_non_null()', value: 'count_non_null' },
 ];
 
@@ -55,54 +60,57 @@ const noDataModes = [
   { text: 'Ok', value: 'ok' },
 ];
 
-const executionErrorModes = [{ text: 'Alerting', value: 'alerting' }, { text: 'Keep Last State', value: 'keep_state' }];
+const executionErrorModes = [
+  { text: 'Alerting', value: 'alerting' },
+  { text: 'Keep Last State', value: 'keep_state' },
+];
 
-function createReducerPart(model) {
+function createReducerPart(model: any) {
   const def = new QueryPartDef({ type: model.type, defaultParams: [] });
   return new QueryPart(model, def);
 }
 
-function getStateDisplayModel(state) {
+function getStateDisplayModel(state: string) {
   switch (state) {
     case 'ok': {
       return {
         text: 'OK',
-        iconClass: 'icon-gf icon-gf-online',
+        iconClass: 'heart',
         stateClass: 'alert-state-ok',
       };
     }
     case 'alerting': {
       return {
         text: 'ALERTING',
-        iconClass: 'icon-gf icon-gf-critical',
+        iconClass: 'heart-break',
         stateClass: 'alert-state-critical',
       };
     }
     case 'no_data': {
       return {
         text: 'NO DATA',
-        iconClass: 'fa fa-question',
+        iconClass: 'question-circle',
         stateClass: 'alert-state-warning',
       };
     }
     case 'paused': {
       return {
         text: 'PAUSED',
-        iconClass: 'fa fa-pause',
+        iconClass: 'pause',
         stateClass: 'alert-state-paused',
       };
     }
     case 'pending': {
       return {
         text: 'PENDING',
-        iconClass: 'fa fa-exclamation',
+        iconClass: 'exclamation-triangle',
         stateClass: 'alert-state-warning',
       };
     }
     case 'unknown': {
       return {
         text: 'UNKNOWN',
-        iconClass: 'fa fa-question',
+        iconClass: 'question-circle',
         stateClass: 'alert-state-paused',
       };
     }
@@ -111,7 +119,7 @@ function getStateDisplayModel(state) {
   throw { message: 'Unknown alert state' };
 }
 
-function joinEvalMatches(matches, separator: string) {
+function joinEvalMatches(matches: any, separator: string) {
   return _.reduce(
     matches,
     (res, ev) => {
@@ -126,11 +134,11 @@ function joinEvalMatches(matches, separator: string) {
 
       return res;
     },
-    []
+    [] as string[]
   ).join(separator);
 }
 
-function getAlertAnnotationInfo(ah) {
+function getAlertAnnotationInfo(ah: any) {
   // backward compatibility, can be removed in grafana 5.x
   // old way stored evalMatches in data property directly,
   // new way stores it in evalMatches property on new data object

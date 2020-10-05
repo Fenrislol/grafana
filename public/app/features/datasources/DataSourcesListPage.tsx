@@ -2,20 +2,18 @@
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { hot } from 'react-hot-loader';
-
 // Components
 import Page from 'app/core/components/Page/Page';
 import OrgActionBar from 'app/core/components/OrgActionBar/OrgActionBar';
 import EmptyListCTA from 'app/core/components/EmptyListCTA/EmptyListCTA';
 import DataSourcesList from './DataSourcesList';
-
 // Types
-import { NavModel, DataSourceSettings } from '@grafana/ui';
+import { DataSourceSettings, NavModel } from '@grafana/data';
+import { IconName } from '@grafana/ui';
 import { StoreState } from 'app/types';
 import { LayoutMode } from 'app/core/components/LayoutSelector/LayoutSelector';
-
 // Actions
-import { loadDataSources, setDataSourcesLayoutMode, setDataSourcesSearchQuery } from './state/actions';
+import { loadDataSources } from './state/actions';
 import { getNavModel } from 'app/core/selectors/navModel';
 
 import {
@@ -24,6 +22,7 @@ import {
   getDataSourcesLayoutMode,
   getDataSourcesSearchQuery,
 } from './state/selectors';
+import { setDataSourcesLayoutMode, setDataSourcesSearchQuery } from './state/reducers';
 
 export interface Props {
   navModel: NavModel;
@@ -39,7 +38,7 @@ export interface Props {
 
 const emptyListModel = {
   title: 'There are no data sources defined yet',
-  buttonIcon: 'gicon gicon-datasources',
+  buttonIcon: 'database' as IconName,
   buttonLink: 'datasources/new',
   buttonTitle: 'Add data source',
   proTip: 'You can also define data sources through configuration files.',
@@ -65,7 +64,6 @@ export class DataSourcesListPage extends PureComponent<Props> {
       layoutMode,
       searchQuery,
       setDataSourcesSearchQuery,
-      setDataSourcesLayoutMode,
       hasFetched,
     } = this.props;
 
@@ -78,13 +76,11 @@ export class DataSourcesListPage extends PureComponent<Props> {
       <Page navModel={navModel}>
         <Page.Contents isLoading={!hasFetched}>
           <>
-            {hasFetched && dataSourcesCount === 0 && <EmptyListCTA model={emptyListModel} />}
+            {hasFetched && dataSourcesCount === 0 && <EmptyListCTA {...emptyListModel} />}
             {hasFetched &&
               dataSourcesCount > 0 && [
                 <OrgActionBar
-                  layoutMode={layoutMode}
                   searchQuery={searchQuery}
-                  onSetLayoutMode={mode => setDataSourcesLayoutMode(mode)}
                   setSearchQuery={query => setDataSourcesSearchQuery(query)}
                   linkButton={linkButton}
                   key="action-bar"
@@ -115,9 +111,4 @@ const mapDispatchToProps = {
   setDataSourcesLayoutMode,
 };
 
-export default hot(module)(
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )(DataSourcesListPage)
-);
+export default hot(module)(connect(mapStateToProps, mapDispatchToProps)(DataSourcesListPage));

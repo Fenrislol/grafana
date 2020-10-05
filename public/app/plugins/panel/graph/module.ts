@@ -11,25 +11,42 @@ import { DataProcessor } from './data_processor';
 import { axesEditorComponent } from './axes_editor';
 import config from 'app/core/config';
 import TimeSeries from 'app/core/time_series2';
-import { getColorFromHexRgbOrName, LegacyResponseData } from '@grafana/ui';
+import { getProcessedDataFrames } from 'app/features/dashboard/state/runRequest';
+import { getColorFromHexRgbOrName, PanelEvents, PanelPlugin, DataFrame, FieldConfigProperty } from '@grafana/data';
 
-class GraphCtrl extends MetricsPanelCtrl {
+import { GraphContextMenuCtrl } from './GraphContextMenuCtrl';
+import { graphPanelMigrationHandler } from './GraphMigrations';
+import { DataWarning, GraphPanelOptions, GraphFieldConfig } from './types';
+
+import { auto } from 'angular';
+import { AnnotationsSrv } from 'app/features/annotations/all';
+import { CoreEvents } from 'app/types';
+import { getLocationSrv } from '@grafana/runtime';
+import { getDataTimeRange } from './utils';
+import { changePanelPlugin } from 'app/features/dashboard/state/actions';
+import { dispatch } from 'app/store/store';
+import { ThresholdMapper } from 'app/features/alerting/state/ThresholdMapper';
+import { getAnnotationsFromData } from 'app/features/annotations/standardAnnotationSupport';
+
+export class GraphCtrl extends MetricsPanelCtrl {
   static template = template;
 
   renderError: boolean;
   hiddenSeries: any = {};
+  hiddenSeriesTainted = false;
   seriesList: TimeSeries[] = [];
-  dataList: LegacyResponseData[] = [];
+  dataList: DataFrame[] = [];
   annotations: any = [];
   alertState: any;
 
   annotationsPromise: any;
-  dataWarning: any;
+  dataWarning?: DataWarning;
   colors: any = [];
   subTabIndex: number;
   processor: DataProcessor;
+  contextMenuCtrl: GraphContextMenuCtrl;
 
-  panelDefaults = {
+  panelDefaults: any = {
     // datasource name, null = default datasource
     datasource: null,
     // sets client side (flot) or native graphite png renderer (png)
@@ -67,10 +84,14 @@ class GraphCtrl extends MetricsPanelCtrl {
     lines: true,
     // fill factor
     fill: 1,
+    // fill gradient
+    fillGradient: 0,
     // line width in pixels
     linewidth: 1,
     // show/hide dashed line
     dashes: false,
+    // show/hide line
+    hiddenSeries: false,
     // length of a dash
     dashLength: 10,
     // length of space between two dashes
@@ -116,41 +137,51 @@ class GraphCtrl extends MetricsPanelCtrl {
     seriesOverrides: [],
     thresholds: [],
     timeRegions: [],
+    options: {
+      // show/hide alert threshold lines and fill
+      alertThreshold: true,
+    },
   };
 
   /** @ngInject */
-  constructor($scope, $injector, private annotationsSrv) {
+  constructor($scope: any, $injector: auto.IInjectorService, private annotationsSrv: AnnotationsSrv) {
     super($scope, $injector);
 
     _.defaults(this.panel, this.panelDefaults);
     _.defaults(this.panel.tooltip, this.panelDefaults.tooltip);
     _.defaults(this.panel.legend, this.panelDefaults.legend);
     _.defaults(this.panel.xaxis, this.panelDefaults.xaxis);
+    _.defaults(this.panel.options, this.panelDefaults.options);
 
+    this.useDataFrames = true;
     this.processor = new DataProcessor(this.panel);
+    this.contextMenuCtrl = new GraphContextMenuCtrl($scope);
 
-    this.events.on('render', this.onRender.bind(this));
-    this.events.on('data-received', this.onDataReceived.bind(this));
-    this.events.on('data-error', this.onDataError.bind(this));
-    this.events.on('data-snapshot-load', this.onDataSnapshotLoad.bind(this));
-    this.events.on('init-edit-mode', this.onInitEditMode.bind(this));
-    this.events.on('init-panel-actions', this.onInitPanelActions.bind(this));
+    this.events.on(PanelEvents.render, this.onRender.bind(this));
+    this.events.on(PanelEvents.dataFramesReceived, this.onDataFramesReceived.bind(this));
+    this.events.on(PanelEvents.dataSnapshotLoad, this.onDataSnapshotLoad.bind(this));
+    this.events.on(PanelEvents.editModeInitialized, this.onInitEditMode.bind(this));
+    this.events.on(PanelEvents.initPanelActions, this.onInitPanelActions.bind(this));
+
+    this.annotationsPromise = Promise.resolve({ annotations: [] });
   }
 
   onInitEditMode() {
-    this.addEditorTab('Display options', 'public/app/plugins/panel/graph/tab_display.html');
+    this.addEditorTab('Display', 'public/app/plugins/panel/graph/tab_display.html');
+    this.addEditorTab('Series overrides', 'public/app/plugins/panel/graph/tab_series_overrides.html');
     this.addEditorTab('Axes', axesEditorComponent);
     this.addEditorTab('Legend', 'public/app/plugins/panel/graph/tab_legend.html');
-    this.addEditorTab('Thresholds & Time Regions', 'public/app/plugins/panel/graph/tab_thresholds_time_regions.html');
+    this.addEditorTab('Thresholds', 'public/app/plugins/panel/graph/tab_thresholds.html');
+    this.addEditorTab('Time regions', 'public/app/plugins/panel/graph/tab_time_regions.html');
     this.subTabIndex = 0;
+    this.hiddenSeriesTainted = false;
   }
 
-  onInitPanelActions(actions) {
-    actions.push({ text: 'Export CSV', click: 'ctrl.exportCsv()' });
+  onInitPanelActions(actions: any[]) {
     actions.push({ text: 'Toggle legend', click: 'ctrl.toggleLegend()', shortcut: 'p l' });
   }
 
-  issueQueries(datasource) {
+  issueQueries(datasource: any) {
     this.annotationsPromise = this.annotationsSrv.getAnnotations({
       dashboard: this.dashboard,
       panel: this.panel,
@@ -163,64 +194,51 @@ class GraphCtrl extends MetricsPanelCtrl {
      * (but not wait for completion). This resolves
      * issue 11806.
      */
-    return this.annotationsSrv.datasourcePromises.then(r => {
+    return this.annotationsSrv.datasourcePromises.then((r: any) => {
       return super.issueQueries(datasource);
     });
   }
 
-  zoomOut(evt) {
-    this.publishAppEvent('zoom-out', 2);
+  zoomOut(evt: any) {
+    this.publishAppEvent(CoreEvents.zoomOut, 2);
   }
 
-  onDataSnapshotLoad(snapshotData) {
+  onDataSnapshotLoad(snapshotData: any) {
     this.annotationsPromise = this.annotationsSrv.getAnnotations({
       dashboard: this.dashboard,
       panel: this.panel,
       range: this.range,
     });
-    this.onDataReceived(snapshotData);
+
+    const frames = getProcessedDataFrames(snapshotData);
+    this.onDataFramesReceived(frames);
   }
 
-  onDataError(err) {
-    this.seriesList = [];
-    this.annotations = [];
-    this.render([]);
-  }
-
-  onDataReceived(dataList: LegacyResponseData[]) {
-    this.dataList = dataList;
+  onDataFramesReceived(data: DataFrame[]) {
+    this.dataList = data;
     this.seriesList = this.processor.getSeriesList({
-      dataList: dataList,
+      dataList: this.dataList,
       range: this.range,
     });
 
-    this.dataWarning = null;
-    const datapointsCount = this.seriesList.reduce((prev, series) => {
-      return prev + series.datapoints.length;
-    }, 0);
-
-    if (datapointsCount === 0) {
-      this.dataWarning = {
-        title: 'No data points',
-        tip: 'No datapoints returned from data query',
-      };
-    } else {
-      for (const series of this.seriesList) {
-        if (series.isOutsideRange) {
-          this.dataWarning = {
-            title: 'Data points outside time range',
-            tip: 'Can be caused by timezone mismatch or missing time filter in query',
-          };
-          break;
-        }
-      }
-    }
+    this.dataWarning = this.getDataWarning();
 
     this.annotationsPromise.then(
-      result => {
+      (result: { alertState: any; annotations: any }) => {
         this.loading = false;
         this.alertState = result.alertState;
         this.annotations = result.annotations;
+
+        // Temp alerting & react hack
+        // Add it to the seriesList so react can access it
+        if (this.alertState) {
+          (this.seriesList as any).alertState = this.alertState.state;
+        }
+
+        if (this.panelData!.annotations?.length) {
+          this.annotations = getAnnotationsFromData(this.panelData!.annotations!);
+        }
+
         this.render(this.seriesList);
       },
       () => {
@@ -230,38 +248,103 @@ class GraphCtrl extends MetricsPanelCtrl {
     );
   }
 
+  getDataWarning(): DataWarning | undefined {
+    const datapointsCount = this.seriesList.reduce((prev, series) => {
+      return prev + series.datapoints.length;
+    }, 0);
+
+    if (datapointsCount === 0) {
+      if (this.dataList) {
+        for (const frame of this.dataList) {
+          if (frame.length && frame.fields?.length) {
+            return {
+              title: 'Unable to graph data',
+              tip: 'Data exists, but is not timeseries',
+              actionText: 'Switch to table view',
+              action: () => {
+                dispatch(changePanelPlugin(this.panel, 'table'));
+              },
+            };
+          }
+        }
+      }
+
+      return {
+        title: 'No data',
+        tip: 'No data returned from query',
+      };
+    }
+
+    // If any data is in range, do not return an error
+    for (const series of this.seriesList) {
+      if (!series.isOutsideRange) {
+        return undefined;
+      }
+    }
+
+    // All data is outside the time range
+    const dataWarning: DataWarning = {
+      title: 'Data outside time range',
+      tip: 'Can be caused by timezone mismatch or missing time filter in query',
+    };
+
+    const range = getDataTimeRange(this.dataList);
+
+    if (range) {
+      dataWarning.actionText = 'Zoom to data';
+      dataWarning.action = () => {
+        getLocationSrv().update({
+          partial: true,
+          query: {
+            from: range.from,
+            to: range.to,
+          },
+        });
+      };
+    }
+
+    return dataWarning;
+  }
+
   onRender() {
     if (!this.seriesList) {
       return;
     }
 
+    ThresholdMapper.alertToGraphThresholds(this.panel);
+
     for (const series of this.seriesList) {
       series.applySeriesOverrides(this.panel.seriesOverrides);
 
+      // Always use the configured field unit
       if (series.unit) {
         this.panel.yaxes[series.yaxis - 1].format = series.unit;
+      }
+      if (this.hiddenSeriesTainted === false && series.hiddenSeries === true) {
+        this.hiddenSeries[series.alias] = true;
       }
     }
   }
 
-  onColorChange = (series, color) => {
+  onColorChange = (series: any, color: string) => {
     series.setColor(getColorFromHexRgbOrName(color, config.theme.type));
     this.panel.aliasColors[series.alias] = color;
     this.render();
   };
 
-  onToggleSeries = hiddenSeries => {
+  onToggleSeries = (hiddenSeries: any) => {
+    this.hiddenSeriesTainted = true;
     this.hiddenSeries = hiddenSeries;
     this.render();
   };
 
-  onToggleSort = (sortBy, sortDesc) => {
+  onToggleSort = (sortBy: any, sortDesc: any) => {
     this.panel.legend.sort = sortBy;
     this.panel.legend.sortDesc = sortDesc;
     this.render();
   };
 
-  onToggleAxis = info => {
+  onToggleAxis = (info: { alias: any; yaxis: any }) => {
     let override: any = _.find(this.panel.seriesOverrides, { alias: info.alias });
     if (!override) {
       override = { alias: info.alias };
@@ -271,11 +354,11 @@ class GraphCtrl extends MetricsPanelCtrl {
     this.render();
   };
 
-  addSeriesOverride(override) {
+  addSeriesOverride(override: any) {
     this.panel.seriesOverrides.push(override || {});
   }
 
-  removeSeriesOverride(override) {
+  removeSeriesOverride(override: any) {
     this.panel.seriesOverrides = _.without(this.panel.seriesOverrides, override);
     this.render();
   }
@@ -291,15 +374,27 @@ class GraphCtrl extends MetricsPanelCtrl {
     this.render();
   }
 
-  exportCsv() {
-    const scope = this.$scope.$new(true);
-    scope.seriesList = this.seriesList;
-    this.publishAppEvent('show-modal', {
-      templateHtml: '<export-data-modal data="seriesList"></export-data-modal>',
-      scope,
-      modalClass: 'modal--narrow',
-    });
-  }
+  onContextMenuClose = () => {
+    this.contextMenuCtrl.toggleMenu();
+  };
+
+  getTimeZone = () => this.dashboard.getTimezone();
+
+  getDataFrameByRefId = (refId: string) => {
+    return this.dataList.filter(dataFrame => dataFrame.refId === refId)[0];
+  };
 }
 
-export { GraphCtrl, GraphCtrl as PanelCtrl };
+// Use new react style configuration
+export const plugin = new PanelPlugin<GraphPanelOptions, GraphFieldConfig>(null)
+  .useFieldConfig({
+    standardOptions: [
+      FieldConfigProperty.DisplayName,
+      FieldConfigProperty.Unit,
+      FieldConfigProperty.Links, // previously saved as dataLinks on options
+    ],
+  })
+  .setMigrationHandler(graphPanelMigrationHandler);
+
+// Use the angular ctrt rather than a react one
+plugin.angularPanelCtrl = GraphCtrl;

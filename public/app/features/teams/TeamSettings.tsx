@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { FC } from 'react';
 import { connect } from 'react-redux';
-import { FormLabel, Input } from '@grafana/ui';
+import { Input, Field, Form, Button, FieldSet, VerticalGroup } from '@grafana/ui';
 
 import { SharedPreferences } from 'app/core/components/SharedPreferences/SharedPreferences';
 import { updateTeam } from './state/actions';
@@ -13,80 +13,39 @@ export interface Props {
   updateTeam: typeof updateTeam;
 }
 
-interface State {
-  name: string;
-  email: string;
-}
+export const TeamSettings: FC<Props> = ({ team, updateTeam }) => {
+  return (
+    <VerticalGroup>
+      <FieldSet label="Team Settings">
+        <Form
+          defaultValues={{ ...team }}
+          onSubmit={(formTeam: Team) => {
+            updateTeam(formTeam.name, formTeam.email);
+          }}
+        >
+          {({ register }) => (
+            <>
+              <Field label="Name">
+                <Input name="name" ref={register({ required: true })} />
+              </Field>
 
-export class TeamSettings extends React.Component<Props, State> {
-  constructor(props) {
-    super(props);
+              <Field
+                label="Email"
+                description="This is optional and is primarily used to set the team profile avatar (via gravatar service)"
+              >
+                <Input placeholder="team@email.com" type="email" name="email" ref={register} />
+              </Field>
+              <Button type="submit">Update</Button>
+            </>
+          )}
+        </Form>
+      </FieldSet>
+      <SharedPreferences resourceUri={`teams/${team.id}`} />
+    </VerticalGroup>
+  );
+};
 
-    this.state = {
-      name: props.team.name,
-      email: props.team.email,
-    };
-  }
-
-  onChangeName = event => {
-    this.setState({ name: event.target.value });
-  };
-
-  onChangeEmail = event => {
-    this.setState({ email: event.target.value });
-  };
-
-  onUpdate = event => {
-    const { name, email } = this.state;
-    event.preventDefault();
-    this.props.updateTeam(name, email);
-  };
-
-  render() {
-    const { team } = this.props;
-    const { name, email } = this.state;
-
-    return (
-      <div>
-        <h3 className="page-sub-heading">Team Settings</h3>
-        <form name="teamDetailsForm" className="gf-form-group" onSubmit={this.onUpdate}>
-          <div className="gf-form max-width-30">
-            <FormLabel>Name</FormLabel>
-            <Input
-              type="text"
-              required
-              value={name}
-              className="gf-form-input max-width-22"
-              onChange={this.onChangeName}
-            />
-          </div>
-
-          <div className="gf-form max-width-30">
-            <FormLabel tooltip="This is optional and is primarily used to set the team profile avatar (via gravatar service)">
-              Email
-            </FormLabel>
-            <Input
-              type="email"
-              className="gf-form-input max-width-22"
-              value={email}
-              placeholder="team@email.com"
-              onChange={this.onChangeEmail}
-            />
-          </div>
-
-          <div className="gf-form-button-row">
-            <button type="submit" className="btn btn-primary">
-              Update
-            </button>
-          </div>
-        </form>
-        <SharedPreferences resourceUri={`teams/${team.id}`} />
-      </div>
-    );
-  }
-}
-
-function mapStateToProps(state) {
+function mapStateToProps(state: any) {
   const teamId = getRouteParamsId(state.location);
 
   return {
@@ -98,7 +57,4 @@ const mapDispatchToProps = {
   updateTeam,
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(TeamSettings);
+export default connect(mapStateToProps, mapDispatchToProps)(TeamSettings);

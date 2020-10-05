@@ -7,12 +7,12 @@ type = "docs"
 name = "GitLab"
 identifier = "gitlab_oauth"
 parent = "authentication"
-weight = 5
+weight = 900
 +++
 
 # GitLab OAuth2 Authentication
 
-To enable the GitLab OAuth2 you must register an application in GitLab. GitLab will generate a client ID and secret key for you to use.
+To enable GitLab OAuth2 you must register the application in GitLab. GitLab will generate a client ID and secret key for you to use.
 
 ## Create GitLab OAuth keys
 
@@ -31,9 +31,9 @@ instance, if you access Grafana at `http://203.0.113.31:3000`, you should use
 http://203.0.113.31:3000/login/gitlab
 ```
 
-Finally, select *api* as the *Scope* and submit the form. Note that if you're
+Finally, select *read_api* as the *Scope* and submit the form. Note that if you're
 not going to use GitLab groups for authorization (i.e. not setting
-`allowed_groups`, see below), you can select *read_user* instead of *api* as
+`allowed_groups`, see below), you can select *read_user* instead of *read_api* as
 the *Scope*, thus giving a more restricted access to your GitLab API.
 
 You'll get an *Application Id* and a *Secret* in return; we'll call them
@@ -51,7 +51,7 @@ enabled = true
 allow_sign_up = false
 client_id = GITLAB_APPLICATION_ID
 client_secret = GITLAB_SECRET
-scopes = api
+scopes = read_api
 auth_url = https://gitlab.com/oauth/authorize
 token_url = https://gitlab.com/oauth/token
 api_url = https://gitlab.com/api/v4
@@ -73,7 +73,7 @@ who can authenticate on GitLab will be able to login on your Grafana instance;
 if you use the public `gitlab.com`, it means anyone in the world would be able
 to login on your Grafana instance.
 
-You can can however limit access to only members of a given group or list of
+You can limit access to only members of a given group or list of
 groups by setting the `allowed_groups` option.
 
 ### allowed_groups
@@ -116,3 +116,13 @@ api_url = https://gitlab.com/api/v4
 allowed_groups = example, foo/bar
 ```
 
+### Team Sync (Enterprise only)
+
+> Only available in Grafana Enterprise v6.4+
+
+With Team Sync you can map your GitLab groups to teams in Grafana so that your users will automatically be added to
+the correct teams. 
+
+Your GitLab groups can be referenced in the same way as `allowed_groups`, like `example` or `foo/bar`.
+
+[Learn more about Team Sync]({{< relref "team-sync.md" >}})
