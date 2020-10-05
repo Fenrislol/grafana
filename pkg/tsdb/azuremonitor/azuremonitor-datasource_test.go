@@ -11,7 +11,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"gitlab.com/digitalizm/grafana-plugin-sdk-go/data"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
 	"gitlab.com/digitalizm/grafana/pkg/models"
 	"gitlab.com/digitalizm/grafana/pkg/tsdb"

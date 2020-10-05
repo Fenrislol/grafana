@@ -3,7 +3,7 @@ package backendplugin
 import (
 	"context"
 
-	"gitlab.com/digitalizm/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"gitlab.com/digitalizm/grafana/pkg/infra/log"
 )
 

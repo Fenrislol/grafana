@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"gitlab.com/digitalizm/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"gitlab.com/digitalizm/grafana/pkg/models"
 	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin"
 	"gitlab.com/digitalizm/grafana/pkg/setting"

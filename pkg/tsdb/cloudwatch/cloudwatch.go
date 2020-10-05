@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"gitlab.com/digitalizm/grafana-plugin-sdk-go/data"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/client"

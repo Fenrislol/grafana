@@ -5,7 +5,7 @@ import (
 	"errors"
 	"sync"
 
-	"gitlab.com/digitalizm/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"gitlab.com/digitalizm/grafana/pkg/infra/log"
 	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin"
 	"github.com/hashicorp/go-plugin"

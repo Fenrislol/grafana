@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"gitlab.com/digitalizm/grafana-plugin-sdk-go/backend"
-	"gitlab.com/digitalizm/grafana-plugin-sdk-go/data"
-	"gitlab.com/digitalizm/grafana-plugin-sdk-go/experimental"
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
+	"github.com/grafana/grafana-plugin-sdk-go/experimental"
 	"gitlab.com/digitalizm/grafana/pkg/components/securejsondata"
 	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
 	"gitlab.com/digitalizm/grafana/pkg/models"

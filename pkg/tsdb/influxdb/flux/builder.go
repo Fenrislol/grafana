@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"gitlab.com/digitalizm/grafana-plugin-sdk-go/data"
-	"gitlab.com/digitalizm/grafana-plugin-sdk-go/data/converters"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
+	"github.com/grafana/grafana-plugin-sdk-go/data/converters"
 	"github.com/influxdata/influxdb-client-go/v2/api/query"
 )
 

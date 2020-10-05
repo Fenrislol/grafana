@@ -7,8 +7,8 @@ import (
 	"path"
 	"strconv"
 
-	sdkgrpcplugin "gitlab.com/digitalizm/grafana-plugin-sdk-go/backend/grpcplugin"
-	"gitlab.com/digitalizm/grafana-plugin-sdk-go/genproto/pluginv2"
+	sdkgrpcplugin "github.com/grafana/grafana-plugin-sdk-go/backend/grpcplugin"
+	"github.com/grafana/grafana-plugin-sdk-go/genproto/pluginv2"
 	"gitlab.com/digitalizm/grafana/pkg/bus"
 	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
 	"gitlab.com/digitalizm/grafana/pkg/infra/log"

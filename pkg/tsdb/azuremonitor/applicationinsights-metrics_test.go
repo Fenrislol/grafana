@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"gitlab.com/digitalizm/grafana-plugin-sdk-go/data"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/stretchr/testify/require"
 	"github.com/xorcare/pointer"
 )

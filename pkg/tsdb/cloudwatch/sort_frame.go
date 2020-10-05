@@ -3,7 +3,7 @@ package cloudwatch
 import (
 	"time"
 
-	"gitlab.com/digitalizm/grafana-plugin-sdk-go/data"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
 // ByTime implements sort.Interface for data.Frame based on the frame's time field

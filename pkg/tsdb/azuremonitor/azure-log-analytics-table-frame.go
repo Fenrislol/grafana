@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"gitlab.com/digitalizm/grafana-plugin-sdk-go/data"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
 // LogTableToFrame converts an AzureLogAnalyticsTable to a data.Frame.

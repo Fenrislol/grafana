@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/digitalizm/grafana-plugin-sdk-go/data"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"gitlab.com/digitalizm/grafana/pkg/bus"
 	"gitlab.com/digitalizm/grafana/pkg/components/null"
 	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"

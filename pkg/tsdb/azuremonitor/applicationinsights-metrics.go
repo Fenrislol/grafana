@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"gitlab.com/digitalizm/grafana-plugin-sdk-go/data"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
 // InsightsMetricsResultToFrame converts a MetricsResult (an Application Insights metrics query response) to a dataframe.

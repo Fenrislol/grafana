@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"gitlab.com/digitalizm/grafana-plugin-sdk-go/data"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"gitlab.com/digitalizm/grafana/pkg/components/null"
 	"gitlab.com/digitalizm/grafana/pkg/util/errutil"
 )

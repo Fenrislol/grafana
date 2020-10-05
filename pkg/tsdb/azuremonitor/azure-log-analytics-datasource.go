@@ -12,7 +12,7 @@ import (
 	"net/url"
 	"path"
 
-	"gitlab.com/digitalizm/grafana-plugin-sdk-go/data"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"gitlab.com/digitalizm/grafana/pkg/api/pluginproxy"
 	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
 	"gitlab.com/digitalizm/grafana/pkg/models"

@@ -10,7 +10,7 @@ There’s a physical wire protocol that Grafana server uses to communicate with 
 
 We advise for backend plugins to not be implemented directly against this protocol. Instead, prefer to use the [Grafana Plugin SDK for Go]({{< relref "grafana-plugin-sdk-for-go.md" >}}) that implements this protocol and provides higher level APIs.
 
-The plugin protocol is available in the [GitHub repository](https://gitlab.com/digitalizm/grafana-plugin-sdk-go/blob/master/proto/backend.proto). The plugin protocol lives in the [Grafana Plugin SDK for Go]({{< relref "grafana-plugin-sdk-for-go.md" >}}) since Grafana itself uses parts of the SDK as a dependency.
+The plugin protocol is available in the [GitHub repository](https://github.com/grafana/grafana-plugin-sdk-go/blob/master/proto/backend.proto). The plugin protocol lives in the [Grafana Plugin SDK for Go]({{< relref "grafana-plugin-sdk-for-go.md" >}}) since Grafana itself uses parts of the SDK as a dependency.
 
 ## Versioning
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sort"
 
-	"gitlab.com/digitalizm/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"gitlab.com/digitalizm/grafana/pkg/api/datasource"
 	"gitlab.com/digitalizm/grafana/pkg/api/dtos"
 	"gitlab.com/digitalizm/grafana/pkg/bus"
