@@ -3,7 +3,7 @@ package wrapper
 import (
 	"testing"
 
-	"gitlab.com/digitalizm/grafana-plugin-model/go/datasource"
+	"github.com/grafana/grafana-plugin-model/go/datasource"
 	"gitlab.com/digitalizm/grafana/pkg/infra/log"
 	"gitlab.com/digitalizm/grafana/pkg/tsdb"
 )

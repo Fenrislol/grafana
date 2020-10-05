@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	pluginModel "gitlab.com/digitalizm/grafana-plugin-model/go/renderer"
+	pluginModel "github.com/grafana/grafana-plugin-model/go/renderer"
 	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin/pluginextensionv2"
 )
 

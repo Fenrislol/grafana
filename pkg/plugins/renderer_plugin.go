@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"path"
 
-	pluginModel "gitlab.com/digitalizm/grafana-plugin-model/go/renderer"
+	pluginModel "github.com/grafana/grafana-plugin-model/go/renderer"
 	"gitlab.com/digitalizm/grafana/pkg/infra/log"
 	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin"
 	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin/grpcplugin"

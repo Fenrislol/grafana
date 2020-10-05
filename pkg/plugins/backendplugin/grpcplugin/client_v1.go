@@ -3,8 +3,8 @@ package grpcplugin
 import (
 	"context"
 
-	datasourceV1 "gitlab.com/digitalizm/grafana-plugin-model/go/datasource"
-	rendererV1 "gitlab.com/digitalizm/grafana-plugin-model/go/renderer"
+	datasourceV1 "github.com/grafana/grafana-plugin-model/go/datasource"
+	rendererV1 "github.com/grafana/grafana-plugin-model/go/renderer"
 	"gitlab.com/digitalizm/grafana-plugin-sdk-go/backend"
 	"gitlab.com/digitalizm/grafana/pkg/infra/log"
 	"gitlab.com/digitalizm/grafana/pkg/plugins/backendplugin"

@@ -24,7 +24,7 @@ The backend plugin feature is implemented with the [HashiCorp plugin system](htt
 
 ## Datasource Plugin Interface
 
-The plugin interface is very simple and described as a Go interface type in [Grafana](https://gitlab.com/digitalizm/grafana/blob/6724aaeff9a332dc73b4ee0f8abe0621f7253142/pkg/tsdb/query_endpoint.go#L10-L12) and as a general [RPC service](https://gitlab.com/digitalizm/grafana-plugin-model/blob/84176c64269d8060f99e750ee8aba6f062753336/datasource.proto#L96-L98) in the corresponding `.proto` (protocol buffer file):
+The plugin interface is very simple and described as a Go interface type in [Grafana](https://gitlab.com/digitalizm/grafana/blob/6724aaeff9a332dc73b4ee0f8abe0621f7253142/pkg/tsdb/query_endpoint.go#L10-L12) and as a general [RPC service](https://github.com/grafana/grafana-plugin-model/blob/84176c64269d8060f99e750ee8aba6f062753336/datasource.proto#L96-L98) in the corresponding `.proto` (protocol buffer file):
 
 ```go
 type TsdbQueryEndpoint interface {
@@ -180,7 +180,7 @@ There is only one query function but it is possible to move all your queries to 
 
 #### Response format
 
-Go types for the query response can be found in Grafana tsdb models ([pkg/tsdb/models.go](https://gitlab.com/digitalizm/grafana/blob/7b63913dc1d79da07f0329cf19dc4c2704ec488f/pkg/tsdb/models.go#L22-L34)) or in the corresponding protocol buffer file ([datasource.proto](https://gitlab.com/digitalizm/grafana-plugin-model/blob/84176c64269d8060f99e750ee8aba6f062753336/datasource.proto#L26-L36))
+Go types for the query response can be found in Grafana tsdb models ([pkg/tsdb/models.go](https://gitlab.com/digitalizm/grafana/blob/7b63913dc1d79da07f0329cf19dc4c2704ec488f/pkg/tsdb/models.go#L22-L34)) or in the corresponding protocol buffer file ([datasource.proto](https://github.com/grafana/grafana-plugin-model/blob/84176c64269d8060f99e750ee8aba6f062753336/datasource.proto#L26-L36))
 
 ```protobuf
 // datasource.proto

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"gitlab.com/digitalizm/grafana-plugin-model/go/datasource"
+	"github.com/grafana/grafana-plugin-model/go/datasource"
 	"gitlab.com/digitalizm/grafana/pkg/components/null"
 	"gitlab.com/digitalizm/grafana/pkg/components/simplejson"
 	"gitlab.com/digitalizm/grafana/pkg/infra/log"
