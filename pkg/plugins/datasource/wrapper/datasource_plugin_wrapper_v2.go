@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend/grpcplugin"
+	"github.com/Fenrislol/grafana-plugin-sdk-go/backend/grpcplugin"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/Fenrislol/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/genproto/pluginv2"
 	"github.com/Fenrislol/grafana/pkg/components/simplejson"
 	"github.com/Fenrislol/grafana/pkg/infra/log"

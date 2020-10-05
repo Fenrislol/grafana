@@ -5,7 +5,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/Fenrislol/grafana-plugin-sdk-go/backend"
 	"github.com/Fenrislol/grafana/pkg/infra/log"
 	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin"
 	"github.com/hashicorp/go-plugin"

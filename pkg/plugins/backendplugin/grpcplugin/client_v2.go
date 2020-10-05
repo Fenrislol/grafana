@@ -4,8 +4,8 @@ import (
 	"context"
 	"io"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend"
-	"github.com/grafana/grafana-plugin-sdk-go/backend/grpcplugin"
+	"github.com/Fenrislol/grafana-plugin-sdk-go/backend"
+	"github.com/Fenrislol/grafana-plugin-sdk-go/backend/grpcplugin"
 	"github.com/grafana/grafana-plugin-sdk-go/genproto/pluginv2"
 	"github.com/Fenrislol/grafana/pkg/infra/log"
 	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin"

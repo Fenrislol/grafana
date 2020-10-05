@@ -7,7 +7,7 @@ import (
 	"path"
 	"strconv"
 
-	sdkgrpcplugin "github.com/grafana/grafana-plugin-sdk-go/backend/grpcplugin"
+	sdkgrpcplugin "github.com/Fenrislol/grafana-plugin-sdk-go/backend/grpcplugin"
 	"github.com/grafana/grafana-plugin-sdk-go/genproto/pluginv2"
 	"github.com/Fenrislol/grafana/pkg/bus"
 	"github.com/Fenrislol/grafana/pkg/components/simplejson"

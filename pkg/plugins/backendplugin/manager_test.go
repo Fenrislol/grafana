@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/Fenrislol/grafana-plugin-sdk-go/backend"
 	"github.com/Fenrislol/grafana/pkg/infra/log"
 	"github.com/Fenrislol/grafana/pkg/models"
 	"github.com/Fenrislol/grafana/pkg/setting"

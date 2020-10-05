@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/Fenrislol/grafana-plugin-sdk-go/backend"
 	"github.com/Fenrislol/grafana/pkg/models"
 	"github.com/Fenrislol/grafana/pkg/tsdb"
 )

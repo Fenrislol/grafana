@@ -5,8 +5,8 @@ import (
 
 	datasourceV1 "github.com/grafana/grafana-plugin-model/go/datasource"
 	rendererV1 "github.com/grafana/grafana-plugin-model/go/renderer"
-	"github.com/grafana/grafana-plugin-sdk-go/backend/grpcplugin"
-	sdkgrpcplugin "github.com/grafana/grafana-plugin-sdk-go/backend/grpcplugin"
+	"github.com/Fenrislol/grafana-plugin-sdk-go/backend/grpcplugin"
+	sdkgrpcplugin "github.com/Fenrislol/grafana-plugin-sdk-go/backend/grpcplugin"
 	"github.com/Fenrislol/grafana/pkg/infra/log"
 	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin"
 	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin/pluginextensionv2"

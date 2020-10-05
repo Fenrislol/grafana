@@ -3,7 +3,7 @@ package backendplugin
 import (
 	"context"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/Fenrislol/grafana-plugin-sdk-go/backend"
 	"github.com/Fenrislol/grafana/pkg/infra/log"
 )
 
