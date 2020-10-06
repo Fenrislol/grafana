@@ -3,11 +3,11 @@ package search
 import (
 	"sort"
 
-	"github.com/grafana/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/setting"
 
-	"github.com/grafana/grafana/pkg/bus"
-	"github.com/grafana/grafana/pkg/models"
-	"github.com/grafana/grafana/pkg/registry"
+	"github.com/Fenrislol/grafana/pkg/bus"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/registry"
 )
 
 func init() {

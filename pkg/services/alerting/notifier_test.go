@@ -5,16 +5,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/grafana/grafana/pkg/components/simplejson"
-	"github.com/grafana/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/components/simplejson"
+	"github.com/Fenrislol/grafana/pkg/setting"
 
-	"github.com/grafana/grafana/pkg/services/rendering"
+	"github.com/Fenrislol/grafana/pkg/services/rendering"
 
-	"github.com/grafana/grafana/pkg/bus"
+	"github.com/Fenrislol/grafana/pkg/bus"
 	"github.com/stretchr/testify/require"
 
-	"github.com/grafana/grafana/pkg/components/imguploader"
-	"github.com/grafana/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/components/imguploader"
+	"github.com/Fenrislol/grafana/pkg/models"
 )
 
 func TestNotificationService(t *testing.T) {

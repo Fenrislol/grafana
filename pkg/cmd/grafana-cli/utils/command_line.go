@@ -3,7 +3,7 @@ package utils
 import (
 	"os"
 
-	"github.com/grafana/grafana/pkg/cmd/grafana-cli/models"
+	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/models"
 	"github.com/urfave/cli/v2"
 )
 

@@ -6,8 +6,8 @@ import (
 
 	_ "github.com/crewjam/saml"
 	_ "github.com/gobwas/glob"
-	"github.com/grafana/grafana/pkg/registry"
-	"github.com/grafana/grafana/pkg/services/licensing"
+	"github.com/Fenrislol/grafana/pkg/registry"
+	"github.com/Fenrislol/grafana/pkg/services/licensing"
 	_ "github.com/grafana/loki/pkg/logproto"
 	_ "github.com/grpc-ecosystem/go-grpc-middleware"
 	_ "github.com/jung-kurt/gofpdf"

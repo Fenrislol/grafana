@@ -18,9 +18,9 @@ import (
 	"github.com/go-macaron/session"
 	ini "gopkg.in/ini.v1"
 
-	"github.com/grafana/grafana/pkg/components/gtime"
-	"github.com/grafana/grafana/pkg/infra/log"
-	"github.com/grafana/grafana/pkg/util"
+	"github.com/Fenrislol/grafana/pkg/components/gtime"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/util"
 )
 
 type Scheme string

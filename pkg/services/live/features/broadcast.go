@@ -2,7 +2,7 @@ package features
 
 import (
 	"github.com/centrifugal/centrifuge"
-	"github.com/grafana/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/models"
 )
 
 // BroadcastRunner will simply broadcast all events to `grafana/broadcast/*` channels

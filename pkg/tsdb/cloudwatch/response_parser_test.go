@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/grafana/grafana/pkg/components/null"
+	"github.com/Fenrislol/grafana/pkg/components/null"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

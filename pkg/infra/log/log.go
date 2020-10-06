@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/go-stack/stack"
-	"github.com/grafana/grafana/pkg/util"
-	"github.com/grafana/grafana/pkg/util/errutil"
+	"github.com/Fenrislol/grafana/pkg/util"
+	"github.com/Fenrislol/grafana/pkg/util/errutil"
 	"github.com/inconshreveable/log15"
 	isatty "github.com/mattn/go-isatty"
 	"gopkg.in/ini.v1"

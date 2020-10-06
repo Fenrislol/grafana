@@ -11,11 +11,11 @@ import (
 	tlog "github.com/opentracing/opentracing-go/log"
 
 	"github.com/benbjohnson/clock"
-	"github.com/grafana/grafana/pkg/bus"
-	"github.com/grafana/grafana/pkg/infra/log"
-	"github.com/grafana/grafana/pkg/registry"
-	"github.com/grafana/grafana/pkg/services/rendering"
-	"github.com/grafana/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/bus"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/registry"
+	"github.com/Fenrislol/grafana/pkg/services/rendering"
+	"github.com/Fenrislol/grafana/pkg/setting"
 	"golang.org/x/sync/errgroup"
 )
 

@@ -2,8 +2,8 @@ package live
 
 import (
 	"github.com/centrifugal/centrifuge"
-	"github.com/grafana/grafana/pkg/models"
-	"github.com/grafana/grafana/pkg/plugins"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/plugins"
 )
 
 // PluginHandler manages all the `grafana/dashboard/*` channels

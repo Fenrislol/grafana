@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/grafana/grafana/pkg/bus"
-	"github.com/grafana/grafana/pkg/infra/log"
-	"github.com/grafana/grafana/pkg/infra/remotecache"
-	authproxy "github.com/grafana/grafana/pkg/middleware/auth_proxy"
-	"github.com/grafana/grafana/pkg/models"
-	"github.com/grafana/grafana/pkg/setting"
+	"github.com/Fenrislol/grafana/pkg/bus"
+	"github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/Fenrislol/grafana/pkg/infra/remotecache"
+	authproxy "github.com/Fenrislol/grafana/pkg/middleware/auth_proxy"
+	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/setting"
 	"github.com/stretchr/testify/require"
 	macaron "gopkg.in/macaron.v1"
 )

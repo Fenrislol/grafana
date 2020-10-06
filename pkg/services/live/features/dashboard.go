@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/centrifugal/centrifuge"
-	"github.com/grafana/grafana/pkg/models"
+	"github.com/Fenrislol/grafana/pkg/models"
 )
 
 // DashboardEvent events related to dashboards
