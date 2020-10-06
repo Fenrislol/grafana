@@ -9,6 +9,7 @@ replace github.com/denisenkom/go-mssqldb => github.com/denisenkom/go-mssqldb v0.
 // Override k8s.io/client-go outdated dependency, which is an indirect dependency of grafana/loki.
 // It's also present on grafana/loki's go.mod so we'll need till it gets updated.
 replace k8s.io/client-go => k8s.io/client-go v0.18.8
+replace github.com/go-xorm/core => xorm.io/core v0.6.2
 
 require (
 	cloud.google.com/go v0.60.0 // indirect
