@@ -4,10 +4,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Fenrislol/grafana/pkg/models"
-	"github.com/Fenrislol/grafana/pkg/services/ldap"
-	"github.com/Fenrislol/grafana/pkg/services/multildap"
-	"github.com/Fenrislol/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/services/ldap"
+	"github.com/grafana/grafana/pkg/services/multildap"
+	"github.com/grafana/grafana/pkg/setting"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

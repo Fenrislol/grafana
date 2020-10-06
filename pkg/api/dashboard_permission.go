@@ -3,10 +3,10 @@ package api
 import (
 	"time"
 
-	"github.com/Fenrislol/grafana/pkg/api/dtos"
-	"github.com/Fenrislol/grafana/pkg/bus"
-	"github.com/Fenrislol/grafana/pkg/models"
-	"github.com/Fenrislol/grafana/pkg/services/guardian"
+	"github.com/grafana/grafana/pkg/api/dtos"
+	"github.com/grafana/grafana/pkg/bus"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/services/guardian"
 )
 
 func GetDashboardPermissionList(c *models.ReqContext) Response {

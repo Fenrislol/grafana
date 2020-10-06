@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Fenrislol/grafana/pkg/infra/metrics"
-	"github.com/Fenrislol/grafana/pkg/models"
-	"github.com/Fenrislol/grafana/pkg/plugins"
-	"github.com/Fenrislol/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/infra/metrics"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/plugins"
+	"github.com/grafana/grafana/pkg/setting"
 )
 
 var usageStatsURL = "https://stats.grafana.org/grafana-usage-report"

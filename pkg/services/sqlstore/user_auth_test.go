@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/models"
 	. "github.com/smartystreets/goconvey/convey"
 	"golang.org/x/oauth2"
 )

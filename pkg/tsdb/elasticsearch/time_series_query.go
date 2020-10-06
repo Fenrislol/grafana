@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/Fenrislol/grafana/pkg/components/simplejson"
-	"github.com/Fenrislol/grafana/pkg/tsdb"
-	es "github.com/Fenrislol/grafana/pkg/tsdb/elasticsearch/client"
+	"github.com/grafana/grafana/pkg/components/simplejson"
+	"github.com/grafana/grafana/pkg/tsdb"
+	es "github.com/grafana/grafana/pkg/tsdb/elasticsearch/client"
 )
 
 type timeSeriesQuery struct {

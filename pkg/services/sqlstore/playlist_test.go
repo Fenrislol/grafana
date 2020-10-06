@@ -5,7 +5,7 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/models"
 )
 
 func TestPlaylistDataAccess(t *testing.T) {

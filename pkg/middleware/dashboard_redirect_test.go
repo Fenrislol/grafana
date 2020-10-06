@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Fenrislol/grafana/pkg/bus"
-	"github.com/Fenrislol/grafana/pkg/models"
-	"github.com/Fenrislol/grafana/pkg/util"
+	"github.com/grafana/grafana/pkg/bus"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/util"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

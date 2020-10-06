@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Fenrislol/grafana/pkg/components/simplejson"
-	"github.com/Fenrislol/grafana/pkg/models"
-	"github.com/Fenrislol/grafana/pkg/services/dashboards"
-	"github.com/Fenrislol/grafana/pkg/services/provisioning/values"
+	"github.com/grafana/grafana/pkg/components/simplejson"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/services/dashboards"
+	"github.com/grafana/grafana/pkg/services/provisioning/values"
 )
 
 type config struct {

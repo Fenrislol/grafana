@@ -6,9 +6,9 @@ import (
 	"io"
 	"strings"
 
-	"github.com/Fenrislol/grafana/pkg/infra/log"
-	"github.com/Fenrislol/grafana/pkg/registry"
-	"github.com/Fenrislol/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/infra/log"
+	"github.com/grafana/grafana/pkg/registry"
+	"github.com/grafana/grafana/pkg/setting"
 
 	opentracing "github.com/opentracing/opentracing-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"

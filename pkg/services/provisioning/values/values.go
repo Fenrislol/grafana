@@ -17,9 +17,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Fenrislol/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/setting"
 
-	"github.com/Fenrislol/grafana/pkg/util/errutil"
+	"github.com/grafana/grafana/pkg/util/errutil"
 )
 
 // IntValue represents a string value in a YAML

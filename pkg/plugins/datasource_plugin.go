@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"path"
 
-	"github.com/Fenrislol/grafana/pkg/infra/log"
-	"github.com/Fenrislol/grafana/pkg/models"
-	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin"
-	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin/grpcplugin"
-	"github.com/Fenrislol/grafana/pkg/plugins/datasource/wrapper"
-	"github.com/Fenrislol/grafana/pkg/tsdb"
-	"github.com/Fenrislol/grafana/pkg/util/errutil"
+	"github.com/grafana/grafana/pkg/infra/log"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/plugins/backendplugin"
+	"github.com/grafana/grafana/pkg/plugins/backendplugin/grpcplugin"
+	"github.com/grafana/grafana/pkg/plugins/datasource/wrapper"
+	"github.com/grafana/grafana/pkg/tsdb"
+	"github.com/grafana/grafana/pkg/util/errutil"
 )
 
 // DataSourcePlugin contains all metadata about a datasource plugin
@@ -34,12 +34,12 @@ type DataSourcePlugin struct {
 	SDK        bool   `json:"sdk,omitempty"`
 }
 
-func (p *DataSourcePlugin) Load(decoder *json.Decoder, pluginDir string, backendPluginManager backendplugin.Manager) error {
+func (p *DataSourcePlugin) Load(decoder *json.Decoder, base *PluginBase, backendPluginManager backendplugin.Manager) error {
 	if err := decoder.Decode(p); err != nil {
 		return errutil.Wrapf(err, "Failed to decode datasource plugin")
 	}
 
-	if err := p.registerPlugin(pluginDir); err != nil {
+	if err := p.registerPlugin(base); err != nil {
 		return errutil.Wrapf(err, "Failed to register plugin")
 	}
 

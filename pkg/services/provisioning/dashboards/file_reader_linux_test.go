@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Fenrislol/grafana/pkg/infra/log"
+	"github.com/grafana/grafana/pkg/infra/log"
 )
 
 var (

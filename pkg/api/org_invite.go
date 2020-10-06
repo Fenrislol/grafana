@@ -4,13 +4,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Fenrislol/grafana/pkg/api/dtos"
-	"github.com/Fenrislol/grafana/pkg/bus"
-	"github.com/Fenrislol/grafana/pkg/events"
-	"github.com/Fenrislol/grafana/pkg/infra/metrics"
-	"github.com/Fenrislol/grafana/pkg/models"
-	"github.com/Fenrislol/grafana/pkg/setting"
-	"github.com/Fenrislol/grafana/pkg/util"
+	"github.com/grafana/grafana/pkg/api/dtos"
+	"github.com/grafana/grafana/pkg/bus"
+	"github.com/grafana/grafana/pkg/events"
+	"github.com/grafana/grafana/pkg/infra/metrics"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/util"
 )
 
 func GetPendingOrgInvites(c *models.ReqContext) Response {

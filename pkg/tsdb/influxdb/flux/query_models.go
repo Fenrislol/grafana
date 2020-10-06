@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Fenrislol/grafana-plugin-sdk-go/backend"
-	"github.com/Fenrislol/grafana/pkg/models"
-	"github.com/Fenrislol/grafana/pkg/tsdb"
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/tsdb"
 )
 
 // queryOptions represents datasource configuration options

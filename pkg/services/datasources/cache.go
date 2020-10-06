@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Fenrislol/grafana/pkg/infra/localcache"
-	"github.com/Fenrislol/grafana/pkg/models"
-	"github.com/Fenrislol/grafana/pkg/registry"
-	"github.com/Fenrislol/grafana/pkg/services/sqlstore"
+	"github.com/grafana/grafana/pkg/infra/localcache"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/registry"
+	"github.com/grafana/grafana/pkg/services/sqlstore"
 )
 
 type CacheService interface {

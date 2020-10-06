@@ -3,7 +3,7 @@ package search
 import (
 	"sort"
 
-	"github.com/Fenrislol/grafana/pkg/services/sqlstore/searchstore"
+	"github.com/grafana/grafana/pkg/services/sqlstore/searchstore"
 )
 
 var (

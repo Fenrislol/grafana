@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/data"
-	"github.com/Fenrislol/grafana/pkg/components/null"
-	"github.com/Fenrislol/grafana/pkg/util/errutil"
+	"github.com/grafana/grafana/pkg/components/null"
+	"github.com/grafana/grafana/pkg/util/errutil"
 )
 
 // SeriesToFrame converts a TimeSeries to a sdk Frame

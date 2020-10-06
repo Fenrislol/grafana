@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/Fenrislol/grafana/pkg/api/dtos"
-	"github.com/Fenrislol/grafana/pkg/bus"
-	"github.com/Fenrislol/grafana/pkg/models"
-	"github.com/Fenrislol/grafana/pkg/util"
+	"github.com/grafana/grafana/pkg/api/dtos"
+	"github.com/grafana/grafana/pkg/bus"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/util"
 	"github.com/ua-parser/uap-go/uaparser"
 )
 

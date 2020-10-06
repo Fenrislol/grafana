@@ -1,10 +1,10 @@
 package commands
 
 import (
-	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/logger"
-	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/models"
-	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/services"
-	"github.com/Fenrislol/grafana/pkg/cmd/grafana-cli/utils"
+	"github.com/grafana/grafana/pkg/cmd/grafana-cli/logger"
+	"github.com/grafana/grafana/pkg/cmd/grafana-cli/models"
+	"github.com/grafana/grafana/pkg/cmd/grafana-cli/services"
+	"github.com/grafana/grafana/pkg/cmd/grafana-cli/utils"
 	"github.com/hashicorp/go-version"
 )
 

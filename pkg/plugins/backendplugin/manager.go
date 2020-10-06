@@ -12,13 +12,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Fenrislol/grafana-plugin-sdk-go/backend"
-	"github.com/Fenrislol/grafana/pkg/infra/log"
-	"github.com/Fenrislol/grafana/pkg/models"
-	"github.com/Fenrislol/grafana/pkg/registry"
-	"github.com/Fenrislol/grafana/pkg/setting"
-	"github.com/Fenrislol/grafana/pkg/util/errutil"
-	"github.com/Fenrislol/grafana/pkg/util/proxyutil"
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana/pkg/infra/log"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/registry"
+	"github.com/grafana/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/util/errutil"
+	"github.com/grafana/grafana/pkg/util/proxyutil"
 )
 
 var (

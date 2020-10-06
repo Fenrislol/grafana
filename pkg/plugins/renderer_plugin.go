@@ -6,11 +6,11 @@ import (
 	"path"
 
 	pluginModel "github.com/grafana/grafana-plugin-model/go/renderer"
-	"github.com/Fenrislol/grafana/pkg/infra/log"
-	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin"
-	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin/grpcplugin"
-	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin/pluginextensionv2"
-	"github.com/Fenrislol/grafana/pkg/util/errutil"
+	"github.com/grafana/grafana/pkg/infra/log"
+	"github.com/grafana/grafana/pkg/plugins/backendplugin"
+	"github.com/grafana/grafana/pkg/plugins/backendplugin/grpcplugin"
+	"github.com/grafana/grafana/pkg/plugins/backendplugin/pluginextensionv2"
+	"github.com/grafana/grafana/pkg/util/errutil"
 )
 
 type RendererPlugin struct {
@@ -22,12 +22,12 @@ type RendererPlugin struct {
 	backendPluginManager backendplugin.Manager
 }
 
-func (r *RendererPlugin) Load(decoder *json.Decoder, pluginDir string, backendPluginManager backendplugin.Manager) error {
+func (r *RendererPlugin) Load(decoder *json.Decoder, base *PluginBase, backendPluginManager backendplugin.Manager) error {
 	if err := decoder.Decode(r); err != nil {
 		return err
 	}
 
-	if err := r.registerPlugin(pluginDir); err != nil {
+	if err := r.registerPlugin(base); err != nil {
 		return err
 	}
 

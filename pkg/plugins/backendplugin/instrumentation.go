@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/Fenrislol/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

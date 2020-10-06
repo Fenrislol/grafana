@@ -3,7 +3,7 @@ package models
 import (
 	"testing"
 
-	"github.com/Fenrislol/grafana/pkg/components/simplejson"
+	"github.com/grafana/grafana/pkg/components/simplejson"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

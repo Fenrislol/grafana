@@ -5,7 +5,7 @@ import (
 	"errors"
 	"io"
 
-	"github.com/Fenrislol/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
 )
 
 func newCallResourceResponseStream(ctx context.Context) *callResourceResponseStream {

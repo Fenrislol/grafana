@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Fenrislol/grafana/pkg/infra/log"
-	"github.com/Fenrislol/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/infra/log"
+	"github.com/grafana/grafana/pkg/setting"
 )
 
 // AnnotationCleanupService is responseible for cleaning old annotations.

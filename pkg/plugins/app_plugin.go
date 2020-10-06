@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	"github.com/gosimple/slug"
-	"github.com/Fenrislol/grafana/pkg/models"
-	"github.com/Fenrislol/grafana/pkg/plugins/backendplugin"
-	"github.com/Fenrislol/grafana/pkg/setting"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/plugins/backendplugin"
+	"github.com/grafana/grafana/pkg/setting"
 )
 
 type AppPluginCss struct {
@@ -58,12 +58,12 @@ type JwtTokenAuth struct {
 	Params map[string]string `json:"params"`
 }
 
-func (app *AppPlugin) Load(decoder *json.Decoder, pluginDir string, backendPluginManager backendplugin.Manager) error {
+func (app *AppPlugin) Load(decoder *json.Decoder, base *PluginBase, backendPluginManager backendplugin.Manager) error {
 	if err := decoder.Decode(app); err != nil {
 		return err
 	}
 
-	if err := app.registerPlugin(pluginDir); err != nil {
+	if err := app.registerPlugin(base); err != nil {
 		return err
 	}
 

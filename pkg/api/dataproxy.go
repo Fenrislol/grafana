@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Fenrislol/grafana/pkg/api/datasource"
-	"github.com/Fenrislol/grafana/pkg/api/pluginproxy"
-	"github.com/Fenrislol/grafana/pkg/infra/metrics"
-	"github.com/Fenrislol/grafana/pkg/models"
-	"github.com/Fenrislol/grafana/pkg/plugins"
+	"github.com/grafana/grafana/pkg/api/datasource"
+	"github.com/grafana/grafana/pkg/api/pluginproxy"
+	"github.com/grafana/grafana/pkg/infra/metrics"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/plugins"
 )
 
 // ProxyDataSourceRequest proxies datasource requests

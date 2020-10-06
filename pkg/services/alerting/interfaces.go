@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/Fenrislol/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/models"
 )
 
 type evalHandler interface {

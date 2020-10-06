@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Fenrislol/grafana/pkg/components/securejsondata"
-	"github.com/Fenrislol/grafana/pkg/components/simplejson"
-	"github.com/Fenrislol/grafana/pkg/models"
-	"github.com/Fenrislol/grafana/pkg/services/sqlstore/sqlutil"
-	"github.com/Fenrislol/grafana/pkg/tsdb"
-	"github.com/Fenrislol/grafana/pkg/tsdb/sqleng"
+	"github.com/grafana/grafana/pkg/components/securejsondata"
+	"github.com/grafana/grafana/pkg/components/simplejson"
+	"github.com/grafana/grafana/pkg/models"
+	"github.com/grafana/grafana/pkg/services/sqlstore/sqlutil"
+	"github.com/grafana/grafana/pkg/tsdb"
+	"github.com/grafana/grafana/pkg/tsdb/sqleng"
 	. "github.com/smartystreets/goconvey/convey"
 	"xorm.io/xorm"
 )
